@@ -123,30 +123,7 @@ int Tm3LaserRegister(RegistryDirectory* directory)
             && ObjectRegisterInteractionCallback("car", beam_class, hit_car));
 }
 
-int Tm3MapLaser(Car* owner, const SVECTOR* target)
+int Tm3LaunchMapBeam(Car* owner, const SVECTOR* origin, const SVECTOR* direction)
 {
-    const SVECTOR* markers = RegGetFileDataS("/world/tm3WeaponMarkers");
-    if (!markers || RegGetFileArraySizeS("/world/tm3WeaponMarkers") != 128)
-        return 0;
-    for (int i = 0; i < 128 && (markers[i].pad & 255); ++i) {
-        const SVECTOR* p = &markers[i];
-        if ((p->pad & 255) != 2)
-            continue;
-        SVECTOR direction = { 0 };
-        if (target) {
-            int32_t delta[3] = { target->vx - p->vx, target->vy - p->vy, target->vz - p->vz };
-            Tm3ProjectileNormalize(delta, &direction.vx);
-        } else {
-            const MATRIX* radar = Tm3RadarPose(owner);
-            if (!radar)
-                return 0;
-            direction = (SVECTOR) { radar->m[0][2], radar->m[1][2], radar->m[2][2], 0 };
-        }
-        return ObjectCreate(beam_class, OBJECT_HAS_OWNER, owner, p, &direction) != NULL;
-    }
-    return 0;
-}
-s32 Tm3FireRadar(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
-{
-    return Tm3MapLaser(car, NULL);
+    return ObjectCreate(beam_class, OBJECT_HAS_OWNER, owner, origin, direction) != NULL;
 }

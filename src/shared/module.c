@@ -7,6 +7,7 @@
 #include "tm3/lightning.h"
 #include "tm3/missile.h"
 #include "tm3/resources.h"
+#include "tm3/world.h"
 #include "tm4/main/os.h"
 #include "world_contact.h"
 #include "world_flash.h"
@@ -53,6 +54,10 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3WeaponAnimationTexture);
     EXPORT(Tm3BodyForwardStep);
     EXPORT(Tm3SpawnLightning);
+    EXPORT(Tm3MarkerLightning);
+    EXPORT(Tm3WorldMarker);
+    EXPORT(Tm3LaunchMapBeam);
+    EXPORT(Tm3PropSpin);
     EXPORT(Tm3WorldProjectile);
     EXPORT(Tm3ProjectileType_Fire);
     EXPORT(Tm3ProjectileType_Homing);

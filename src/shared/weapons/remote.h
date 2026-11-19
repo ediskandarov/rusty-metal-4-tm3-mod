@@ -7,6 +7,5 @@ typedef struct {
     s32 slot;
 } Tm3Remote;
 int Tm3RemoteRegister(RegistryDirectory* directory);
-s32 Tm3UseEye(Car*, void*, CarWeaponInstance*, s32);
 s32 Tm3PlaceRemote(Car*, void*, CarWeaponInstance*, s32);
 #endif

@@ -9,6 +9,5 @@ typedef struct {
 } Tm3MapBeam;
 extern const SnapshotField Tm3MapBeamFields[];
 int Tm3LaserRegister(RegistryDirectory*);
-int Tm3MapLaser(Car*, const SVECTOR* target);
-s32 Tm3FireRadar(Car*, void*, CarWeaponInstance*, s32);
+
 #endif

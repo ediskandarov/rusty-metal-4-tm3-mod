@@ -1,5 +1,4 @@
 #include "remote.h"
-#include "laser.h"
 #include "mod_api.h"
 #include "module_import.h"
 #include "tm3/resources.h"
@@ -42,8 +41,7 @@ static void display(Tm3Remote* mine, Tm4OrderingTag* ordering, u8** cursor, u8* 
     transform.t[0] = p->vx;
     transform.t[1] = p->vy;
     transform.t[2] = p->vz;
-    Tm3DisplayWeaponGroup(
-        mine->slot == 12 ? 0x38 : 0x28, 0, -1, &transform, ordering, cursor, end, view);
+    Tm3DisplayWeaponGroup(0x28, 0, -1, &transform, ordering, cursor, end, view);
 }
 
 /* 8002f488 casts eight fans of five rays against damageable world polygons. */
@@ -70,8 +68,6 @@ static void damage_scenery(SVECTOR* position)
 static void explode(Tm3Remote* mine)
 {
     Car* owner = ObjectGetHeader(mine)->owner;
-    if (mine->slot == 12)
-        return;
     WEB_MODULE("car", RemoveObjectFromDetonationDeviceList)
     (mine);
     if (owner && GameIsCarRegistered(owner) && owner->control_kind == CAR_CONTROL_PLAYER
@@ -132,26 +128,4 @@ s32 Tm3PlaceRemote(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
     }
     /* TM3 charges the round on detonation, including when the owner dies. */
     return 0;
-}
-
-/* 8003326c fires at the marker only when the weapon is used a second time. */
-s32 Tm3UseEye(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
-{
-    Tm4ObjectHeader* first = ObjectGetHeader(car);
-    while (first->previous)
-        first = first->previous;
-    for (Tm4ObjectHeader* h = first; h; h = h->next) {
-        if (h->owner != car || strcmp(h->name, remote_class))
-            continue;
-        Tm3Remote* marker = ObjectGetPayload(h);
-        if (marker->slot != 12)
-            continue;
-        SVECTOR p;
-        ObjectCopyPosition(&p, marker);
-        if (!Tm3MapLaser(car, &p))
-            return 0;
-        ObjectDestroy(marker);
-        return 1;
-    }
-    return Tm3PlaceRemote(car, context, weapon, rear);
 }

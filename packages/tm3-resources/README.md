@@ -13,7 +13,10 @@ bun packages/tm3-resources/src/cli.ts convert-world 'HOLLYWD.TER;1' 'HOLLYWD.IMG
 
 Use `inspect-car` or `inspect-world` with the same input files to print a JSON report.
 
-Converted maps use the shared TM3 gameplay module and the port's world texture bank. Register the converted map with the launcher. The shared module also supplies the map's weapons to stock TM4 cars.
+`convert-world` exports resources. Use `bun run build:maps --tm3-disc ./disc-tm3`
+from the mod root to attach map-specific Wasm and bind moving-object behavior.
+Maps also need the shared TM3 module and the port's world texture bank. The map
+weapon set applies to stock TM4 cars too.
 
 ## GAP
 

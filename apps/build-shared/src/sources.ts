@@ -34,6 +34,7 @@ export const sharedModuleSources = [
   "shared/world/decoration.c",
   "shared/world/flash.c",
   "shared/world/lightning.c",
+  "shared/world/markers.c",
   "shared/world/prop.c",
   "shared/world/stage.c",
   "shared/world/surface.c",

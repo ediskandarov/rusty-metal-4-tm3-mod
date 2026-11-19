@@ -18,7 +18,8 @@
     "test": "bun test ./packages/ ./tests/",
     "build:cars": "bun apps/build-cars/src/main.ts",
     "build:maps": "bun apps/build-maps/src/main.ts",
-    "test:execution": "bun tests/browser/execution.mjs"
+    "test:execution": "bun tests/browser/execution.mjs",
+    "test:maps": "bun tests/browser/maps.mjs"
   },
   "devDependencies": {
     "@tsconfig/bun": "1.0.11",

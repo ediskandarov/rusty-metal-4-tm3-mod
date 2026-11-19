@@ -8,31 +8,19 @@
 #include "tm4/main/geometry.h"
 #include "tm4/main/math3d.h"
 #include "tm4/main/object.h"
+#include "tm4/main/os.h"
 #include "tm4/main/render.h"
 #include "tm4/modules/car_weapon.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
-    SVECTOR vertices[4];
-    u32 colors[4], shader;
-} PropFace;
-
-typedef struct PropResource {
-    u32 header;
-    SVECTOR origin;
-    u16 range, health, speed, radius;
-    s16 spin[3];
-    u8 motion, faces;
-    PropFace mesh[];
-} PropResource;
-
-_Static_assert(sizeof(PropFace) == 52 && sizeof(PropResource) == 28, "TM3 type-23 record");
+_Static_assert(sizeof(Tm3PropFace) == 52 && sizeof(Tm3PropResource) == 28, "TM3 type-23 record");
 u32 Tm3PropSizeof = sizeof(Tm3Prop);
 const SnapshotField Tm3PropFields[] = {
     SNAP_LOCAL(Tm3Prop, resource),
     SNAP_LOCAL(Tm3Prop, shaders),
+    SNAP_LOCAL(Tm3Prop, behavior),
     SNAP_POD(Tm3Prop, transform.m),
     SNAP_POD(Tm3Prop, transform.t),
     SNAP_POD(Tm3Prop, velocity.vx),
@@ -47,7 +35,7 @@ const SnapshotField Tm3PropFields[] = {
 
 s32 Tm3PropInstanceConstructor(Tm3Prop* prop, RegistryDirectory* instance)
 {
-    const PropResource* resource = RegGetFileDataPS(instance, "mesh");
+    const Tm3PropResource* resource = RegGetFileDataPS(instance, "mesh");
     const s32* count = RegGetFileDataS("/world/displayPolys/numPsxShaders");
     prop->shaders = RegGetFileDataS("/world/displayPolys/shaderData");
     if (!resource || !count || !prop->shaders || resource->motion > 2
@@ -56,6 +44,11 @@ s32 Tm3PropInstanceConstructor(Tm3Prop* prop, RegistryDirectory* instance)
     for (unsigned i = 0; i < resource->faces; ++i)
         if (resource->mesh[i].shader >= (u32)*count)
             return 0;
+    const char* behavior = RegGetFileDataPS(instance, "behavior");
+    prop->behavior = behavior ? (const void*)OSSymbolGetAddress((char*)behavior) : NULL;
+    if ((behavior && (!prop->behavior || strcmp(prop->behavior->name, behavior)))
+        || (resource->motion && !prop->behavior))
+        return 0;
     prop->resource = resource;
     memset(prop->burst_offsets, 0, sizeof(prop->burst_offsets));
     memset(prop->burst_sizes, 0, sizeof(prop->burst_sizes));
@@ -70,37 +63,6 @@ s32 Tm3PropInstanceConstructor(Tm3Prop* prop, RegistryDirectory* instance)
     if (prop->health != 255)
         ObjectSetInteractionRadius(prop, (resource->radius * 3 + 2) / 4);
     return 1;
-}
-
-static void flight(Tm3Prop* prop)
-{
-    const PropResource* r = prop->resource;
-    int32_t direction[3] = { r->origin.vx - prop->transform.t[0],
-        r->origin.vy - prop->transform.t[1], r->origin.vz - prop->transform.t[2] };
-    s32 floor = r->origin.vy - 4096;
-    if (floor < -30720)
-        floor = -30720;
-    int return_home = prop->transform.t[1] <= floor || prop->transform.t[1] > r->origin.vy
-        || ((int64_t)direction[0] * direction[0] + (int64_t)direction[1] * direction[1]
-               + (int64_t)direction[2] * direction[2])
-            >= 4LL * r->range * r->range;
-    if (return_home || prop->age % 120 == 0) {
-        int16_t unit[3];
-        if (!return_home || !(direction[0] || direction[1] || direction[2])) {
-            direction[0] = 1023 - (rand() & 2047);
-            direction[1] = 255 - (rand() & 511);
-            direction[2] = 1023 - (rand() & 2047);
-        }
-        Tm3ProjectileNormalize(direction, unit);
-        s32 speed = r->speed + r->speed / 2 - rand() % r->speed;
-        prop->velocity.vx = (unit[0] * speed + 2048) >> 12;
-        prop->velocity.vy = (unit[1] * speed + 2048) >> 12;
-        prop->velocity.vz = (unit[2] * speed + 2048) >> 12;
-    }
-    prop->transform.t[0] += prop->velocity.vx;
-    prop->transform.t[1] += prop->velocity.vy;
-    prop->transform.t[2] += prop->velocity.vz;
-    ObjectSetPosition(prop, prop->transform.t[0], prop->transform.t[1], prop->transform.t[2]);
 }
 
 /* Type-23 interactions in SCUS_942.49 at 8004b954, 8004b9d0 and 8004bac4. */
@@ -125,13 +87,8 @@ static int damage_prop(Tm3Prop* prop, void* projectile, unsigned damage)
         prop->burst_sizes[i] = span + span / 2 - rand() % span;
     }
     ObjectSetInteractionRadius(prop, 0);
-    Car* owner = b->owner;
-    if (owner && GameIsCarRegistered(owner) && owner->control_kind == CAR_CONTROL_PLAYER) {
-        owner->weapons[0].amount = 8;
-        WEB_MODULE("car", CarApplyParticipantDamage)
-        (owner, NULL, (WebParticipantId) { 0 }, -owner->maximum_health, NULL, NULL);
-        Tm3PlayNamedSound("tm3_s32", NULL, NULL, 1308, 0);
-    }
+    if (prop->behavior && prop->behavior->destroyed)
+        prop->behavior->destroyed(prop, projectile);
     return 1;
 }
 
@@ -176,69 +133,31 @@ static void burst(Tm3Prop* prop)
         ObjectDestroy(prop);
 }
 
+void Tm3PropSpin(Tm3Prop* prop)
+{
+    const Tm3PropResource* r = prop->resource;
+    if (r->spin[0])
+        RotMatrixX(r->spin[0], &prop->transform);
+    if (r->spin[1])
+        RotMatrixY(r->spin[1], &prop->transform);
+    if (r->spin[2])
+        RotMatrixZ(r->spin[2], &prop->transform);
+}
+
 void Tm3PropProcess(Tm3Prop* prop)
 {
-    const PropResource* r = prop->resource;
     if (!prop->health) {
         burst(prop);
         return;
     }
-    if (r->motion == 1) {
-        /* 800357d8: the first car carrying Radar designates the nearest other car. */
-        Car* holder = NULL;
-        for (int i = 0; i < GameInfo.car_count; ++i) {
-            Car* car = GameInfo.cars[i];
-            if (car->weapons && car->weapons[12].amount) {
-                holder = car;
-                break;
-            }
-        }
-        Car* closest = NULL;
-        s32 best = INT32_MAX;
-        for (int i = 0; holder && i < GameInfo.car_count; ++i) {
-            Car* car = GameInfo.cars[i];
-            const Tm4ShortVectorXYZ* p = &ObjectGetHeader(car)->position;
-            s32 dist = DistanceApprox3d(
-                p->vx - r->origin.vx, p->vy - r->origin.vy, p->vz - r->origin.vz);
-            if (car != holder && dist < best) {
-                closest = car;
-                best = dist;
-            }
-        }
-        if (closest) {
-            const Tm4ShortVectorXYZ* p = &ObjectGetHeader(closest)->position;
-            const int16_t target[3]
-                = { p->vx - r->origin.vx, p->vy - r->origin.vy, p->vz - r->origin.vz };
-            Tm3ProjectileOrient(&prop->transform, target);
-        }
-    } else if (r->motion == 2)
-        flight(prop);
-    if (r->motion != 1) {
-        if (r->spin[0])
-            RotMatrixX(r->spin[0], &prop->transform);
-        if (r->spin[1])
-            RotMatrixY(r->spin[1], &prop->transform);
-        if (r->spin[2])
-            RotMatrixZ(r->spin[2], &prop->transform);
-    }
+    if (prop->behavior && prop->behavior->process)
+        prop->behavior->process(prop);
+    else
+        Tm3PropSpin(prop);
     ++prop->age;
 }
 
-const MATRIX* Tm3RadarPose(Car* car)
-{
-    Tm4ObjectHeader* first = ObjectGetHeader(car);
-    while (first->previous)
-        first = first->previous;
-    for (Tm4ObjectHeader* obj = first; obj; obj = obj->next) {
-        if (strcmp(obj->name, "tm3Prop"))
-            continue;
-        Tm3Prop* prop = ObjectGetPayload(obj);
-        if (prop->resource->motion == 1)
-            return &prop->transform;
-    }
-    return NULL;
-}
-static void draw_mesh(const PropFace* faces, unsigned count, const Tm4CardQuadTexture* shaders,
+static void draw_mesh(const Tm3PropFace* faces, unsigned count, const Tm4CardQuadTexture* shaders,
     MATRIX* transform, Tm4OrderingTag* ordering, u8** cursor, u8* end, MATRIX* view)
 {
     MATRIX camera;
@@ -247,7 +166,7 @@ static void draw_mesh(const PropFace* faces, unsigned count, const Tm4CardQuadTe
     SetRotMatrix(&camera);
     SetTransMatrix(&camera);
     for (unsigned i = 0; i < count; ++i) {
-        const PropFace* f = &faces[i];
+        const Tm3PropFace* f = &faces[i];
         const int quad = (f->colors[0] >> 24) == 0x3c;
         const int n = quad ? 4 : 3;
         const size_t size = quad ? sizeof(POLY_GT4) : sizeof(POLY_GT3);
@@ -381,7 +300,7 @@ void Tm3TransitionDisplay(
 {
     RegistryDirectory* directory = transition_directory(t);
     const TransitionResource* r = RegGetFileDataPS(directory, "motion");
-    const PropFace* faces = RegGetFileDataPS(directory, "mesh");
+    const Tm3PropFace* faces = RegGetFileDataPS(directory, "mesh");
     const Tm4CardQuadTexture* shaders = RegGetFileDataS("/world/displayPolys/shaderData");
     if (r && faces && shaders)
         draw_mesh(faces, r->faces, shaders, &t->transform, order, cursor, end, view);

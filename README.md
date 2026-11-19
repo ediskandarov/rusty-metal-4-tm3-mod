@@ -11,6 +11,7 @@ src/shared/include/tm3/     Headers used by cars and maps
 src/shared/weapons/        Common projectiles and weapon effects
 src/shared/world/          Shared map objects and effects
 src/cars/                  Car behavior and special tuning
+src/maps/                  Map-specific weapons and object behavior
 packages/                  Disc reading and resource conversion
 external/rusty-metal-4/     Engine headers, PsyZ and build tools
 ```
@@ -45,11 +46,15 @@ cars/maps. Filter builds with `--car sweet-tooth` or `--map egypt`; both flags
 can be repeated. Available IDs are in `apps/build-cars/src/catalog.ts` and `apps/build-maps/src/catalog.ts`.
 The MENU scene is excluded from playable maps.
 
-For shared and cars, `--game-build DIR` selects the engine build supplying
+For shared, cars and maps, `--game-build DIR` selects the engine build supplying
 generated headers and host exports; the default is `external/rusty-metal-4/build/diagnostic`.
 
-Shared and car packs contain Wasm bytes directly in `behavior.mod` (MR type 6).
-Map packs refer to the shared module's object and effect handlers.
+Shared, car and scripted map packs embed Wasm in `behavior.mod` (MR type 6).
+Egypt owns Eye, Tokyo owns radar targeting and firing, and Hangar 18 owns saucer
+flight, its destruction reward and Spaceship. Other maps need no separate module: their
+scenery, transitions, materials and ordinary weapons use shared mechanisms.
+Map prop behavior is bound from the instance resource and restored with its template;
+callback addresses are never written into portable snapshots.
 Each Wasm module exports `Tm4ModuleExport`, imports shared memory, and uses no
 Asyncify. Car modules must be rebuilt against the same shared headers when
 their interface changes.
@@ -69,3 +74,13 @@ bun run test:execution --disc ./disc-tm4
 It fires all 16 specials, verifies missile ownership across Wasm modules, and
 compares replay after local rollback and snapshot restore in a fresh match.
 The test adapts archive packaging for the current loader without changing Wasm.
+
+Map check (requires built shared, maps and cars with `--test-hooks`):
+
+```sh
+bun run test:maps --disc ./disc-tm4
+```
+
+Use `--map egypt`, `--map tokyo` or `--map hangar-18` for a focused run. Checks cover
+map weapons, beam audio/flash, saucer destruction and replay after local rollback
+and snapshot restoration in a fresh match.

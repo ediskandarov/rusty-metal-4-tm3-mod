@@ -23,5 +23,5 @@ typedef struct {
     char* sound;
 } Tm3LightningSettings;
 int Tm3SpawnLightning(const Tm3LightningSettings* settings);
-int Tm3MapLightning(unsigned marker);
+int Tm3MarkerLightning(unsigned marker, const Tm3LightningSettings* settings);
 #endif

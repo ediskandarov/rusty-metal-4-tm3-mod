@@ -1,10 +1,10 @@
-#include "world_weapons.h"
 #include "laser.h"
 #include "module_import.h"
 #include "remote.h"
 #include "tm3/lightning.h"
 #include "tm3/missile.h"
 #include "tm3/resources.h"
+#include "tm3/world.h"
 #include "tm4/main/game.h"
 #include "tm4/main/object.h"
 #include "tm4/modules/car_ai.h"
@@ -67,7 +67,16 @@ static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
 
 static s32 lightning(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
 {
-    return Tm3MapLightning(!strcasecmp(weapon->descriptor->name, "Proximity") ? 5 : 3);
+    const Tm3LightningSettings settings = {
+        .range = 8192,
+        .force = -6291456,
+        .damage = 10,
+        .duration = 90,
+        .flash = 1,
+        .sound = "tm3_s26",
+        .pitch = 0x51c,
+    };
+    return Tm3MarkerLightning(3, &settings);
 }
 
 static void configure(CarWeaponDescriptor* weapon)
@@ -81,12 +90,6 @@ static void configure(CarWeaponDescriptor* weapon)
             return;
         weapon->hud_name = title;
         weapon->detonate = 0;
-        if (!strcmp(title, "Eye"))
-            weapon->launch = Tm3UseEye;
-        else if (!strcmp(title, "Radar"))
-            weapon->launch = Tm3FireRadar;
-        else
-            weapon->launch = lightning;
     }
     weapon->initial = entry->initial;
     weapon->maximum = entry->maximum;
