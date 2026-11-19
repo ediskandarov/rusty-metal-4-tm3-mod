@@ -41,6 +41,15 @@ function round(value: number) {
 function scaled(point: number[], scale: number) {
   return point.slice(0, 3).map((v) => integer(round(v * scale)));
 }
+// TM3 renderer (0x800240b0) adds a half-turn and reverses spin on right wheels.
+// Bake that proper Y rotation into their local geometry for TM4's common wheel transform.
+function wheelPoint(point: number[], scale: number, slot: number) {
+  const right = slot === 1 || slot === 3;
+  return scaled(
+    point.map((value, axis) => (right && axis !== 1 ? -value : value)),
+    scale,
+  );
+}
 function concat(parts: Uint8Array[]): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
   let cursor = 0;
@@ -243,7 +252,7 @@ function geometry(root: MrDirectory, meshes: CarModel[], scale: number) {
           const corners = (face.command & 0x7f) === 0x24 ? 3 : 4;
           let points = face.indices
             .slice(0, corners)
-            .map((i) => scaled(at(mesh.vertices, start + i), scale));
+            .map((i) => wheelPoint(at(mesh.vertices, start + i), scale, slot));
           // The selector also drives visibility. Only flagged groups store pivot-relative vertices.
           if (group.flag && !wheel && slot >= 4)
             points = points.map((p) => p.map((v, i) => integer(v + at(center, i))));
@@ -267,7 +276,7 @@ function geometry(root: MrDirectory, meshes: CarModel[], scale: number) {
           // Preserve wheel extents that physics measures, even when no face uses their vertices.
           const original = mesh.vertices
             .slice(start, start + vertexCount)
-            .map((p) => scaled(p, scale));
+            .map((p) => wheelPoint(p, scale, slot));
           const extremes = [0, 1, 2].flatMap((axis) => [
             original.reduce((a, b) => (at(a, axis) <= at(b, axis) ? a : b)),
             original.reduce((a, b) => (at(a, axis) >= at(b, axis) ? a : b)),

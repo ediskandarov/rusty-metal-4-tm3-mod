@@ -74,7 +74,8 @@ function geometry(source, result) {
                 .slice(0, 3)
                 .map(
                   (value, axis) =>
-                    value + (group.flag && group.transform_slot >= 4 ? group.center[axis] : 0),
+                    value * ([1, 3].includes(group.transform_slot) && axis !== 1 ? -1 : 1) +
+                    (group.flag && group.transform_slot >= 4 ? group.center[axis] : 0),
                 );
               assert.deepEqual(actual, expected, `${lod}/${gi}/${frame}/${index - 1}`);
               ++checked;

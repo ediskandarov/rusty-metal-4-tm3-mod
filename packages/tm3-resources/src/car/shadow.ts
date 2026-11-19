@@ -39,8 +39,10 @@ function silhouette(model: CarModel) {
   const groups = model.groups.map((group) => {
     const [, , start, count] = at(group.frames, 0);
     return model.vertices.slice(start, start + count).map((vertex) => {
-      const x = at(vertex, 0) + (group.flag ? at(group.center, 0) : 0);
-      const z = at(vertex, 2) + (group.flag ? at(group.center, 2) : 0);
+      // Include the right-wheel half-turn used by the original car renderer.
+      const direction = group.transform_slot === 1 || group.transform_slot === 3 ? -1 : 1;
+      const x = direction * at(vertex, 0) + (group.flag ? at(group.center, 0) : 0);
+      const z = direction * at(vertex, 2) + (group.flag ? at(group.center, 2) : 0);
       minX = Math.min(minX, x);
       maxX = Math.max(maxX, x);
       minZ = Math.min(minZ, z);

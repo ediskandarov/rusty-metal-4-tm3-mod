@@ -15,6 +15,8 @@ import {
 import { readMr } from "@tm4/resources/compatibility/mr";
 import { writeMr } from "@tm4/resources/mods/mr-writer";
 
+import { carShadow } from "../src/car/shadow.ts";
+
 function meshFixture(
   points = [
     [0, 0, 0],
@@ -322,6 +324,105 @@ test("custom animation pivots are recorded and baked into resource-only geometry
   expect([0, 1, 2].map((axis) => view.getInt16(firstVertex * 8 + axis * 2, true))).toEqual([
     10, -20, 30,
   ]);
+});
+
+test("right wheels bake TM3's half-turn without changing pivots, UVs or winding", async () => {
+  const points = [
+    [12, 4, 8],
+    [44, 4, 8],
+    [12, -28, 40],
+    [90, 60, -70],
+  ];
+  for (const axle of [0, 2]) {
+    const model = meshFixture(points);
+    const uv = [
+      [1, 2],
+      [11, 3],
+      [5, 12],
+    ];
+    uv.forEach((pair, i) => model.bytes.set(pair, model.faceStart + 4 + i * 4));
+    for (let side = 0; side < 2; ++side) {
+      const group = 44 + side * 24;
+      [120 + side * 240, -20, 300].forEach((v, axis) =>
+        model.view.setInt16(group + 16 + axis * 2, v, true),
+      );
+      model.bytes[group + 22] = 1;
+      model.view.setInt8(group + 23, axle + side);
+    }
+    const input = carFixture([model.bytes, model.bytes, model.bytes]);
+    const original = input.slice();
+    const { root, metadata } = await convertCar(input);
+    expect(input).toEqual(original);
+    const r = root.folders.get("display").folders.get("resolution");
+    const faces = r.files.get("FaceList").bytes;
+    const vertices = r.files.get("VertexList").bytes;
+    const v = new DataView(vertices.buffer, vertices.byteOffset);
+    const normalBytes = r.files.get("VertexNormalList").bytes;
+    const normals = new DataView(normalBytes.buffer, normalBytes.byteOffset);
+    for (const [lod, groups] of metadata.groups.entries()) {
+      const leftNormals = [];
+      for (const [side, group] of groups.entries()) {
+        const bytes = r.folders.get(`r${lod}`).folders.get("Groups").files.get(group.name).bytes;
+        const record = new DataView(bytes.buffer, bytes.byteOffset);
+        expect([0, 1, 2].map((axis) => record.getInt16(24 + axis * 2, true))).toEqual([
+          120 + side * 240,
+          -20,
+          300,
+        ]);
+        const expected = points.map((p) => p.map((n, axis) => (side && axis !== 1 ? -n : n)));
+        for (const frame of [0, 12]) {
+          const face = record.getInt16(frame, true) * 24;
+          const base = record.getInt16(frame + 4, true);
+          const count = record.getInt16(frame + 6, true);
+          const positions = Array.from({ length: count }, (_, i) =>
+            [0, 1, 2].map((axis) => v.getInt16((base + i) * 8 + axis * 2, true)),
+          );
+          expect([0, 1, 2].map((i) => positions[faces[face + 16 + i]])).toEqual(
+            expected.slice(0, 3),
+          );
+          expect(positions).toContainEqual(expected[3]); // Unreferenced extent vertex.
+          for (let corner = 0; corner < 3; ++corner)
+            expect([...faces.slice(face + 4 + corner * 4, face + 6 + corner * 4)]).toEqual(
+              uv[corner],
+            );
+          const ni = record.getInt16(frame + 8, true) + faces[face + 20];
+          const n = [0, 1, 2].map((axis) => normals.getInt16(ni * 8 + axis * 2, true));
+          if (!side) leftNormals.push(n);
+          else
+            expect(n).toEqual(
+              leftNormals[frame / 12].map((value, axis) => (axis === 1 ? value : -value || 0)),
+            );
+        }
+      }
+    }
+  }
+});
+
+test("shadow projection includes the right-wheel half-turn", () => {
+  const model = meshFixture([
+    [12, 4, 8],
+    [44, 4, 8],
+    [12, -28, 40],
+  ]);
+  for (let group = 0; group < 2; ++group) model.view.setInt8(44 + group * 24 + 23, 1);
+  const source = readCar(carFixture([model.bytes, model.bytes, model.bytes]));
+  const expected = structuredClone(source.models);
+  for (const mesh of expected) {
+    for (const group of mesh.groups) group.transform_slot = 0;
+    for (const vertex of mesh.vertices) {
+      vertex[0] *= -1;
+      vertex[2] *= -1;
+    }
+  }
+  expect(carShadow(source.texture, source.models)).toEqual(carShadow(source.texture, expected));
+  for (const mesh of expected)
+    for (const vertex of mesh.vertices) {
+      vertex[0] *= -1;
+      vertex[2] *= -1;
+    }
+  expect(carShadow(source.texture, source.models).words).not.toEqual(
+    carShadow(source.texture, expected).words,
+  );
 });
 
 test("visibility selectors preserve body-space vertices in static and animated cars", async () => {
