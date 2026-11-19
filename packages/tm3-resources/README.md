@@ -1,4 +1,4 @@
-# @tm4/tm3-resources
+# @rusty-metal-4/tm3-resources
 
 Convert Twisted Metal III car and map resources from the US v1.1 disc to TM4 archives.
 

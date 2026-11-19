@@ -22,18 +22,18 @@
       },
     },
     "packages/tm3-resources": {
-      "name": "@tm4/tm3-resources",
+      "name": "@rusty-metal-4/tm3-resources",
       "dependencies": {
         "@tm4/resources": "workspace:*",
       },
     },
   },
   "packages": {
+    "@rusty-metal-4/tm3-resources": ["@rusty-metal-4/tm3-resources@workspace:packages/tm3-resources"],
+
     "@tm4/dev-server-client": ["@tm4/dev-server-client@workspace:external/rusty-metal-4/packages/dev-server-client"],
 
     "@tm4/resources": ["@tm4/resources@workspace:external/rusty-metal-4/packages/resources"],
-
-    "@tm4/tm3-resources": ["@tm4/tm3-resources@workspace:packages/tm3-resources"],
 
     "@tsconfig/bun": ["@tsconfig/bun@1.0.11", "", {}, "sha512-DQA3HOKFQ+/yPTUa73k5QGcuEM1ExtL6uWQMR0QrfOTitm0oLHqHd1tI74WtEtMqlIu+tvSMELJ6p5uNxVE7lw=="],
 
