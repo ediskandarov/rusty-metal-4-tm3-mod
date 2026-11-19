@@ -1,0 +1,19 @@
+{
+  "name": "@tm4/tm3-resources",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vab": "./src/shared/vab.ts"
+  },
+  "scripts": {
+    "typecheck": "bun check --no-script -p tsconfig.json",
+    "inspect:car": "bun src/cli.ts inspect-car",
+    "convert:car": "bun src/cli.ts convert-car",
+    "convert:world": "bun src/cli.ts convert-world",
+    "inspect:world": "bun src/cli.ts inspect-world"
+  },
+  "dependencies": {
+    "@tm4/resources": "workspace:*"
+  }
+}
