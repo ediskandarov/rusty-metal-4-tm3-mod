@@ -1,0 +1,10 @@
+{
+  "name": "@rusty-metal-4/build-shared",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@rusty-metal-4/disc": "workspace:*",
+    "@tm4/resources": "workspace:*",
+    "@rusty-metal-4/tm3-resources": "workspace:*"
+  }
+}

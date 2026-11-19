@@ -9,6 +9,14 @@
         "@types/bun": "1.4.4",
       },
     },
+    "apps/build-shared": {
+      "name": "@rusty-metal-4/build-shared",
+      "dependencies": {
+        "@rusty-metal-4/disc": "workspace:*",
+        "@rusty-metal-4/tm3-resources": "workspace:*",
+        "@tm4/resources": "workspace:*",
+      },
+    },
     "external/rusty-metal-4/packages/dev-server-client": {
       "name": "@tm4/dev-server-client",
       "dependencies": {
@@ -35,6 +43,8 @@
     },
   },
   "packages": {
+    "@rusty-metal-4/build-shared": ["@rusty-metal-4/build-shared@workspace:apps/build-shared"],
+
     "@rusty-metal-4/disc": ["@rusty-metal-4/disc@workspace:packages/disc"],
 
     "@rusty-metal-4/tm3-resources": ["@rusty-metal-4/tm3-resources@workspace:packages/tm3-resources"],
