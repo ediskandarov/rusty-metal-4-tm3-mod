@@ -15,7 +15,8 @@
     "typecheck": "bun check --no-script -p tsconfig.json",
     "fmt": "bun fmt --no-script apps packages package.json tsconfig.json bunfig.toml tests",
     "fmt:check": "bun fmt --no-script --check apps packages package.json tsconfig.json bunfig.toml tests",
-    "test": "bun test ./packages/ ./tests/"
+    "test": "bun test ./packages/ ./tests/",
+    "build:maps": "bun apps/build-maps/src/main.ts"
   },
   "devDependencies": {
     "@tsconfig/bun": "1.0.11",

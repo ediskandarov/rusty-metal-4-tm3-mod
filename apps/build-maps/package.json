@@ -1,0 +1,10 @@
+{
+  "name": "@rusty-metal-4/build-maps",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@rusty-metal-4/disc": "workspace:*",
+    "@rusty-metal-4/tm3-resources": "workspace:*",
+    "@tm4/resources": "workspace:*"
+  }
+}
