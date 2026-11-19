@@ -6,8 +6,8 @@ import { parseArgs } from "node:util";
 import { mapBehaviors } from "../../apps/build-maps/src/behavior.ts";
 import { maps } from "../../apps/build-maps/src/catalog.ts";
 import { readMr } from "../../external/rusty-metal-4/packages/resources/src/compatibility/mr.ts";
-import { openTm3Car } from "../../external/rusty-metal-4/tests/browser/helpers/tm3.mjs";
 import { prepareFixture, prepareMapFixture } from "./fixture.mjs";
+import { openTm3Car } from "./helpers/tm3.mjs";
 
 const { values } = parseArgs({
   options: {

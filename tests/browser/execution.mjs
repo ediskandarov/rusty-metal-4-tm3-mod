@@ -2,8 +2,8 @@
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-import { openTm3Car } from "../../external/rusty-metal-4/tests/browser/helpers/tm3.mjs";
 import { prepareFixture } from "./fixture.mjs";
+import { openTm3Car } from "./helpers/tm3.mjs";
 
 const { values } = parseArgs({
   options: {
