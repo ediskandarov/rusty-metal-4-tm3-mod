@@ -11,11 +11,11 @@
   "scripts": {
     "build:shared": "bun apps/build-shared/src/main.ts",
     "check": "bun run lint && bun run typecheck && bun run fmt:check",
-    "lint": "bun lint --no-script --max-warnings=0 apps packages",
+    "lint": "bun lint --no-script --max-warnings=0 apps packages tests",
     "typecheck": "bun check --no-script -p tsconfig.json",
-    "fmt": "bun fmt --no-script apps packages package.json tsconfig.json bunfig.toml",
-    "fmt:check": "bun fmt --no-script --check apps packages package.json tsconfig.json bunfig.toml",
-    "test": "bun test ./packages/"
+    "fmt": "bun fmt --no-script apps packages package.json tsconfig.json bunfig.toml tests",
+    "fmt:check": "bun fmt --no-script --check apps packages package.json tsconfig.json bunfig.toml tests",
+    "test": "bun test ./packages/ ./tests/"
   },
   "devDependencies": {
     "@tsconfig/bun": "1.0.11",
