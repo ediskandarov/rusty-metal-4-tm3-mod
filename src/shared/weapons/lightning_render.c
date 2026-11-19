@@ -25,9 +25,12 @@ void Tm3DrawOutlawBolt(const MATRIX* transform, const s16 points[][3], int count
     SetTransMatrix(&camera);
     for (int i = 1; i < count; ++i) {
         const s16 *a = points[i - 1], *b = points[i];
-        SVECTOR vertices[4]
-            = { { a[0], a[1], a[2], 0 }, { a[0] + (i == 1 ? 0 : 32), a[1], a[2], 0 },
-                  { b[0], b[1], b[2], 0 }, { b[0] + 32, b[1], b[2], 0 } };
+        SVECTOR vertices[4] = {
+            { a[0], a[1], a[2], 0 },
+            { a[0] + (i == 1 ? 0 : 32), a[1], a[2], 0 },
+            { b[0], b[1], b[2], 0 },
+            { b[0] + 32, b[1], b[2], 0 },
+        };
         CardDisplayTexturedQuad(
             vertices, 0x808080, &texture, ordering, (Tm4CardPacket**)cursor, 1, limit, 200);
     }

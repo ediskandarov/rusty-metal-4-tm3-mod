@@ -135,7 +135,9 @@ static void vortex_destroy(Vortex* vortex)
     WEB_MODULE("mtm3fx.sym", Tm3SpawnBurstParticles)(&burst.position);
 }
 
-CarNameEntry CarMtm3ckDisplayGroupTranslations[] = { { NULL, -1 } };
+CarNameEntry CarMtm3ckDisplayGroupTranslations[] = {
+    { NULL, -1 },
+};
 s32 CarMtm3ckConstructor(Car* car, void* context)
 {
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)
@@ -177,15 +179,24 @@ s32 CarMtm3ckWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance
         != NULL;
 }
 
-static const SnapshotField vortex_fields[]
-    = { SNAP_POD(Vortex, transform.m), SNAP_POD(Vortex, transform.t), SNAP_POD(Vortex, age),
-          SNAP_POD(Vortex, angle), SNAP_POD(Vortex, speed), SNAP_POD(Vortex, scale),
-          SNAP_POD(Vortex, tint), SNAP_POD(Vortex, pitch), { 0 } };
+static const SnapshotField vortex_fields[] = {
+    SNAP_POD(Vortex, transform.m),
+    SNAP_POD(Vortex, transform.t),
+    SNAP_POD(Vortex, age),
+    SNAP_POD(Vortex, angle),
+    SNAP_POD(Vortex, speed),
+    SNAP_POD(Vortex, scale),
+    SNAP_POD(Vortex, tint),
+    SNAP_POD(Vortex, pitch),
+    { 0 },
+};
 static const SnapshotType types[] = {
     { .name = "tm3ClubVortex", .size = sizeof(Vortex), .fields = vortex_fields, .hash_fields = 1 },
-    { 0 }
+    { 0 },
 };
-static const SnapshotField empty_fields[] = { { 0 } };
+static const SnapshotField empty_fields[] = {
+    { 0 },
+};
 static const SnapshotType car_type = { .name = "tm3ClubKidCar", .fields = empty_fields };
 static const SnapshotType* car_snapshot_type(const Car* car)
 {

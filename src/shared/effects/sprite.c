@@ -99,8 +99,17 @@ int Tm3SpritesRegister(RegistryDirectory* directory)
         (Tm4PackedConstructor)sprite_constructor, NULL, (Tm4ObjectCallback)sprite_process,
         (Tm4ObjectDisplayCallback)sprite_display, NULL);
 }
-const SnapshotField Tm3SpriteFields[] = { SNAP_POD(Tm3Sprite, position.vx),
-    SNAP_POD(Tm3Sprite, position.vy), SNAP_POD(Tm3Sprite, position.vz),
-    SNAP_POD(Tm3Sprite, step.vx), SNAP_POD(Tm3Sprite, step.vy), SNAP_POD(Tm3Sprite, step.vz),
-    SNAP_POD(Tm3Sprite, profile), SNAP_POD(Tm3Sprite, frame), SNAP_POD(Tm3Sprite, elapsed),
-    SNAP_POD(Tm3Sprite, period), SNAP_POD(Tm3Sprite, size), { 0 } };
+const SnapshotField Tm3SpriteFields[] = {
+    SNAP_POD(Tm3Sprite, position.vx),
+    SNAP_POD(Tm3Sprite, position.vy),
+    SNAP_POD(Tm3Sprite, position.vz),
+    SNAP_POD(Tm3Sprite, step.vx),
+    SNAP_POD(Tm3Sprite, step.vy),
+    SNAP_POD(Tm3Sprite, step.vz),
+    SNAP_POD(Tm3Sprite, profile),
+    SNAP_POD(Tm3Sprite, frame),
+    SNAP_POD(Tm3Sprite, elapsed),
+    SNAP_POD(Tm3Sprite, period),
+    SNAP_POD(Tm3Sprite, size),
+    { 0 },
+};

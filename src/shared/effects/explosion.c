@@ -179,5 +179,7 @@ int Tm3ExplosionInteractionsRegister(void)
 {
     return ObjectRegisterInteractionCallback("car", explosion_class, explosion_car);
 }
-const SnapshotField Tm3ExplosionFields[]
-    = { { SnapshotPod, 0, sizeof(Tm3Explosion), NULL }, { 0 } };
+const SnapshotField Tm3ExplosionFields[] = {
+    { SnapshotPod, 0, sizeof(Tm3Explosion), NULL },
+    { 0 },
+};

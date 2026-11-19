@@ -229,12 +229,26 @@ int Tm3SpawnLightning(const Tm3LightningSettings* settings)
         != NULL;
 }
 
-const SnapshotField Tm3BoltFields[] = { SNAP_POD(OutlawBolt, transform.m),
-    SNAP_POD(OutlawBolt, transform.t), SNAP_POD(OutlawBolt, points), SNAP_POD(OutlawBolt, count),
-    SNAP_POD(OutlawBolt, phase), SNAP_POD(OutlawBolt, target_serial), { 0 } };
-const SnapshotField Tm3EmitterFields[] = { SNAP_POD(OutlawEmitter, initial_transform.m),
-    SNAP_POD(OutlawEmitter, initial_transform.t), SNAP_REF(OutlawEmitter, bolts, "tm3OutlawBolt"),
-    SNAP_POD(OutlawEmitter, age), SNAP_POD(OutlawEmitter, angle), SNAP_POD(OutlawEmitter, frame),
-    SNAP_POD(OutlawEmitter, duration), SNAP_POD(OutlawEmitter, flash),
-    SNAP_POD(OutlawEmitter, range), SNAP_POD(OutlawEmitter, damage), SNAP_POD(OutlawEmitter, force),
-    { 0 } };
+const SnapshotField Tm3BoltFields[] = {
+    SNAP_POD(OutlawBolt, transform.m),
+    SNAP_POD(OutlawBolt, transform.t),
+    SNAP_POD(OutlawBolt, points),
+    SNAP_POD(OutlawBolt, count),
+    SNAP_POD(OutlawBolt, phase),
+    SNAP_POD(OutlawBolt, target_serial),
+    { 0 },
+};
+const SnapshotField Tm3EmitterFields[] = {
+    SNAP_POD(OutlawEmitter, initial_transform.m),
+    SNAP_POD(OutlawEmitter, initial_transform.t),
+    SNAP_REF(OutlawEmitter, bolts, "tm3OutlawBolt"),
+    SNAP_POD(OutlawEmitter, age),
+    SNAP_POD(OutlawEmitter, angle),
+    SNAP_POD(OutlawEmitter, frame),
+    SNAP_POD(OutlawEmitter, duration),
+    SNAP_POD(OutlawEmitter, flash),
+    SNAP_POD(OutlawEmitter, range),
+    SNAP_POD(OutlawEmitter, damage),
+    SNAP_POD(OutlawEmitter, force),
+    { 0 },
+};

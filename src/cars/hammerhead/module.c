@@ -15,7 +15,9 @@ typedef struct {
     s32 hit_serials[ArrayCount(GameInfo.cars)];
 } Hammerhead;
 u32 CarMtm3hhSizeof = sizeof(Hammerhead);
-CarNameEntry CarMtm3hhDisplayGroupTranslations[] = { { NULL, -1 } };
+CarNameEntry CarMtm3hhDisplayGroupTranslations[] = {
+    { NULL, -1 },
+};
 s32 CarMtm3hhConstructor(Car* car, void* context)
 {
     memset(context, 0, sizeof(Hammerhead));
@@ -121,8 +123,12 @@ u32 InteractCarMtm3hhWithCar(Car* car, void* context, Car* target)
     return 0;
 }
 
-static const SnapshotField car_fields[] = { SNAP_POD(Hammerhead, ticks), SNAP_POD(Hammerhead, mode),
-    SNAP_POD(Hammerhead, hit_serials), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_POD(Hammerhead, ticks),
+    SNAP_POD(Hammerhead, mode),
+    SNAP_POD(Hammerhead, hit_serials),
+    { 0 },
+};
 static const SnapshotType car_snapshot = {
     .name = "tm3HammerheadCar", .size = sizeof(Hammerhead), .fields = car_fields, .hash_fields = 1
 };

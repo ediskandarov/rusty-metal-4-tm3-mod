@@ -16,8 +16,11 @@ static const Tm3EngineSettings* engine_settings;
 static const CarMount* side_mounts;
 void* CarPrepareProjectileLaunch(Car*, CarWeaponInstance*, s32, MATRIX*, SVECTOR*);
 u32 CarMtm3mnSizeof = sizeof(Tm3MissileOwner);
-CarNameEntry CarMtm3mnDisplayGroupTranslations[]
-    = { { "tm3_part04", 4 }, { "tm3_part05", 5 }, { NULL, -1 } };
+CarNameEntry CarMtm3mnDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { "tm3_part05", 5 },
+    { NULL, -1 },
+};
 s32 CarMtm3mnConstructor(Car* car, void* context)
 {
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
@@ -52,10 +55,12 @@ s32 CarMtm3mnWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance
     Car* target
         = WEB_MODULE("car", CarPrepareProjectileLaunch)(car, weapon, mode, &transform, &inherited);
     static const u32 colors[4] = { 0xd00000, 0x000078, 0xc80000, 0xc80000 };
-    const Tm3MissileDefinition* const profiles[4]
-        = { WEB_MODULE("mtm3fx.sym", Tm3WorldProjectile)(Tm3ProjectileFreeze),
-              &Tm3ProjectileType_MinionCentral, &Tm3ProjectileType_MinionSide,
-              &Tm3ProjectileType_MinionSide };
+    const Tm3MissileDefinition* const profiles[4] = {
+        WEB_MODULE("mtm3fx.sym", Tm3WorldProjectile)(Tm3ProjectileFreeze),
+        &Tm3ProjectileType_MinionCentral,
+        &Tm3ProjectileType_MinionSide,
+        &Tm3ProjectileType_MinionSide,
+    };
     MATRIX center = transform;
     s32 launched = 0;
     for (u32 slot = 0; slot < 4; ++slot) {
@@ -97,11 +102,13 @@ MATRIX* CarMtm3mnDisplaySpecialGroupDisplay(
     CompMatrix(&scratch->car_to_camera, &scratch->group, &scratch->group);
     return &scratch->group;
 }
-static const SnapshotField car_fields[]
-    = { SNAP_WEAK_REF(Tm3MissileOwner, projectiles[0], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[1], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[2], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[3], "tm3Missile"), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[0], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[1], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[2], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[3], "tm3Missile"),
+    { 0 },
+};
 static const SnapshotType car_snapshot = {
     .name = "tm3MinionCar", .size = sizeof(Tm3MissileOwner), .fields = car_fields, .hash_fields = 1
 };

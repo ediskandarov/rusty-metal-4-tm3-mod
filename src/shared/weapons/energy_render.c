@@ -26,9 +26,24 @@ void Tm3DisplayEnergyMissile(MATRIX* transform, Tm3EnergyVisual visual, unsigned
     }
     const u32 tint = visual != Tm3FreezeVisual ? 0x808080 : 0xa00000;
     s16 w = Tm3ReadS16(Tm3WeaponData + 0x4a) / 2, h = Tm3ReadS16(Tm3WeaponData + 0x4c) / 2;
-    SVECTOR head[4] = { { -w, -h }, { w, -h }, { -w, h }, { w, h } };
-    SVECTOR flat[4] = { { -70, 0, -400 }, { 70, 0, -400 }, { -70, 0, 0 }, { 70, 0, 0 } };
-    SVECTOR upright[4] = { { 0, 70, -400 }, { 0, -70, -400 }, { 0, 70, 0 }, { 0, -70, 0 } };
+    SVECTOR head[4] = {
+        { -w, -h },
+        { w, -h },
+        { -w, h },
+        { w, h },
+    };
+    SVECTOR flat[4] = {
+        { -70, 0, -400 },
+        { 70, 0, -400 },
+        { -70, 0, 0 },
+        { 70, 0, 0 },
+    };
+    SVECTOR upright[4] = {
+        { 0, 70, -400 },
+        { 0, -70, -400 },
+        { 0, 70, 0 },
+        { 0, -70, 0 },
+    };
     MATRIX camera, billboard;
     CompMatrix(view, transform, &camera);
     RotationMatrixY(0, &billboard);

@@ -14,12 +14,19 @@
 #include <string.h>
 
 static char beam_class[] = "tm3MapBeam";
-const SnapshotField Tm3MapBeamFields[]
-    = { SNAP_POD(Tm3MapBeam, flight.previous), SNAP_POD(Tm3MapBeam, flight.position),
-          SNAP_POD(Tm3MapBeam, flight.velocity), SNAP_POD(Tm3MapBeam, flight.midpoint),
-          SNAP_POD(Tm3MapBeam, flight.age), SNAP_POD(Tm3MapBeam, origin.vx),
-          SNAP_POD(Tm3MapBeam, origin.vy), SNAP_POD(Tm3MapBeam, origin.vz),
-          SNAP_POD(Tm3MapBeam, pose.m), SNAP_POD(Tm3MapBeam, pose.t), { 0 } };
+const SnapshotField Tm3MapBeamFields[] = {
+    SNAP_POD(Tm3MapBeam, flight.previous),
+    SNAP_POD(Tm3MapBeam, flight.position),
+    SNAP_POD(Tm3MapBeam, flight.velocity),
+    SNAP_POD(Tm3MapBeam, flight.midpoint),
+    SNAP_POD(Tm3MapBeam, flight.age),
+    SNAP_POD(Tm3MapBeam, origin.vx),
+    SNAP_POD(Tm3MapBeam, origin.vy),
+    SNAP_POD(Tm3MapBeam, origin.vz),
+    SNAP_POD(Tm3MapBeam, pose.m),
+    SNAP_POD(Tm3MapBeam, pose.t),
+    { 0 },
+};
 
 static s32 construct(Tm3MapBeam* beam, va_list args)
 {

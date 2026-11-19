@@ -18,7 +18,10 @@ typedef struct {
 static const Tm3EngineSettings* engine_settings;
 void* CarPrepareProjectileLaunch(Car*, CarWeaponInstance*, s32, MATRIX*, SVECTOR*);
 u32 CarMtm3grSizeof = sizeof(GrimmCar);
-CarNameEntry CarMtm3grDisplayGroupTranslations[] = { { "tm3_part04", 4 }, { NULL, -1 } };
+CarNameEntry CarMtm3grDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { NULL, -1 },
+};
 s32 CarMtm3grConstructor(Car* car, void* context)
 {
     memset(context, 0, sizeof(GrimmCar));
@@ -76,12 +79,14 @@ MATRIX* CarMtm3grDisplaySpecialGroupDisplay(
     CompMatrix(&scratch->car_to_camera, &scratch->group, &scratch->group);
     return &scratch->group;
 }
-static const SnapshotField car_fields[]
-    = { SNAP_WEAK_REF(GrimmCar, missiles.projectiles[0], "tm3Missile"),
-          SNAP_WEAK_REF(GrimmCar, missiles.projectiles[1], "tm3Missile"),
-          SNAP_WEAK_REF(GrimmCar, missiles.projectiles[2], "tm3Missile"),
-          SNAP_WEAK_REF(GrimmCar, missiles.projectiles[3], "tm3Missile"),
-          SNAP_POD(GrimmCar, animation), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_WEAK_REF(GrimmCar, missiles.projectiles[0], "tm3Missile"),
+    SNAP_WEAK_REF(GrimmCar, missiles.projectiles[1], "tm3Missile"),
+    SNAP_WEAK_REF(GrimmCar, missiles.projectiles[2], "tm3Missile"),
+    SNAP_WEAK_REF(GrimmCar, missiles.projectiles[3], "tm3Missile"),
+    SNAP_POD(GrimmCar, animation),
+    { 0 },
+};
 static const SnapshotType car_snapshot
     = { .name = "tm3GrimmCar", .size = sizeof(GrimmCar), .fields = car_fields, .hash_fields = 1 };
 static const SnapshotType* car_snapshot_type(const Car* car)

@@ -30,11 +30,20 @@ typedef struct PropResource {
 
 _Static_assert(sizeof(PropFace) == 52 && sizeof(PropResource) == 28, "TM3 type-23 record");
 u32 Tm3PropSizeof = sizeof(Tm3Prop);
-const SnapshotField Tm3PropFields[] = { SNAP_LOCAL(Tm3Prop, resource), SNAP_LOCAL(Tm3Prop, shaders),
-    SNAP_POD(Tm3Prop, transform.m), SNAP_POD(Tm3Prop, transform.t), SNAP_POD(Tm3Prop, velocity.vx),
-    SNAP_POD(Tm3Prop, velocity.vy), SNAP_POD(Tm3Prop, velocity.vz),
-    SNAP_POD(Tm3Prop, burst_offsets), SNAP_POD(Tm3Prop, burst_sizes), SNAP_POD(Tm3Prop, age),
-    SNAP_POD(Tm3Prop, health), { 0 } };
+const SnapshotField Tm3PropFields[] = {
+    SNAP_LOCAL(Tm3Prop, resource),
+    SNAP_LOCAL(Tm3Prop, shaders),
+    SNAP_POD(Tm3Prop, transform.m),
+    SNAP_POD(Tm3Prop, transform.t),
+    SNAP_POD(Tm3Prop, velocity.vx),
+    SNAP_POD(Tm3Prop, velocity.vy),
+    SNAP_POD(Tm3Prop, velocity.vz),
+    SNAP_POD(Tm3Prop, burst_offsets),
+    SNAP_POD(Tm3Prop, burst_sizes),
+    SNAP_POD(Tm3Prop, age),
+    SNAP_POD(Tm3Prop, health),
+    { 0 },
+};
 
 s32 Tm3PropInstanceConstructor(Tm3Prop* prop, RegistryDirectory* instance)
 {
@@ -287,11 +296,17 @@ typedef struct {
 } TransitionResource;
 _Static_assert(sizeof(TransitionResource) == 56, "TM3 transition resource");
 u32 Tm3TransitionSizeof = sizeof(Tm3Transition);
-const SnapshotField Tm3TransitionFields[]
-    = { SNAP_POD(Tm3Transition, transform.m), SNAP_POD(Tm3Transition, transform.t),
-          SNAP_POD(Tm3Transition, group), SNAP_POD(Tm3Transition, age),
-          SNAP_POD(Tm3Transition, angular_speed), SNAP_POD(Tm3Transition, linear_speed),
-          SNAP_POD(Tm3Transition, angle), SNAP_POD(Tm3Transition, moving), { 0 } };
+const SnapshotField Tm3TransitionFields[] = {
+    SNAP_POD(Tm3Transition, transform.m),
+    SNAP_POD(Tm3Transition, transform.t),
+    SNAP_POD(Tm3Transition, group),
+    SNAP_POD(Tm3Transition, age),
+    SNAP_POD(Tm3Transition, angular_speed),
+    SNAP_POD(Tm3Transition, linear_speed),
+    SNAP_POD(Tm3Transition, angle),
+    SNAP_POD(Tm3Transition, moving),
+    { 0 },
+};
 
 static RegistryDirectory* transition_directory(Tm3Transition* t)
 {

@@ -82,10 +82,16 @@ static s32 missile_constructor(Tm3Missile* missile, va_list arguments)
 }
 
 static char rain_drop_class[] = "tm3RainDrop";
-const SnapshotField Tm3RainDropFields[] = { SNAP_POD(Tm3RainDrop, flight.previous),
-    SNAP_POD(Tm3RainDrop, flight.position), SNAP_POD(Tm3RainDrop, flight.velocity),
-    SNAP_POD(Tm3RainDrop, flight.midpoint), SNAP_POD(Tm3RainDrop, flight.age),
-    SNAP_POD(Tm3RainDrop, transform.m), SNAP_POD(Tm3RainDrop, transform.t), { 0 } };
+const SnapshotField Tm3RainDropFields[] = {
+    SNAP_POD(Tm3RainDrop, flight.previous),
+    SNAP_POD(Tm3RainDrop, flight.position),
+    SNAP_POD(Tm3RainDrop, flight.velocity),
+    SNAP_POD(Tm3RainDrop, flight.midpoint),
+    SNAP_POD(Tm3RainDrop, flight.age),
+    SNAP_POD(Tm3RainDrop, transform.m),
+    SNAP_POD(Tm3RainDrop, transform.t),
+    { 0 },
+};
 static s32 drop_constructor(Tm3RainDrop* drop, va_list args)
 {
     const Tm3Missile* parent = va_arg(args, const Tm3Missile*);
@@ -470,16 +476,31 @@ int Tm3MissileValidate(const void* payload)
 static const SnapshotKeyBinding definition_keys
     = { offsetof(Tm3MissileDefinition, name), resolve_definition };
 
-const SnapshotField Tm3MissileFields[] = { SNAP_KEY(Tm3Missile, definition, &definition_keys),
-    SNAP_POD(Tm3Missile, flight.previous), SNAP_POD(Tm3Missile, flight.position),
-    SNAP_POD(Tm3Missile, flight.velocity), SNAP_POD(Tm3Missile, flight.midpoint),
-    SNAP_POD(Tm3Missile, flight.age), SNAP_POD(Tm3Missile, flight.speed),
-    SNAP_POD(Tm3Missile, transform.m), SNAP_POD(Tm3Missile, transform.t),
-    SNAP_POD(Tm3Missile, trail), SNAP_WEAK_REF(Tm3Missile, target, "car"),
-    SNAP_WEAK_REF(Tm3Missile, hit, "car"), SNAP_POD(Tm3Missile, target_serial),
-    SNAP_POD(Tm3Missile, hit_serial), SNAP_POD(Tm3Missile, contact.vx),
-    SNAP_POD(Tm3Missile, contact.vy), SNAP_POD(Tm3Missile, contact.vz),
-    SNAP_POD(Tm3Missile, hit_distance), SNAP_POD(Tm3Missile, linger), SNAP_POD(Tm3Missile, damage),
-    SNAP_POD(Tm3Missile, volley_slot), SNAP_POD(Tm3Missile, surface_kind),
-    SNAP_POD(Tm3Missile, world_hit), SNAP_WEAK_REF(Tm3Missile, world_owner, NULL),
-    SNAP_POD(Tm3Missile, world_serial), { 0 } };
+const SnapshotField Tm3MissileFields[] = {
+    SNAP_KEY(Tm3Missile, definition, &definition_keys),
+    SNAP_POD(Tm3Missile, flight.previous),
+    SNAP_POD(Tm3Missile, flight.position),
+    SNAP_POD(Tm3Missile, flight.velocity),
+    SNAP_POD(Tm3Missile, flight.midpoint),
+    SNAP_POD(Tm3Missile, flight.age),
+    SNAP_POD(Tm3Missile, flight.speed),
+    SNAP_POD(Tm3Missile, transform.m),
+    SNAP_POD(Tm3Missile, transform.t),
+    SNAP_POD(Tm3Missile, trail),
+    SNAP_WEAK_REF(Tm3Missile, target, "car"),
+    SNAP_WEAK_REF(Tm3Missile, hit, "car"),
+    SNAP_POD(Tm3Missile, target_serial),
+    SNAP_POD(Tm3Missile, hit_serial),
+    SNAP_POD(Tm3Missile, contact.vx),
+    SNAP_POD(Tm3Missile, contact.vy),
+    SNAP_POD(Tm3Missile, contact.vz),
+    SNAP_POD(Tm3Missile, hit_distance),
+    SNAP_POD(Tm3Missile, linger),
+    SNAP_POD(Tm3Missile, damage),
+    SNAP_POD(Tm3Missile, volley_slot),
+    SNAP_POD(Tm3Missile, surface_kind),
+    SNAP_POD(Tm3Missile, world_hit),
+    SNAP_WEAK_REF(Tm3Missile, world_owner, NULL),
+    SNAP_POD(Tm3Missile, world_serial),
+    { 0 },
+};

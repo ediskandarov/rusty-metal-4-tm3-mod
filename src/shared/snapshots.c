@@ -10,12 +10,17 @@
 #include "tm3/lightning.h"
 #include "tm3/missile.h"
 
-static const SnapshotField stage_hide_fields[] = { SNAP_POD(Tm3StageHide, group),
-    SNAP_POD(Tm3StageHide, stage), SNAP_POD(Tm3StageHide, tick), { 0 } };
-static const SnapshotType snapshot_types[] = { { .name = "tm3TireMark",
-                                                   .size = sizeof(Tm3TireMark),
-                                                   .fields = Tm3TireMarkFields,
-                                                   .hash_fields = 1 },
+static const SnapshotField stage_hide_fields[] = {
+    SNAP_POD(Tm3StageHide, group),
+    SNAP_POD(Tm3StageHide, stage),
+    SNAP_POD(Tm3StageHide, tick),
+    { 0 },
+};
+static const SnapshotType snapshot_types[] = {
+    { .name = "tm3TireMark",
+        .size = sizeof(Tm3TireMark),
+        .fields = Tm3TireMarkFields,
+        .hash_fields = 1 },
     { .name = "tm3WheelSurface",
         .size = sizeof(Tm3WheelSurface),
         .fields = Tm3WheelSurfaceFields,
@@ -75,7 +80,8 @@ static const SnapshotType snapshot_types[] = { { .name = "tm3TireMark",
         .size = sizeof(Tm3Explosion),
         .fields = Tm3ExplosionFields,
         .hash_fields = 1 },
-    { 0 } };
+    { 0 },
+};
 const SnapshotType* Tm3SnapshotTypes(void)
 {
     return snapshot_types;

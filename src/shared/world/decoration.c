@@ -14,9 +14,13 @@ typedef struct {
 _Static_assert(sizeof(Quad) == 56 && offsetof(Quad, shader) == 52, "TM3 type-11 layout");
 
 u32 Tm3DecorationSizeof = sizeof(Tm3Decoration);
-const SnapshotField Tm3DecorationFields[]
-    = { SNAP_LOCAL(Tm3Decoration, quad), SNAP_LOCAL(Tm3Decoration, texture),
-          SNAP_LOCAL(Tm3Decoration, width), SNAP_LOCAL(Tm3Decoration, height), { 0 } };
+const SnapshotField Tm3DecorationFields[] = {
+    SNAP_LOCAL(Tm3Decoration, quad),
+    SNAP_LOCAL(Tm3Decoration, texture),
+    SNAP_LOCAL(Tm3Decoration, width),
+    SNAP_LOCAL(Tm3Decoration, height),
+    { 0 },
+};
 
 static s32 edge_length(const SVECTOR* a, const SVECTOR* b)
 {

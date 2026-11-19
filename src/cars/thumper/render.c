@@ -10,8 +10,12 @@ void Tm3DrawThumperSegment(MATRIX* transform, int frame, int age, Tm4OrderingTag
     if (!WEB_MODULE("mtm3fx.sym", Tm3WeaponAnimationTexture)(0x118, frame, &texture))
         return;
     s16 half = (100 + 32 * age) / 2;
-    SVECTOR vertices[4]
-        = { { -half, -20, 0, 0 }, { half, -20, 0, 0 }, { -half, 20, 0, 0 }, { half, 20, 0, 0 } };
+    SVECTOR vertices[4] = {
+        { -half, -20, 0, 0 },
+        { half, -20, 0, 0 },
+        { -half, 20, 0, 0 },
+        { half, 20, 0, 0 },
+    };
     MATRIX camera;
     CompMatrix(view, transform, &camera);
     PushMatrix();

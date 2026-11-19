@@ -18,7 +18,10 @@ typedef struct {
 static const Tm3EngineSettings* engine_settings;
 static const CarMount* nozzle;
 u32 CarMtm3fsSizeof = sizeof(FirestarterCar);
-CarNameEntry CarMtm3fsDisplayGroupTranslations[] = { { "tm3_part04", 4 }, { NULL, -1 } };
+CarNameEntry CarMtm3fsDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { NULL, -1 },
+};
 s32 CarMtm3fsConstructor(Car* car, void* context)
 {
     memset(context, 0, sizeof(FirestarterCar));
@@ -73,7 +76,10 @@ MATRIX* CarMtm3fsDisplaySpecialGroupDisplay(
     CompMatrix(&scratch->car_to_camera, &scratch->group, &scratch->group);
     return &scratch->group;
 }
-static const SnapshotField car_fields[] = { SNAP_POD(FirestarterCar, animation), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_POD(FirestarterCar, animation),
+    { 0 },
+};
 static const SnapshotType car_snapshot = { .name = "tm3FirestarterCar",
     .size = sizeof(FirestarterCar),
     .fields = car_fields,

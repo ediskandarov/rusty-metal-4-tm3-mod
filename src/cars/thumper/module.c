@@ -107,7 +107,9 @@ static void emitter_tick(Emitter* emitter)
     int frame = ++emitter->age % 3;
     ObjectCreateWithParticipant(segment_name, OBJECT_HAS_OWNER, h->participant, h->owner, frame);
 }
-CarNameEntry CarMtm3thDisplayGroupTranslations[] = { { NULL, -1 } };
+CarNameEntry CarMtm3thDisplayGroupTranslations[] = {
+    { NULL, -1 },
+};
 s32 CarMtm3thConstructor(Car* car, void* context)
 {
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)
@@ -153,21 +155,37 @@ s32 CarMtm3thWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance
     ("tm3thumper", NULL, car, 1200, 0);
     return emitter != NULL;
 }
-static const SnapshotField segment_fields[] = { SNAP_POD(Segment, transform.m),
-    SNAP_POD(Segment, transform.t), SNAP_POD(Segment, end.vx), SNAP_POD(Segment, end.vy),
-    SNAP_POD(Segment, end.vz), SNAP_POD(Segment, velocity.vx), SNAP_POD(Segment, velocity.vy),
-    SNAP_POD(Segment, velocity.vz), SNAP_POD(Segment, frame), SNAP_POD(Segment, age), { 0 } };
-static const SnapshotField emitter_fields[] = { SNAP_POD(Emitter, age), { 0 } };
-static const SnapshotType types[] = { { .name = "tm3ThumperSegment",
-                                          .size = sizeof(Segment),
-                                          .fields = segment_fields,
-                                          .hash_fields = 1 },
+static const SnapshotField segment_fields[] = {
+    SNAP_POD(Segment, transform.m),
+    SNAP_POD(Segment, transform.t),
+    SNAP_POD(Segment, end.vx),
+    SNAP_POD(Segment, end.vy),
+    SNAP_POD(Segment, end.vz),
+    SNAP_POD(Segment, velocity.vx),
+    SNAP_POD(Segment, velocity.vy),
+    SNAP_POD(Segment, velocity.vz),
+    SNAP_POD(Segment, frame),
+    SNAP_POD(Segment, age),
+    { 0 },
+};
+static const SnapshotField emitter_fields[] = {
+    SNAP_POD(Emitter, age),
+    { 0 },
+};
+static const SnapshotType types[] = {
+    { .name = "tm3ThumperSegment",
+        .size = sizeof(Segment),
+        .fields = segment_fields,
+        .hash_fields = 1 },
     { .name = "tm3ThumperEmitter",
         .size = sizeof(Emitter),
         .fields = emitter_fields,
         .hash_fields = 1 },
-    { 0 } };
-static const SnapshotField empty_fields[] = { { 0 } };
+    { 0 },
+};
+static const SnapshotField empty_fields[] = {
+    { 0 },
+};
 static const SnapshotType car_type = { .name = "tm3ThumperCar", .fields = empty_fields };
 static const SnapshotType* car_snapshot_type(const Car* car)
 {

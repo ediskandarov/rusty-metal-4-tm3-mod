@@ -16,22 +16,36 @@ enum { Splash, Dust, Spray };
 static const u8 material_offset[] = { 18, 11, 25 };
 static const s16 minimum_speed[] = { 1537, 626, 1537 };
 static char tracker_class[] = "tm3WheelSurface", particle_class[] = "tm3SurfaceParticle";
-const SnapshotField Tm3WheelSurfaceFields[]
-    = { SNAP_WEAK_REF(Tm3WheelSurface, active[0], "tm3TireMark"),
-          SNAP_WEAK_REF(Tm3WheelSurface, active[1], "tm3TireMark"),
-          SNAP_WEAK_REF(Tm3WheelSurface, active[2], "tm3TireMark"),
-          SNAP_WEAK_REF(Tm3WheelSurface, active[3], "tm3TireMark"),
-          SNAP_POD(Tm3WheelSurface, finished), SNAP_POD(Tm3WheelSurface, skid_sample),
-          SNAP_POD(Tm3WheelSurface, skid_volume), SNAP_POD(Tm3WheelSurface, delay), { 0 } };
-const SnapshotField Tm3SurfaceParticleFields[]
-    = { SNAP_POD(Tm3SurfaceParticle, position.vx), SNAP_POD(Tm3SurfaceParticle, position.vy),
-          SNAP_POD(Tm3SurfaceParticle, position.vz), SNAP_POD(Tm3SurfaceParticle, velocity.vx),
-          SNAP_POD(Tm3SurfaceParticle, velocity.vy), SNAP_POD(Tm3SurfaceParticle, velocity.vz),
-          SNAP_POD(Tm3SurfaceParticle, width), SNAP_POD(Tm3SurfaceParticle, height),
-          SNAP_POD(Tm3SurfaceParticle, rise), SNAP_POD(Tm3SurfaceParticle, family),
-          SNAP_POD(Tm3SurfaceParticle, material), SNAP_POD(Tm3SurfaceParticle, frame),
-          SNAP_POD(Tm3SurfaceParticle, flip), SNAP_POD(Tm3SurfaceParticle, shade),
-          SNAP_POD(Tm3SurfaceParticle, growing), SNAP_POD(Tm3SurfaceParticle, timer), { 0 } };
+const SnapshotField Tm3WheelSurfaceFields[] = {
+    SNAP_WEAK_REF(Tm3WheelSurface, active[0], "tm3TireMark"),
+    SNAP_WEAK_REF(Tm3WheelSurface, active[1], "tm3TireMark"),
+    SNAP_WEAK_REF(Tm3WheelSurface, active[2], "tm3TireMark"),
+    SNAP_WEAK_REF(Tm3WheelSurface, active[3], "tm3TireMark"),
+    SNAP_POD(Tm3WheelSurface, finished),
+    SNAP_POD(Tm3WheelSurface, skid_sample),
+    SNAP_POD(Tm3WheelSurface, skid_volume),
+    SNAP_POD(Tm3WheelSurface, delay),
+    { 0 },
+};
+const SnapshotField Tm3SurfaceParticleFields[] = {
+    SNAP_POD(Tm3SurfaceParticle, position.vx),
+    SNAP_POD(Tm3SurfaceParticle, position.vy),
+    SNAP_POD(Tm3SurfaceParticle, position.vz),
+    SNAP_POD(Tm3SurfaceParticle, velocity.vx),
+    SNAP_POD(Tm3SurfaceParticle, velocity.vy),
+    SNAP_POD(Tm3SurfaceParticle, velocity.vz),
+    SNAP_POD(Tm3SurfaceParticle, width),
+    SNAP_POD(Tm3SurfaceParticle, height),
+    SNAP_POD(Tm3SurfaceParticle, rise),
+    SNAP_POD(Tm3SurfaceParticle, family),
+    SNAP_POD(Tm3SurfaceParticle, material),
+    SNAP_POD(Tm3SurfaceParticle, frame),
+    SNAP_POD(Tm3SurfaceParticle, flip),
+    SNAP_POD(Tm3SurfaceParticle, shade),
+    SNAP_POD(Tm3SurfaceParticle, growing),
+    SNAP_POD(Tm3SurfaceParticle, timer),
+    { 0 },
+};
 
 static const u8* material(int index)
 {
@@ -196,8 +210,12 @@ static void particle_draw(
     tpage |= shaders->uv.tpage & 0x1e00;
     int half = p->family == Spray ? p->width / 2 : p->width / 32;
     int height = p->family == Spray ? p->height : p->height / 16;
-    SVECTOR quad[] = { { -half, -height, 0, 0 }, { half, -height, 0, 0 }, { -half, 0, 0, 0 },
-        { half, 0, 0, 0 } };
+    SVECTOR quad[] = {
+        { -half, -height, 0, 0 },
+        { half, -height, 0, 0 },
+        { -half, 0, 0, 0 },
+        { half, 0, 0, 0 },
+    };
     PushMatrix();
     SetRotMatrix(view);
     SetTransMatrix(view);

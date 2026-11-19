@@ -220,10 +220,27 @@ int Tm3FlamesRegister(RegistryDirectory* dir)
         && ObjectRegisterInteractionCallback("car", flame_name, flame_car)
         && ObjectRegisterInteractionCallback("car", burn_name, burn_car);
 }
-const SnapshotField emitter_fields[] = { SNAP_POD(Emitter, mount.vx), SNAP_POD(Emitter, mount.vy),
-    SNAP_POD(Emitter, mount.vz), SNAP_POD(Emitter, age), { 0 } };
-const SnapshotField flame_fields[] = { SNAP_POD(Flame, end.vx), SNAP_POD(Flame, end.vy),
-    SNAP_POD(Flame, end.vz), SNAP_POD(Flame, velocity.vx), SNAP_POD(Flame, velocity.vy),
-    SNAP_POD(Flame, velocity.vz), SNAP_POD(Flame, age), SNAP_POD(Flame, size),
-    SNAP_POD(Flame, frame), SNAP_POD(Flame, elapsed), { 0 } };
-const SnapshotField burn_fields[] = { { SnapshotPod, 0, sizeof(Burn), NULL }, { 0 } };
+const SnapshotField emitter_fields[] = {
+    SNAP_POD(Emitter, mount.vx),
+    SNAP_POD(Emitter, mount.vy),
+    SNAP_POD(Emitter, mount.vz),
+    SNAP_POD(Emitter, age),
+    { 0 },
+};
+const SnapshotField flame_fields[] = {
+    SNAP_POD(Flame, end.vx),
+    SNAP_POD(Flame, end.vy),
+    SNAP_POD(Flame, end.vz),
+    SNAP_POD(Flame, velocity.vx),
+    SNAP_POD(Flame, velocity.vy),
+    SNAP_POD(Flame, velocity.vz),
+    SNAP_POD(Flame, age),
+    SNAP_POD(Flame, size),
+    SNAP_POD(Flame, frame),
+    SNAP_POD(Flame, elapsed),
+    { 0 },
+};
+const SnapshotField burn_fields[] = {
+    { SnapshotPod, 0, sizeof(Burn), NULL },
+    { 0 },
+};

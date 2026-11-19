@@ -15,8 +15,11 @@
 #include "tm3/lightning.h"
 static const Tm3EngineSettings* engine_settings;
 u32 CarMtm3olSizeof = sizeof(Tm3BodyAnimation);
-CarNameEntry CarMtm3olDisplayGroupTranslations[]
-    = { { "tm3_part04", 4 }, { "tm3_part05", 5 }, { NULL, -1 } };
+CarNameEntry CarMtm3olDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { "tm3_part05", 5 },
+    { NULL, -1 },
+};
 s32 CarMtm3olConstructor(Car* car, void* context)
 {
     memset(context, 0, sizeof(Tm3BodyAnimation));
@@ -66,8 +69,12 @@ MATRIX* CarMtm3olDisplaySpecialGroupDisplay(
     CompMatrix(&scratch->car_to_camera, &local, &scratch->group);
     return &scratch->group;
 }
-static const SnapshotField car_fields[] = { SNAP_POD(Tm3BodyAnimation, angle),
-    SNAP_POD(Tm3BodyAnimation, frame), SNAP_POD(Tm3BodyAnimation, frame_ticks), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_POD(Tm3BodyAnimation, angle),
+    SNAP_POD(Tm3BodyAnimation, frame),
+    SNAP_POD(Tm3BodyAnimation, frame_ticks),
+    { 0 },
+};
 static const SnapshotType car_snapshot = {
     .name = "tm3OutlawCar", .size = sizeof(Tm3BodyAnimation), .fields = car_fields, .hash_fields = 1
 };

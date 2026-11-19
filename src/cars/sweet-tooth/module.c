@@ -40,8 +40,11 @@ static char head_class[] = "tm3SweetHead";
 static const Tm3EngineSettings* engine_settings;
 
 u32 CarMtm3swSizeof = sizeof(SweetCar);
-CarNameEntry CarMtm3swDisplayGroupTranslations[]
-    = { { "tm3_part04", 4 }, { "tm3_part05", 5 }, { NULL, -1 } };
+CarNameEntry CarMtm3swDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { "tm3_part05", 5 },
+    { NULL, -1 },
+};
 
 static void add_force(Car* car, const VECTOR* force)
 {
@@ -273,15 +276,23 @@ s32 CarMtm3swWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance
     return 0;
 }
 
-static const SnapshotField car_fields[]
-    = { SNAP_POD(SweetCar, animation), SNAP_REF(SweetCar, head, "tm3SweetHead"), { 0 } };
-static const SnapshotField head_fields[]
-    = { SNAP_POD(SweetHead, flight), SNAP_POD(SweetHead, transform.m),
-          SNAP_POD(SweetHead, transform.t), SNAP_WEAK_REF(SweetHead, hit, "car"),
-          SNAP_POD(SweetHead, hit_serial), SNAP_POD(SweetHead, hit_distance), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_POD(SweetCar, animation),
+    SNAP_REF(SweetCar, head, "tm3SweetHead"),
+    { 0 },
+};
+static const SnapshotField head_fields[] = {
+    SNAP_POD(SweetHead, flight),
+    SNAP_POD(SweetHead, transform.m),
+    SNAP_POD(SweetHead, transform.t),
+    SNAP_WEAK_REF(SweetHead, hit, "car"),
+    SNAP_POD(SweetHead, hit_serial),
+    SNAP_POD(SweetHead, hit_distance),
+    { 0 },
+};
 static const SnapshotType snapshot_types[] = {
     { .name = "tm3SweetHead", .size = sizeof(SweetHead), .fields = head_fields, .hash_fields = 1 },
-    { 0 }
+    { 0 },
 };
 static const SnapshotType car_snapshot
     = { .name = "tm3SweetCar", .size = sizeof(SweetCar), .fields = car_fields, .hash_fields = 1 };

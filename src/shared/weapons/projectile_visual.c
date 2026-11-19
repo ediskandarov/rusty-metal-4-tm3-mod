@@ -133,8 +133,11 @@ void Tm3MissileTrailStep(Tm3MissileTrail* trail, const MATRIX* matrix, uint32_t 
     if (!(age % 2))
         trail->head = (trail->head + 1) % trail->count;
     int32_t width = trail->width;
-    SVECTOR offsets[3]
-        = { { -width, 0, -width, 0 }, { width, 0, -width, 0 }, { 0, width, -width, 0 } };
+    SVECTOR offsets[3] = {
+        { -width, 0, -width, 0 },
+        { width, 0, -width, 0 },
+        { 0, width, -width, 0 },
+    };
     for (int edge = 0; edge < 3; ++edge) {
         SVECTOR rotated;
         ApplyMatrixSV((MATRIX*)matrix, &offsets[edge], &rotated);

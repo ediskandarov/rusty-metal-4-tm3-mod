@@ -67,8 +67,11 @@ static void debris_display(
         SetRotMatrix(&camera);
         SetTransMatrix(&camera);
         s32 half = debris->size / 2;
-        SVECTOR vertices[3]
-            = { { -half, -half, 0, 0 }, { half, -half, 0, 0 }, { -half, half, 0, 0 } };
+        SVECTOR vertices[3] = {
+            { -half, -half, 0, 0 },
+            { half, -half, 0, 0 },
+            { -half, half, 0, 0 },
+        };
         int xy[3], perspective, flags;
         s32 depth = RotTransPers3(
             &vertices[0], &vertices[1], &vertices[2], &xy[0], &xy[1], &xy[2], &perspective, &flags);
@@ -103,4 +106,7 @@ int Tm3DebrisRegister(RegistryDirectory* directory)
         (Tm4PackedConstructor)debris_constructor, NULL, (Tm4ObjectCallback)debris_process,
         (Tm4ObjectDisplayCallback)debris_display, NULL);
 }
-const SnapshotField Tm3DebrisFields[] = { { SnapshotPod, 0, sizeof(Tm3Debris), NULL }, { 0 } };
+const SnapshotField Tm3DebrisFields[] = {
+    { SnapshotPod, 0, sizeof(Tm3Debris), NULL },
+    { 0 },
+};

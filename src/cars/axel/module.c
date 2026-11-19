@@ -17,7 +17,10 @@ typedef struct {
 } AxelCar;
 static const Tm3EngineSettings* engine_settings;
 u32 CarMtm3axSizeof = sizeof(AxelCar);
-CarNameEntry CarMtm3axDisplayGroupTranslations[] = { { "tm3_part04", 4 }, { NULL, -1 } };
+CarNameEntry CarMtm3axDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { NULL, -1 },
+};
 s32 CarMtm3axConstructor(Car* car, void* context)
 {
     memset(context, 0, sizeof(AxelCar));
@@ -68,7 +71,10 @@ MATRIX* CarMtm3axDisplaySpecialGroupDisplay(
     CompMatrix(&scratch->car_to_camera, &scratch->group, &scratch->group);
     return &scratch->group;
 }
-static const SnapshotField car_fields[] = { SNAP_POD(AxelCar, animation), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_POD(AxelCar, animation),
+    { 0 },
+};
 static const SnapshotType car_snapshot
     = { .name = "tm3AxelCar", .size = sizeof(AxelCar), .fields = car_fields, .hash_fields = 1 };
 static const SnapshotType* car_snapshot_type(const Car* car)

@@ -14,7 +14,10 @@
 
 void CarTrackDetonationDevice(CarWeaponInstance*, Car*, void*);
 static char remote_class[] = "tm3Remote";
-const SnapshotField Tm3RemoteFields[] = { SNAP_POD(Tm3Remote, slot), { 0 } };
+const SnapshotField Tm3RemoteFields[] = {
+    SNAP_POD(Tm3Remote, slot),
+    { 0 },
+};
 
 static s32 construct(Tm3Remote* mine, va_list args)
 {

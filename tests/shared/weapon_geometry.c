@@ -89,8 +89,17 @@ static void original(const char* path)
     assert(Tm3WeaponGeometryRead(&mesh, bytes, sizeof(bytes)));
     assert(mesh.face_count == 113 && mesh.vertex_count == 164);
     assert(mesh.material_bytes == 1116);
-    const int counts[9][2] = { { 17, 7 }, { 17, 20 }, { 21, 15 }, { 8, 12 }, { 13, 13 }, { 6, 4 },
-        { 45, 17 }, { 5, 4 }, { 32, 21 } };
+    const int counts[9][2] = {
+        { 17, 7 },
+        { 17, 20 },
+        { 21, 15 },
+        { 8, 12 },
+        { 13, 13 },
+        { 6, 4 },
+        { 45, 17 },
+        { 5, 4 },
+        { 32, 21 },
+    };
     uint32_t total = 0;
     for (uint32_t i = 0; i < 9; ++i) {
         Tm3WeaponGroup group;

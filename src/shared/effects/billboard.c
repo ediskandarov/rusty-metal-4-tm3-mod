@@ -32,7 +32,12 @@ void Tm3DrawOrientedBillboard(int angle, int depth_bias, int id, int frame, int 
     SetRotMatrix(&billboard);
     SetTransMatrix(&billboard);
     s32 x = width / 2, y = height / 2;
-    SVECTOR vertices[4] = { { -x, -y, 0, 0 }, { x, -y, 0, 0 }, { -x, y, 0, 0 }, { x, y, 0, 0 } };
+    SVECTOR vertices[4] = {
+        { -x, -y, 0, 0 },
+        { x, -y, 0, 0 },
+        { -x, y, 0, 0 },
+        { x, y, 0, 0 },
+    };
     CardDisplayTexturedQuad(
         vertices, color, &texture, ordering, (Tm4CardPacket**)cursor, 1, limit, depth_bias);
     PopMatrix();

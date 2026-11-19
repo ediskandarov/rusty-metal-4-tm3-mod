@@ -13,7 +13,9 @@ static const Tm3EngineSettings* engine_settings;
 static const CarMount* side_mounts;
 void* CarPrepareProjectileLaunch(Car*, CarWeaponInstance*, s32, MATRIX*, SVECTOR*);
 u32 CarMtm3pvSizeof = sizeof(Tm3MissileOwner);
-CarNameEntry CarMtm3pvDisplayGroupTranslations[] = { { NULL, -1 } };
+CarNameEntry CarMtm3pvDisplayGroupTranslations[] = {
+    { NULL, -1 },
+};
 s32 CarMtm3pvConstructor(Car* car, void* context)
 {
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
@@ -48,8 +50,11 @@ s32 CarMtm3pvWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance
     Car* target
         = WEB_MODULE("car", CarPrepareProjectileLaunch)(car, weapon, mode, &transform, &inherited);
     static const u32 colors[3] = { 0x000078, 0x000078, 0 };
-    static const Tm3MissileDefinition* const profiles[3] = { &Tm3ProjectileType_PrimevalTumbling,
-        &Tm3ProjectileType_PrimevalTumbling, &Tm3ProjectileType_PrimevalSkull };
+    static const Tm3MissileDefinition* const profiles[3] = {
+        &Tm3ProjectileType_PrimevalTumbling,
+        &Tm3ProjectileType_PrimevalTumbling,
+        &Tm3ProjectileType_PrimevalSkull,
+    };
     s32 launched = 0;
     for (u32 slot = 0; slot < 3; ++slot) {
         if (slot) {
@@ -68,11 +73,13 @@ s32 CarMtm3pvWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance
     WEB_MODULE("mtm3fx.sym", Tm3PlayNamedSound)("tm3primeval", NULL, car, 1200, 0);
     return launched;
 }
-static const SnapshotField car_fields[]
-    = { SNAP_WEAK_REF(Tm3MissileOwner, projectiles[0], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[1], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[2], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[3], "tm3Missile"), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[0], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[1], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[2], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[3], "tm3Missile"),
+    { 0 },
+};
 static const SnapshotType car_snapshot = { .name = "tm3PrimevalCar",
     .size = sizeof(Tm3MissileOwner),
     .fields = car_fields,

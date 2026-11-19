@@ -13,10 +13,15 @@
 #include <string.h>
 
 static char mark_class[] = "tm3TireMark";
-const SnapshotField Tm3TireMarkFields[]
-    = { SNAP_POD(Tm3TireMark, edge), SNAP_POD(Tm3TireMark, material),
-          SNAP_POD(Tm3TireMark, first_shade), SNAP_POD(Tm3TireMark, last_shade),
-          SNAP_POD(Tm3TireMark, sequence), SNAP_POD(Tm3TireMark, finished), { 0 } };
+const SnapshotField Tm3TireMarkFields[] = {
+    SNAP_POD(Tm3TireMark, edge),
+    SNAP_POD(Tm3TireMark, material),
+    SNAP_POD(Tm3TireMark, first_shade),
+    SNAP_POD(Tm3TireMark, last_shade),
+    SNAP_POD(Tm3TireMark, sequence),
+    SNAP_POD(Tm3TireMark, finished),
+    { 0 },
+};
 
 static s32 mark_init(Tm3TireMark* mark, va_list args)
 {

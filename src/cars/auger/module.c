@@ -17,7 +17,10 @@
 
 static const Tm3EngineSettings* engine_settings;
 u32 CarMtm3agSizeof = sizeof(AugerDrill);
-CarNameEntry CarMtm3agDisplayGroupTranslations[] = { { "tm3_part04", 4 }, { NULL, -1 } };
+CarNameEntry CarMtm3agDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { NULL, -1 },
+};
 s32 CarMtm3agConstructor(Car* car, void* context)
 {
     memset(context, 0, sizeof(AugerDrill));
@@ -157,10 +160,14 @@ MATRIX* CarMtm3agDisplaySpecialGroupDisplay(
     CompMatrix(&scratch->car_to_camera, &scratch->group, &scratch->group);
     return &scratch->group;
 }
-static const SnapshotField car_fields[]
-    = { SNAP_POD(AugerDrill, angle), SNAP_POD(AugerDrill, active_ticks),
-          SNAP_POD(AugerDrill, angular_speed), SNAP_WEAK_REF(AugerDrill, target, "car"),
-          SNAP_REF(AugerDrill, loop_sound, "soundEmitter"), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_POD(AugerDrill, angle),
+    SNAP_POD(AugerDrill, active_ticks),
+    SNAP_POD(AugerDrill, angular_speed),
+    SNAP_WEAK_REF(AugerDrill, target, "car"),
+    SNAP_REF(AugerDrill, loop_sound, "soundEmitter"),
+    { 0 },
+};
 static const SnapshotType car_snapshot = {
     .name = "tm3AugerDrill", .size = sizeof(AugerDrill), .fields = car_fields, .hash_fields = 1
 };

@@ -15,8 +15,11 @@ static const Tm3EngineSettings* engine_settings;
 static const CarMount* nozzle;
 void* CarPrepareProjectileLaunch(Car*, CarWeaponInstance*, s32, MATRIX*, SVECTOR*);
 u32 CarMtm3dsSizeof = sizeof(Tm3MissileOwner);
-CarNameEntry CarMtm3dsDisplayGroupTranslations[]
-    = { { "tm3_part04", 4 }, { "tm3_part05", 5 }, { NULL, -1 } };
+CarNameEntry CarMtm3dsDisplayGroupTranslations[] = {
+    { "tm3_part04", 4 },
+    { "tm3_part05", 5 },
+    { NULL, -1 },
+};
 s32 CarMtm3dsConstructor(Car* car, void* context)
 {
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
@@ -72,11 +75,13 @@ MATRIX* CarMtm3dsDisplaySpecialGroupDisplay(
     CompMatrix(&scratch->car_to_camera, &scratch->group, &scratch->group);
     return &scratch->group;
 }
-static const SnapshotField car_fields[]
-    = { SNAP_WEAK_REF(Tm3MissileOwner, projectiles[0], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[1], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[2], "tm3Missile"),
-          SNAP_WEAK_REF(Tm3MissileOwner, projectiles[3], "tm3Missile"), { 0 } };
+static const SnapshotField car_fields[] = {
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[0], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[1], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[2], "tm3Missile"),
+    SNAP_WEAK_REF(Tm3MissileOwner, projectiles[3], "tm3Missile"),
+    { 0 },
+};
 static const SnapshotType car_snapshot = { .name = "tm3DarksideCar",
     .size = sizeof(Tm3MissileOwner),
     .fields = car_fields,
