@@ -1,4 +1,5 @@
 #include "tm3/projectile_motion.h"
+#include "projectile_cases.h"
 #include "tm3/projectile_visual.h"
 #include <assert.h>
 #include <stddef.h>
@@ -61,7 +62,7 @@ static void roadkill_guidance(void)
         MATRIX frame
             = { .m = { { 4096, 0, 0 }, { 0, 4096, 0 }, { 0, 0, 4096 } }, .t = { 300, 300, 500 } };
         int16_t velocity[3];
-        Tm3RoadkillGuide(&frame, 5000, 256, i ? targets[i - 1] : NULL, velocity);
+        Tm3BallisticGuide(&frame, 5000, 256, i ? targets[i - 1] : NULL, velocity);
         assert(velocity[0] == 0 && velocity[1] == 0 && velocity[2] == 5000);
         assert(!memcmp(frame.m, poses[i], sizeof(frame.m)));
     }
@@ -87,13 +88,13 @@ static void visual(void)
         Tm3ProjectileOrient(&m, inputs[i]);
         assert(!memcmp(m.m, original[i], sizeof(m.m)));
     }
-    const Tm3ProjectilePresentation* art = Tm3ProjectileArtwork(22);
+    const Tm3ProjectilePresentation* art = test_artwork(22);
     assert(art && art->descriptor == 24 && art->spin && !art->draw_ribbon);
     assert(art->effect_size == 12 && art->flight_pitch == 1080);
-    art = Tm3ProjectileArtwork(23);
+    art = test_artwork(23);
     assert(art && art->descriptor == 8 && !art->spin && !art->draw_ribbon);
     assert(art->effect_size == 128 && art->flight_sound == 0 && art->flight_pitch == 1280);
-    assert(!Tm3ProjectileArtwork(-1) && !Tm3ProjectileArtwork(16));
+    assert(!test_artwork(-1) && !test_artwork(16));
     MATRIX base
         = { .m = { { 4096, 0, 0 }, { 0, 4096, 0 }, { 0, 0, 4096 } }, .t = { 712, -38, 5000 } },
         output;
@@ -107,10 +108,10 @@ static void visual(void)
         assert(!memcmp(output.t, base.t, sizeof(output.t)));
         assert(base.m[0][0] == 4096 && base.m[0][1] == 0);
     }
-    art = Tm3ProjectileArtwork(18);
+    art = test_artwork(18);
     assert(art && art->descriptor == 8 && art->flight_sound == 15 && art->flight_pitch == 1400);
     assert(art->effect_size == 0 && art->spin == TM3_SPIN_NONE && !art->draw_ribbon);
-    art = Tm3ProjectileArtwork(21);
+    art = test_artwork(21);
     assert(art && art->descriptor == 48 && art->spin == TM3_SPIN_YAW && !art->draw_ribbon);
     assert(art->flight_sound == -1 && art->effect_size == 0);
     Tm3ProjectileModelPose(&base, 1, TM3_SPIN_YAW, &output);
@@ -165,7 +166,7 @@ static void visual(void)
     assert(vertices[0].vx == 110 && vertices[2].vy == -190);
     Tm3MissileTrailQuad(&trail, 6, 1, vertices, colors);
     assert(vertices[0].vx == 90);
-    const Tm3ProjectileTuning* tuning = Tm3ProjectileDefaults(15);
+    const Tm3ProjectileTuning* tuning = test_tuning(15);
     int16_t direction[3] = { 0, 0, 4096 }, velocity[3];
     int32_t body[3] = { 900 * 4096, 0, 700 * 4096 };
     assert(Tm3ProjectileLaunchVelocity(tuning, direction, body, 0, velocity) == 5700);
@@ -188,7 +189,7 @@ static void axel_wave_step(void)
     };
     for (unsigned i = 0; i < sizeof(samples) / sizeof(samples[0]); ++i) {
         int16_t step[3];
-        Tm3AxelWaveStep(samples[i].forward, samples[i].velocity_q12, step);
+        Tm3BodyForwardStep(samples[i].forward, samples[i].velocity_q12, step);
         assert(!memcmp(step, samples[i].expected, sizeof(step)));
     }
 }
@@ -208,7 +209,7 @@ int main(void)
         assert(memcmp(actual, normals[i], sizeof(actual)) == 0);
     }
     for (unsigned i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
-        const Tm3ProjectileTuning* tuning = Tm3ProjectileDefaults(cases[i].profile);
+        const Tm3ProjectileTuning* tuning = test_tuning(cases[i].profile);
         Tm3ProjectileFlight flight = { .age = cases[i].age, .speed = tuning->speed };
         memcpy(flight.position, cases[i].position, sizeof(flight.position));
         memcpy(flight.velocity, cases[i].velocity, sizeof(flight.velocity));
@@ -231,11 +232,11 @@ int main(void)
     assert(flight.previous[1] == 32767 && flight.age == 3);
     uint32_t seed = 55;
     draws = 0;
-    Tm3ProjectileGuide(&flight, Tm3ProjectileDefaults(15), NULL, draw, &seed);
+    Tm3ProjectileGuide(&flight, test_tuning(15), NULL, draw, &seed);
     assert(draws == 0 && seed == 55 && flight.velocity[1] == 5000);
 
     const int16_t behind[3] = { 0, 0, -1000 };
-    Tm3ProjectileTuning tuning = *Tm3ProjectileDefaults(15);
+    Tm3ProjectileTuning tuning = *test_tuning(15);
     tuning.initial_deviation = 0;
     flight = (Tm3ProjectileFlight) { .velocity = { 0, 0, 5000 }, .speed = 5000 };
     tuning.omnidirectional_homing = 0;
@@ -249,12 +250,12 @@ int main(void)
 
     const int16_t forward[3] = { 0, 0, 4096 };
     int32_t impulse[3];
-    Tm3ProjectileImpactForce(Tm3ProjectileDefaults(15), forward, impulse);
+    Tm3ProjectileImpactForce(test_tuning(15), forward, impulse);
     assert(impulse[0] == 0 && impulse[1] == 0 && impulse[2] == 4096000);
-    Tm3ProjectileImpactForce(Tm3ProjectileDefaults(20), forward, impulse);
+    Tm3ProjectileImpactForce(test_tuning(20), forward, impulse);
     assert(impulse[0] == 0 && impulse[1] == -409600 && impulse[2] == 4915200);
-    assert(Tm3ProjectileDefaults(20)->impact_size == 512);
-    assert(Tm3ProjectileDefaults(15)->impact_size == 256);
+    assert(test_tuning(20)->impact_size == 512);
+    assert(test_tuning(15)->impact_size == 256);
 
     Tm3ProjectileFlight bounce = { .previous = { 0, 0, 0 }, .position = { 100, 0, 100 } };
     Tm3RicochetReflect(&bounce, (int16_t[3]) { -4096, 0, 0 }, 5000);
@@ -280,7 +281,7 @@ int main(void)
         { 23, { -30095, -25282, 3724 }, { 5310, 1984, -2015 }, 4153166989u },
     };
     for (unsigned i = 0; i < sizeof(trajectories) / sizeof(trajectories[0]); ++i) {
-        const Tm3ProjectileTuning* profile = Tm3ProjectileDefaults(trajectories[i].profile);
+        const Tm3ProjectileTuning* profile = test_tuning(trajectories[i].profile);
         flight = (Tm3ProjectileFlight) { .position = { 30000, -32700, -800 },
             .velocity = { 3000, -1000, 4000 },
             .speed = profile->speed };
@@ -309,7 +310,7 @@ int main(void)
         }
         for (int tick = 0; tick < 45; ++tick) {
             Tm3ProjectileAdvance(&flight);
-            Tm3ProjectileGuide(&flight, Tm3ProjectileDefaults(15), behind, draw, &seed);
+            Tm3ProjectileGuide(&flight, test_tuning(15), behind, draw, &seed);
             ++flight.age;
         }
         if (!repeat)

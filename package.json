@@ -16,7 +16,9 @@
     "fmt": "bun fmt --no-script apps packages package.json tsconfig.json bunfig.toml tests",
     "fmt:check": "bun fmt --no-script --check apps packages package.json tsconfig.json bunfig.toml tests",
     "test": "bun test ./packages/ ./tests/",
-    "build:maps": "bun apps/build-maps/src/main.ts"
+    "build:cars": "bun apps/build-cars/src/main.ts",
+    "build:maps": "bun apps/build-maps/src/main.ts",
+    "test:execution": "bun tests/browser/execution.mjs"
   },
   "devDependencies": {
     "@tsconfig/bun": "1.0.11",

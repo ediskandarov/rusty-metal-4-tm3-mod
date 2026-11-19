@@ -40,7 +40,7 @@ static void display(Tm3Remote* mine, Tm4OrderingTag* ordering, u8** cursor, u8* 
     transform.t[1] = p->vy;
     transform.t[2] = p->vz;
     Tm3DisplayWeaponGroup(
-        mine->slot == 12 ? 0x38 : 0x28, 0, &transform, ordering, cursor, end, view);
+        mine->slot == 12 ? 0x38 : 0x28, 0, -1, &transform, ordering, cursor, end, view);
 }
 
 /* 8002f488 casts eight fans of five rays against damageable world polygons. */

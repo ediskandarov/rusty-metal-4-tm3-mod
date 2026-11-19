@@ -7,7 +7,8 @@ import { readBlocks, splitVab, TextureRectangle } from "@rusty-metal-4/tm3-resou
 import { readMr } from "@tm4/resources/compatibility/mr";
 import { binary, directory, stringEntry, writeMr } from "@tm4/resources/mods/mr-writer";
 
-import { buildSharedModule } from "./native.ts";
+import { createModuleBuilder } from "../../wasm.ts";
+import { sharedModuleSources } from "./sources.ts";
 
 function verified(bytes: Uint8Array<ArrayBuffer>, name: string, expected: string) {
   if (new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !== expected) {
@@ -111,7 +112,13 @@ for (const [id, bytes] of splitVab(sounds).entries()) {
 }
 root.folders.set("soundBanks", banks);
 
-const wasm = await buildSharedModule(values["game-build"], resolve("build/shared"));
+const compile = await createModuleBuilder(values["game-build"]);
+const wasm = await compile({
+  name: "mtm3fx",
+  sources: sharedModuleSources,
+  output: resolve("build/shared"),
+  inverseRoot: true,
+});
 root.files.set("behavior.mod", { ...binary(wasm), type: 6 });
 
 const archive = writeMr(root);

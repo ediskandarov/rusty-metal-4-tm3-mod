@@ -11,7 +11,8 @@ typedef struct {
 
 typedef int32_t (*Tm3ProjectileRandom)(void* context);
 
-void Tm3AxelWaveStep(const int16_t forward[3], const int32_t body_velocity_q12[3], int16_t step[3]);
+void Tm3BodyForwardStep(
+    const int16_t forward[3], const int32_t body_velocity_q12[3], int16_t step[3]);
 uint16_t Tm3ProjectileLaunchVelocity(const Tm3ProjectileTuning* tuning, const int16_t forward[3],
     const int32_t body_velocity_q12[3], int rear, int16_t output[3]);
 /* TM3 game normalization, including its GTE low-halfword input semantics. */

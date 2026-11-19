@@ -26,16 +26,16 @@ typedef struct {
 /* SCUS_942.49: initial ammo and capacity at 8007e0f8, class-8 launch at 80033870.
    Profile colours come from 8008a990/8008a5e8/8008aad8 after weapon initialization. */
 static const WorldWeapon weapons[] = {
-    { "Fire", 2, 10, 0, 0x20ffff },
-    { "Homing", 0, 10, 1, 0xc000c0 },
-    { "Power", 0, 5, 2, 0xf00000 },
-    { "Speed", 0, 30, 6, 0x50 },
-    { "Napalm", 1, 10, 4, 0x2080ff },
+    { "Fire", 2, 10, Tm3ProjectileFire, 0x20ffff },
+    { "Homing", 0, 10, Tm3ProjectileHoming, 0xc000c0 },
+    { "Power", 0, 5, Tm3ProjectilePower, 0xf00000 },
+    { "Speed", 0, 30, Tm3ProjectileSpeed, 0x50 },
+    { "Napalm", 1, 10, Tm3ProjectileNapalm, 0x2080ff },
     { "Proximity", 0, 10, -1, 0 }, /* Each map selects its own special pickup. */
     { "Remote", 0, 5, -1, 0 },
-    { "Ricochet", 0, 3, 5, 0 },
-    { "Rain", 0, 10, 7, 0 },
-    { "Mortar", 0, 10, 8, 0x404040 },
+    { "Ricochet", 0, 3, Tm3ProjectileRicochet, 0 },
+    { "Rain", 0, 10, Tm3ProjectileRain, 0 },
+    { "Mortar", 0, 10, Tm3ProjectileMortar, 0x404040 },
     { "Lightning", 0, 10, -1, 0 },
 };
 
@@ -54,9 +54,9 @@ static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
     SVECTOR inherited;
     Car* target
         = WEB_MODULE("car", CarPrepareProjectileLaunch)(car, weapon, rear, &transform, &inherited);
-    Tm3Missile* missile = Tm3MissileLaunch(
-        NULL, car, target, &transform, rear, entry->profile, 0, entry->trail_color);
-    if (missile && entry->profile == 7) {
+    Tm3Missile* missile = Tm3MissileLaunch(NULL, car, target, &transform, rear,
+        Tm3WorldProjectile(entry->profile), 0, entry->trail_color);
+    if (missile && entry->profile == Tm3ProjectileRain) {
         WEB_MODULE("car", CarTrackDetonationDevice)
         (weapon, car, missile);
         weapon->next_time = 0;
@@ -91,8 +91,8 @@ static void configure(CarWeaponDescriptor* weapon)
     weapon->initial = entry->initial;
     weapon->maximum = entry->maximum;
     /* 8002cfbc and 80033d30: Speed uses 0x334 Q12 seconds, the others 0x1000. */
-    weapon->delay = entry->profile == 6 ? 6 : 30;
-    if (entry->profile == 7)
+    weapon->delay = entry->profile == Tm3ProjectileSpeed ? 6 : 30;
+    if (entry->profile == Tm3ProjectileRain)
         weapon->detonate = 1;
     if (!strcasecmp(entry->name, "Remote")) {
         weapon->detonate = 1;

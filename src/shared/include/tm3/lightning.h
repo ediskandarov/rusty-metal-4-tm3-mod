@@ -10,11 +10,18 @@ typedef struct {
 typedef struct {
     MATRIX initial_transform;
     OutlawBolt* bolts[16];
-    s32 age, angle, frame, range, force, damage;
+    s32 age, angle, frame, range, force, damage, duration, flash;
 } OutlawEmitter;
 
 extern const SnapshotField Tm3BoltFields[], Tm3EmitterFields[];
 int Tm3LightningRegister(RegistryDirectory* directory);
-int Tm3CarLightning(Car* car);
+typedef struct {
+    Car* owner;
+    SVECTOR position;
+    const MATRIX* transform;
+    s32 range, force, damage, duration, flash, pitch;
+    char* sound;
+} Tm3LightningSettings;
+int Tm3SpawnLightning(const Tm3LightningSettings* settings);
 int Tm3MapLightning(unsigned marker);
 #endif

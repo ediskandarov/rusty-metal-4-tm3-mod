@@ -1,83 +1,10 @@
 #include "tm3/projectile_visual.h"
 #include "port/psyz/sdk.h"
 #include "tm3/projectile_motion.h"
+#include "tm3/weapon_tuning.h"
 #include <psyz/gte.h>
 #include <string.h>
 
-const Tm3ProjectilePresentation* Tm3ProjectileArtwork(int32_t profile)
-{
-    /* Callback records at 8007e238; model selectors at 8002f2dc,
-       80031fc4 and 80032bc0; effect sizes from 8008a648. */
-    static const Tm3ProjectilePresentation rocket = { 0, 10, 15, 1200, TM3_SPIN_NONE, 1 };
-    static const Tm3ProjectilePresentation tumbling = { 24, 12, 15, 1080, TM3_SPIN_YAW_PITCH, 0 };
-    static const Tm3ProjectilePresentation skull = { 8, 128, 0, 1280, TM3_SPIN_NONE, 0 };
-    static const Tm3ProjectilePresentation grimm = { 8, 0, 15, 1400, TM3_SPIN_NONE, 0 };
-    static const Tm3ProjectilePresentation flower = { 48, 0, -1, 1280, TM3_SPIN_YAW, 0 };
-    switch (profile) {
-    case 0: {
-        static const Tm3ProjectilePresentation fire = { 0, 10, 15, 1880, TM3_SPIN_NONE, 1 };
-        return &fire;
-    }
-    case 1: {
-        static const Tm3ProjectilePresentation homing = { 0, 10, 15, 1560, TM3_SPIN_NONE, 1 };
-        return &homing;
-    }
-    case 2: {
-        static const Tm3ProjectilePresentation power = { 0, 10, 15, 1180, TM3_SPIN_NONE, 1 };
-        return &power;
-    }
-    case 4: {
-        static const Tm3ProjectilePresentation napalm = { 0, 10, 13, 2000, TM3_SPIN_NONE, 1 };
-        return &napalm;
-    }
-    case 5: {
-        static const Tm3ProjectilePresentation ricochet = { 64, 0, 15, 1180, TM3_SPIN_NONE, 0 };
-        return &ricochet;
-    }
-    case 8: {
-        static const Tm3ProjectilePresentation mortar = { 32, 18, 22, 1180, TM3_SPIN_NONE, 1 };
-        return &mortar;
-    }
-    case 7: {
-        static const Tm3ProjectilePresentation rain = { 0, 8, 15, 880, TM3_SPIN_NONE, 0 };
-        return &rain;
-    }
-    case 6: {
-        static const Tm3ProjectilePresentation speed = { 0, 8, 14, 1280, TM3_SPIN_NONE, 1 };
-        return &speed;
-    }
-    case 3: {
-        static const Tm3ProjectilePresentation freeze = { 0, 10, 7, 1180, TM3_SPIN_NONE, 1 };
-        return &freeze;
-    }
-    case 19: {
-        static const Tm3ProjectilePresentation central = { 0, 10, 15, 1080, TM3_SPIN_NONE, 1 };
-        return &central;
-    }
-    case 20: {
-        static const Tm3ProjectilePresentation side = { 0, 10, 15, 1280, TM3_SPIN_NONE, 1 };
-        return &side;
-    }
-    case 14:
-    case 15:
-        return &rocket;
-    case 17: {
-        static const Tm3ProjectilePresentation roadkill
-            = { 24, 10, 0, 1880, TM3_SPIN_YAW_PITCH, 0 };
-        return &roadkill;
-    }
-    case 18:
-        return &grimm;
-    case 21:
-        return &flower;
-    case 22:
-        return &tumbling;
-    case 23:
-        return &skull;
-    default:
-        return NULL;
-    }
-}
 void Tm3ProjectileModelPose(
     const MATRIX* transform, uint32_t age, Tm3ProjectileSpin spin, MATRIX* output)
 {
@@ -161,7 +88,7 @@ void Tm3ProjectileOrient(MATRIX* matrix, const int16_t velocity[3])
 }
 /* Guidance in 8002ef84 uses only the horizontal target offset. Even without
    a target it bends the forward column down by the global initialized at 8002d20c. */
-void Tm3RoadkillGuide(
+void Tm3BallisticGuide(
     MATRIX* frame, uint16_t speed, uint16_t steering, const int16_t target[3], int16_t velocity[3])
 {
     for (int axis = 0; axis < 3; ++axis)

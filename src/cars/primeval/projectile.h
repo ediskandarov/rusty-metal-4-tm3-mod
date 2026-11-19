@@ -1,0 +1,6 @@
+#ifndef TM3_PRIMEVAL_PROJECTILE_H
+#define TM3_PRIMEVAL_PROJECTILE_H
+#include "tm3/projectile_definition.h"
+extern const Tm3MissileDefinition Tm3ProjectileType_PrimevalTumbling;
+extern const Tm3MissileDefinition Tm3ProjectileType_PrimevalSkull;
+#endif

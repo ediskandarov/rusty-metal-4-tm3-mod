@@ -14,6 +14,7 @@ typedef struct {
     Tm3Missile* projectiles[4];
 } Tm3MissileOwner;
 struct Tm3Missile {
+    const Tm3MissileDefinition* definition;
     Tm3ProjectileFlight flight;
     MATRIX transform;
     Tm3MissileTrail trail;
@@ -21,12 +22,13 @@ struct Tm3Missile {
     void* world_owner;
     s32 target_serial, hit_serial, world_serial;
     SVECTOR contact;
-    u32 hit_distance, linger, profile, world_hit, volley_slot;
+    u32 hit_distance, linger, world_hit, volley_slot;
     u16 damage, surface_kind;
 };
+int Tm3MissileValidate(const void* payload);
 int Tm3MissilesRegister(RegistryDirectory* directory);
 Tm3Missile* Tm3MissileLaunch(Tm3MissileOwner* state, Car* owner, Car* target,
-    const MATRIX* transform, s32 rear, u32 profile, u32 slot, u32 color);
+    const MATRIX* transform, s32 rear, const Tm3MissileDefinition* definition, u32 slot, u32 color);
 extern const SnapshotField Tm3MissileFields[], Tm3RainDropFields[];
 typedef struct {
     Tm3ProjectileFlight flight;

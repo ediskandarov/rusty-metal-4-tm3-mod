@@ -107,22 +107,20 @@ static s32 emitter_init(OutlawEmitter* emitter, va_list args)
 {
     Car* owner = ObjectGetHeader(emitter)->owner;
     memset(emitter, 0, sizeof(*emitter));
-    const SVECTOR* anchor = va_arg(args, const SVECTOR*);
-    unsigned marker = va_arg(args, unsigned);
-    emitter->range = marker == 5 ? 6144 : marker == 3 ? 8192 : 2048;
-    emitter->force = marker == 5 ? -2097152 : -6291456;
-    emitter->damage = marker == 5 ? 20 : 10;
-    if (anchor) {
+    const Tm3LightningSettings* settings = va_arg(args, const Tm3LightningSettings*);
+    emitter->range = settings->range;
+    emitter->force = settings->force;
+    emitter->damage = settings->damage;
+    emitter->duration = settings->duration;
+    emitter->flash = settings->flash;
+    if (settings->transform)
+        emitter->initial_transform = *settings->transform;
+    else
         IdentifyMatrix(&emitter->initial_transform);
-        ObjectSetPosition(emitter, anchor->vx, anchor->vy, anchor->vz);
-        Tm3PlayNamedSound("tm3_s26", NULL, NULL, 0x51c, 0);
+    ObjectSetPosition(emitter, settings->position.vx, settings->position.vy, settings->position.vz);
+    Tm3PlayNamedSound(settings->sound, NULL, owner ? emitter : NULL, settings->pitch, 0);
+    if (emitter->flash)
         Tm3FlashSet(1, 1);
-    } else {
-        emitter->initial_transform = owner->transform;
-        ObjectSetPosition(
-            emitter, owner->transform.t[0], owner->transform.t[1], owner->transform.t[2]);
-        Tm3PlayNamedSound("tm3outlaw", NULL, emitter, 1558, 0);
-    }
     emitter->bolts[0] = create_bolt(emitter, -1);
     return emitter->bolts[0] != NULL;
 }
@@ -179,11 +177,11 @@ static void emitter_process(OutlawEmitter* emitter)
         ObjectSetPosition(emitter, p->vx, p->vy, p->vz);
     }
 
-    if (!owner)
+    if (emitter->flash)
         Tm3FlashStep(1);
     emitter_targets(emitter);
     ++emitter->age;
-    if (emitter->age > 90) {
+    if (emitter->age > emitter->duration) {
         ObjectDestroy(emitter);
         return;
     }
@@ -204,7 +202,7 @@ static void emitter_display(
 }
 static void destroy_emitter(void* emitter)
 {
-    if (!ObjectGetHeader(emitter)->owner)
+    if (((OutlawEmitter*)emitter)->flash)
         Tm3FlashSet(1, 0);
 }
 
@@ -222,31 +220,21 @@ int Tm3LightningRegister(RegistryDirectory* directory)
     return 1;
 }
 
-int Tm3CarLightning(Car* car)
+int Tm3SpawnLightning(const Tm3LightningSettings* settings)
 {
-    return ObjectCreateWithParticipant(emitter_name, OBJECT_DESTROY_WITH_OWNER,
-               ObjectGetHeader(car)->participant, car, (const SVECTOR*)NULL, 0u)
+    return (settings->owner
+                   ? ObjectCreateWithParticipant(emitter_name, OBJECT_DESTROY_WITH_OWNER,
+                         ObjectGetHeader(settings->owner)->participant, settings->owner, settings)
+                   : ObjectCreate(emitter_name, 0, settings))
         != NULL;
 }
 
-/* Original fixed emitters use no car owner, and scan markers until the first zero. */
-int Tm3MapLightning(unsigned marker)
-{
-    const SVECTOR* anchors = RegGetFileDataS("/world/tm3WeaponMarkers");
-    if (!anchors || RegGetFileArraySizeS("/world/tm3WeaponMarkers") != 128)
-        return 0;
-    int created = 0;
-    for (unsigned i = 0; i < 128 && (anchors[i].pad & 255); ++i) {
-        if ((anchors[i].pad & 255) == marker && ObjectCreate(emitter_name, 0, anchors + i, marker))
-            created = 1;
-    }
-    return created;
-}
 const SnapshotField Tm3BoltFields[] = { SNAP_POD(OutlawBolt, transform.m),
     SNAP_POD(OutlawBolt, transform.t), SNAP_POD(OutlawBolt, points), SNAP_POD(OutlawBolt, count),
     SNAP_POD(OutlawBolt, phase), SNAP_POD(OutlawBolt, target_serial), { 0 } };
 const SnapshotField Tm3EmitterFields[] = { SNAP_POD(OutlawEmitter, initial_transform.m),
     SNAP_POD(OutlawEmitter, initial_transform.t), SNAP_REF(OutlawEmitter, bolts, "tm3OutlawBolt"),
     SNAP_POD(OutlawEmitter, age), SNAP_POD(OutlawEmitter, angle), SNAP_POD(OutlawEmitter, frame),
+    SNAP_POD(OutlawEmitter, duration), SNAP_POD(OutlawEmitter, flash),
     SNAP_POD(OutlawEmitter, range), SNAP_POD(OutlawEmitter, damage), SNAP_POD(OutlawEmitter, force),
     { 0 } };

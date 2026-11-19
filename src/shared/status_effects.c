@@ -11,7 +11,9 @@ static s32 launch(Car* car, CarWeaponInstance* weapon, s32 rear)
     SVECTOR inherited;
     Car* target
         = WEB_MODULE("car", CarPrepareProjectileLaunch)(car, weapon, rear, &transform, &inherited);
-    return Tm3MissileLaunch(NULL, car, target, &transform, rear, 3, 0, 0xd00000) != NULL;
+    return Tm3MissileLaunch(NULL, car, target, &transform, rear,
+               Tm3WorldProjectile(Tm3ProjectileFreeze), 0, 0xd00000)
+        != NULL;
 }
 
 /* 800240b0 draws the translucent textured body for its own camera.

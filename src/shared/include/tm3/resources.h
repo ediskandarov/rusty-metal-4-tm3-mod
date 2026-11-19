@@ -45,9 +45,8 @@ void Tm3SpawnSprite(
     s32 profile, const SVECTOR* position, s32 size, const SVECTOR* velocity, s32 fps, s32 sound);
 void Tm3CarTurboProcess(Car* car);
 void Tm3CarEngineProcess(Car* car, const Tm3EngineSettings* settings);
-void Tm3SpawnRoadkillTrail(const int16_t position[3]);
+void Tm3SpawnProjectileSmoke(const int16_t position[3]);
 void Tm3SpawnBurstParticles(const SVECTOR* position);
-void Tm3SpawnAxelWave(Car* car);
 void Tm3SpawnExplosion(const Tm3ExplosionSettings* settings);
 void Tm3DisplayCarGroups(Car* car, s32 association, const MATRIX* local_to_world,
     Tm4OrderingTag* ordering, u8** cursor, u8* limit, MATRIX* view);
@@ -57,20 +56,20 @@ void Tm3DisplayWeaponGeometry(const Tm3WeaponGeometry* mesh, u32 descriptor, u32
     u8** cursor, u8* limit, MATRIX* view);
 void Tm3DrawMapBeam(
     const SVECTOR*, const s16 end[3], const MATRIX*, Tm4OrderingTag*, u8**, u8*, MATRIX*);
-void Tm3DisplayWeaponGroup(u32 descriptor, u32 variant, const MATRIX* local_to_world,
+void Tm3DisplayWeaponGroup(u32 descriptor, u32 variant, s32 tint, const MATRIX* local_to_world,
     Tm4OrderingTag* ordering, u8** cursor, u8* limit, MATRIX* view);
 int Tm3SpriteFrameCount(int id);
 void Tm3DrawOutlawEmitter(int angle, int frame, const SVECTOR* position, Tm4OrderingTag* ordering,
     u8** cursor, u8* limit, MATRIX* view);
 void Tm3DrawOutlawBolt(const MATRIX* transform, const s16 points[][3], int count,
     Tm4OrderingTag* ordering, u8** cursor, u8* limit, MATRIX* view);
-void Tm3DisplayClubVortex(const MATRIX* transform, s32 tint, Tm4OrderingTag* ordering, u8** cursor,
-    u8* limit, MATRIX* view);
-void Tm3DrawThumperSegment(MATRIX* transform, int frame, int age, Tm4OrderingTag* ordering,
-    u8** cursor, u8* limit, MATRIX* view);
 typedef enum { Tm3FreezeVisual, Tm3NapalmVisual, Tm3RainDropVisual } Tm3EnergyVisual;
 void Tm3DisplayEnergyMissile(MATRIX* transform, Tm3EnergyVisual visual, unsigned age,
     Tm4OrderingTag* ordering, u8** cursor, u8* limit, MATRIX* view);
 void Tm3DisplayMissileTrail(
     const Tm3MissileTrail* trail, Tm4OrderingTag* ordering, u8** cursor, u8* limit, MATRIX* view);
+void Tm3DrawBillboard(int id, int frame, int size, u32 color, const SVECTOR* position,
+    Tm4OrderingTag* ordering, u8** cursor, u8* limit, MATRIX* view);
+void Tm3SpawnSmoke(const int16_t position[3], s32 size);
+int Tm3WeaponAnimationTexture(u32 header, int frame, Tm4CardQuadTexture* texture);
 #endif

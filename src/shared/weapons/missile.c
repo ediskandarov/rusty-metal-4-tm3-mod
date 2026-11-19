@@ -21,7 +21,8 @@ typedef struct {
     MATRIX transform;
     SVECTOR velocity;
     Car* target;
-    u32 profile, color, volley_slot;
+    const Tm3MissileDefinition* definition;
+    u32 color, volley_slot;
     u16 speed;
 } MissileSpawn;
 static char missile_class[] = "tm3Missile";
@@ -53,15 +54,13 @@ static s32 random_draw(void* ignored)
 static s32 missile_constructor(Tm3Missile* missile, va_list arguments)
 {
     const MissileSpawn* spawn = va_arg(arguments, const MissileSpawn*);
-    const Tm3ProjectilePresentation* art = Tm3ProjectileArtwork(spawn->profile);
-    if (!art)
-        return 0;
+    const Tm3ProjectilePresentation* art = &spawn->definition->artwork;
     memset(missile, 0, sizeof(*missile));
     missile->transform = spawn->transform;
     missile->flight.speed = spawn->speed;
-    missile->profile = spawn->profile;
+    missile->definition = spawn->definition;
     missile->volley_slot = spawn->volley_slot;
-    missile->damage = Tm3ProjectileDefaults(spawn->profile)->damage;
+    missile->damage = spawn->definition->tuning.damage;
     for (s32 axis = 0; axis < 3; ++axis) {
         missile->flight.position[axis] = missile->flight.previous[axis] = spawn->transform.t[axis];
         missile->flight.midpoint[axis] = spawn->transform.t[axis];
@@ -71,7 +70,7 @@ static s32 missile_constructor(Tm3Missile* missile, va_list arguments)
     missile->target_serial = spawn->target ? ObjectGetHeader(spawn->target)->serial : 0;
     Tm3ProjectileLaunchFrame(&missile->transform);
     Tm3MissileTrailInit(&missile->trail, missile->flight.position, spawn->color, art->effect_size,
-        spawn->profile == 6 ? 4 : 8);
+        spawn->definition->trail_sections);
     ObjectSetPosition(missile, spawn->transform.t[0], spawn->transform.t[1], spawn->transform.t[2]);
     ObjectSetInteractionRadius(missile, 0);
     if (art->flight_sound >= 0) {
@@ -138,7 +137,7 @@ static void drop_display(
         &drop->transform, Tm3RainDropVisual, drop->flight.age, order, cursor, limit, view);
 }
 
-static void rain_split(Tm3Missile* parent)
+void Tm3RainSplit(Tm3Missile* parent)
 {
     WEB_MODULE("car", RemoveObjectFromDetonationDeviceList)
     (parent);
@@ -165,8 +164,8 @@ static void rain_split(Tm3Missile* parent)
 static void missile_destroy(Tm3Missile* missile)
 {
     Car* owner = ObjectGetHeader(missile)->owner;
-    if (missile->profile == 7)
-        rain_split(missile);
+    if (missile->definition->destroy)
+        missile->definition->destroy(missile);
     if (missile->volley_slot && owner && GameIsCarRegistered(owner)) {
         Tm3MissileOwner* car = owner->callback_context;
         u32 slot = missile->volley_slot - 1;
@@ -176,21 +175,21 @@ static void missile_destroy(Tm3Missile* missile)
 }
 static int missile_impact(Tm3Missile* missile, Car* hit)
 {
-    const Tm3ProjectileTuning* tuning = Tm3ProjectileDefaults(missile->profile);
+    const Tm3ProjectileTuning* tuning = &missile->definition->tuning;
     SVECTOR position = { missile->flight.position[0], missile->flight.position[1],
         missile->flight.position[2], 0 };
     if (hit) {
         Car* owner = ObjectGetHeader(missile)->owner;
         s32 survived = WEB_MODULE("car", CarApplyParticipantDamage)(
             hit, owner, ObjectGetHeader(missile)->participant, missile->damage, NULL, NULL);
-        if (survived && missile->profile == 4)
+        if (survived && missile->definition->hit_effect == Tm3HitIgnite)
             Tm3Ignite(hit, NULL, ObjectGetHeader(missile)->participant);
-        else if (survived && missile->profile == 3 && !hit->shield_ticks) {
+        else if (survived && missile->definition->hit_effect == Tm3HitFreeze
+            && !hit->shield_ticks) {
             WEB_MODULE("car", CarFreezeCar)
             (hit);
             hit->freeze_ticks = Tm3FreezeTicks;
-        } else if (survived && missile->profile != 3 && missile->profile != 17
-            && missile->profile != 8) {
+        } else if (survived && missile->definition->apply_impulse) {
             int16_t forward[3] = { missile->transform.m[0][2], missile->transform.m[1][2],
                 missile->transform.m[2][2] };
             int32_t force[3];
@@ -198,54 +197,10 @@ static int missile_impact(Tm3Missile* missile, Car* hit)
             add_force(hit, force);
         }
     }
-    if (missile->profile == 8 || (missile->profile == 4 && !hit)) {
-        /* 8003132c (Mortar) and 80030df4 (Napalm) choose distinct splash profiles. */
-        const int mortar = missile->profile == 8;
-        Tm3ExplosionSettings splash = { .position = position,
-            .material = Tm3Untextured,
-            .color = 0x202020,
-            .height = 32,
-            .inner_ratio_q12 = 1024,
-            .speed = mortar ? 128 : 384,
-            .duration = mortar ? 30 : 15,
-            .radial_force = mortar ? 764 : 1024,
-            .lift = mortar ? 640 : 700,
-            .owner = ObjectGetHeader(missile)->owner,
-            .source = ObjectGetHeader(missile)->participant,
-            .affects_owner = 1,
-            .once_per_car = 1 };
-        if (mortar) {
-            position.vy -= 200;
-            Tm3SpawnSprite(0, &position, 800, NULL, 12, -1);
-        } else {
-            splash.position.vy -= 96;
-            const SVECTOR still = { 0 };
-            Tm3GroundImpact(&position, ObjectGetHeader(missile)->participant, 160, 3, 768,
-                missile->surface_kind);
-            Tm3SpawnSurfaceSprite(1, &position, 768, &still, 12, -1, missile->surface_kind);
-        }
-        Tm3SpawnExplosion(&splash);
-    } else if (missile->profile == 17) {
-        /* 80032104 uses two sprites at the contact and a lower class-9 origin. */
-        Tm3SpawnSprite(0, &position, 1024, NULL, 12, -1);
-        Tm3SpawnSprite(1, &position, 1024, NULL, 12, -1);
-        position.vy -= 32;
-        Tm3ExplosionSettings burst = { .position = position,
-            .color = 0x30,
-            .height = 80,
-            .inner_ratio_q12 = 1024,
-            .speed = 384,
-            .duration = 10,
-            .radial_force = 760,
-            .lift = 700,
-            .owner = ObjectGetHeader(missile)->owner,
-            .source = ObjectGetHeader(missile)->participant,
-            .affects_owner = 1,
-            .once_per_car = 1 };
-        Tm3SpawnExplosion(&burst);
-    } else {
+    if (missile->definition->impact)
+        missile->definition->impact(missile, hit != NULL);
+    else
         Tm3SpawnSprite(0, &position, tuning->impact_size, NULL, 12, -1);
-    }
     if (tuning->effect != 1)
         return 0;
     missile->linger = 30;
@@ -287,7 +242,7 @@ static int ricochet_step(Tm3Missile* missile)
     RotMatrixX((((speed - 1024) / 1024) * 64) | 32, &missile->transform);
     ObjectSetPosition(
         missile, missile->transform.t[0], missile->transform.t[1], missile->transform.t[2]);
-    ObjectSetInteractionRadius(missile, Tm3ProjectileDefaults(5)->interaction_radius);
+    ObjectSetInteractionRadius(missile, missile->definition->tuning.interaction_radius);
     ++f->age;
     if (ObjectOffGrid(missile))
         return missile_impact(missile, NULL);
@@ -298,8 +253,8 @@ static int missile_step(Tm3Missile* missile)
     if (missile->linger) {
         Tm3MissileTrailStep(&missile->trail, &missile->transform, missile->flight.age);
         ++missile->flight.age;
-        if (missile->profile == 14)
-            missile->damage = Tm3WarthogDamage(missile->flight.age);
+        if (missile->definition->damage_at_age)
+            missile->damage = missile->definition->damage_at_age(missile->flight.age);
         return --missile->linger != 0;
     }
     Car* hit = registered(missile->hit, missile->hit_serial);
@@ -327,11 +282,11 @@ static int missile_step(Tm3Missile* missile)
         return missile_impact(missile, hit);
     }
     missile->hit = NULL;
-    if (missile->profile == 5)
+    if (missile->definition->motion == Tm3RicochetFlight)
         return ricochet_step(missile);
-    const Tm3ProjectileTuning* tuning = Tm3ProjectileDefaults(missile->profile);
+    const Tm3ProjectileTuning* tuning = &missile->definition->tuning;
     Tm3ProjectileAdvance(&missile->flight);
-    if (missile->profile != 15) {
+    if (missile->definition->collide_world) {
         SVECTOR start = { missile->flight.previous[0], missile->flight.previous[1],
             missile->flight.previous[2], 0 };
         SVECTOR end = { missile->flight.position[0], missile->flight.position[1],
@@ -357,10 +312,10 @@ static int missile_step(Tm3Missile* missile)
     SVECTOR target_position;
     if (target)
         ObjectCopyPosition(&target_position, target);
-    if (missile->profile == 4 || missile->profile == 8 || missile->profile == 17) {
-        Tm3RoadkillGuide(&missile->transform, missile->flight.speed, tuning->steering,
+    if (missile->definition->motion == Tm3BallisticFlight) {
+        Tm3BallisticGuide(&missile->transform, missile->flight.speed, tuning->steering,
             target ? &target_position.vx : NULL, missile->flight.velocity);
-    } else if (missile->profile == 7) {
+    } else if (missile->definition->motion == Tm3RainFlight) {
         int32_t velocity[3],
             horizontal[3] = { missile->transform.m[0][2], 0, missile->transform.m[2][2] };
         int16_t current[3], heading[3];
@@ -386,8 +341,7 @@ static int missile_step(Tm3Missile* missile)
             missile->flight.position[2], 0 };
         SVECTOR velocity = { 0 };
         Tm3ProjectileSmokeVelocity(missile->flight.velocity, &velocity.vx);
-        Tm3SpawnSprite(
-            2, &position, Tm3ProjectileArtwork(missile->profile)->effect_size, &velocity, 12, -2);
+        Tm3SpawnSprite(2, &position, missile->definition->artwork.effect_size, &velocity, 12, -2);
     }
     s32 dx = missile->flight.position[0] - missile->flight.previous[0];
     s32 dy = missile->flight.position[1] - missile->flight.previous[1];
@@ -396,19 +350,18 @@ static int missile_step(Tm3Missile* missile)
     ObjectSetPosition(missile, missile->flight.midpoint[0], missile->flight.midpoint[1],
         missile->flight.midpoint[2]);
     ObjectSetInteractionRadius(missile, SquareRoot0(square) / 2);
-    /* Spectre (800322e8) ignores walls; Warthog retains the pending world hit. */
     if (++missile->flight.age > Tm3WeaponTimeTicks(tuning->lifetime_q12)
         && !missile_impact(missile, NULL))
         return 0;
-    if (missile->profile == 14)
-        missile->damage = Tm3WarthogDamage(missile->flight.age);
+    if (missile->definition->damage_at_age)
+        missile->damage = missile->definition->damage_at_age(missile->flight.age);
     return 1;
 }
 static void missile_process(Tm3Missile* missile)
 {
     int live = missile_step(missile);
-    if (missile->profile == 4 || missile->profile == 8 || missile->profile == 17)
-        Tm3SpawnRoadkillTrail(missile->flight.position);
+    if (missile->definition->smoke_trail)
+        Tm3SpawnProjectileSmoke(missile->flight.position);
     if (!live)
         ObjectDestroy(missile);
 }
@@ -437,19 +390,19 @@ static void missile_car(void* first, void* second)
 static void missile_display(
     Tm3Missile* missile, Tm4OrderingTag* ordering, u8** cursor, u8* limit, MATRIX* view)
 {
-    const Tm3ProjectilePresentation* art = Tm3ProjectileArtwork(missile->profile);
+    const Tm3ProjectilePresentation* art = &missile->definition->artwork;
     if (art->draw_ribbon)
         Tm3DisplayMissileTrail(&missile->trail, ordering, cursor, limit, view);
     if (!missile->linger) {
         MATRIX transform;
-        if (missile->profile == 3 || missile->profile == 4) {
+        if (missile->definition->visual != Tm3ModelVisual) {
             Tm3DisplayEnergyMissile(&missile->transform,
-                missile->profile == 4 ? Tm3NapalmVisual : Tm3FreezeVisual, missile->flight.age,
-                ordering, cursor, limit, view);
+                missile->definition->visual == Tm3BurningVisual ? Tm3NapalmVisual : Tm3FreezeVisual,
+                missile->flight.age, ordering, cursor, limit, view);
             return;
         }
         Tm3ProjectileModelPose(&missile->transform, missile->flight.age, art->spin, &transform);
-        Tm3DisplayWeaponGroup(art->descriptor, 0, &transform, ordering, cursor, limit, view);
+        Tm3DisplayWeaponGroup(art->descriptor, 0, -1, &transform, ordering, cursor, limit, view);
     }
 }
 int Tm3MissilesRegister(RegistryDirectory* directory)
@@ -469,20 +422,20 @@ int Tm3MissilesRegister(RegistryDirectory* directory)
                     missile_class, "tm3Prop", Tm3MissileHitsProp)));
 }
 Tm3Missile* Tm3MissileLaunch(Tm3MissileOwner* state, Car* owner, Car* target,
-    const MATRIX* transform, s32 rear, u32 profile, u32 slot, u32 color)
+    const MATRIX* transform, s32 rear, const Tm3MissileDefinition* definition, u32 slot, u32 color)
 {
-    if (slot >= 4 || !Tm3ProjectileArtwork(profile))
+    if (slot >= 4 || !definition)
         return NULL;
     MissileSpawn spawn = { .transform = *transform,
         .target = target,
-        .profile = profile,
+        .definition = definition,
         .color = color,
         .volley_slot = state ? slot + 1 : 0 };
 
     const CarParticle* body = owner->particle_end - 1;
     int32_t body_velocity[3]
         = { body->velocity_q12.vx, body->velocity_q12.vy, body->velocity_q12.vz };
-    const Tm3ProjectileTuning* tuning = Tm3ProjectileDefaults(profile);
+    const Tm3ProjectileTuning* tuning = &definition->tuning;
     Tm3ProjectileOffsetLaunch(transform, tuning->launch_offset, &spawn.transform);
     int16_t forward[3]
         = { spawn.transform.m[0][2], spawn.transform.m[1][2], spawn.transform.m[2][2] };
@@ -500,16 +453,33 @@ Tm3Missile* Tm3MissileLaunch(Tm3MissileOwner* state, Car* owner, Car* target,
     }
     return missile;
 }
-const SnapshotField Tm3MissileFields[] = { SNAP_POD(Tm3Missile, flight.previous),
-    SNAP_POD(Tm3Missile, flight.position), SNAP_POD(Tm3Missile, flight.velocity),
-    SNAP_POD(Tm3Missile, flight.midpoint), SNAP_POD(Tm3Missile, flight.age),
-    SNAP_POD(Tm3Missile, flight.speed), SNAP_POD(Tm3Missile, transform.m),
-    SNAP_POD(Tm3Missile, transform.t), SNAP_POD(Tm3Missile, trail),
-    SNAP_WEAK_REF(Tm3Missile, target, "car"), SNAP_WEAK_REF(Tm3Missile, hit, "car"),
-    SNAP_POD(Tm3Missile, target_serial), SNAP_POD(Tm3Missile, hit_serial),
-    SNAP_POD(Tm3Missile, contact.vx), SNAP_POD(Tm3Missile, contact.vy),
-    SNAP_POD(Tm3Missile, contact.vz), SNAP_POD(Tm3Missile, hit_distance),
-    SNAP_POD(Tm3Missile, linger), SNAP_POD(Tm3Missile, profile), SNAP_POD(Tm3Missile, damage),
+static void* resolve_definition(char* name)
+{
+    if (strncmp(name, "Tm3ProjectileType_", 18))
+        return NULL;
+    const Tm3MissileDefinition* definition = (const void*)OSSymbolGetAddress(name);
+    return definition && definition->name && !strcmp(definition->name, name) ? (void*)definition
+                                                                             : NULL;
+}
+int Tm3MissileValidate(const void* payload)
+{
+    const Tm3Missile* missile = payload;
+    return missile->definition && missile->definition->name
+        && resolve_definition((char*)missile->definition->name) == missile->definition;
+}
+static const SnapshotKeyBinding definition_keys
+    = { offsetof(Tm3MissileDefinition, name), resolve_definition };
+
+const SnapshotField Tm3MissileFields[] = { SNAP_KEY(Tm3Missile, definition, &definition_keys),
+    SNAP_POD(Tm3Missile, flight.previous), SNAP_POD(Tm3Missile, flight.position),
+    SNAP_POD(Tm3Missile, flight.velocity), SNAP_POD(Tm3Missile, flight.midpoint),
+    SNAP_POD(Tm3Missile, flight.age), SNAP_POD(Tm3Missile, flight.speed),
+    SNAP_POD(Tm3Missile, transform.m), SNAP_POD(Tm3Missile, transform.t),
+    SNAP_POD(Tm3Missile, trail), SNAP_WEAK_REF(Tm3Missile, target, "car"),
+    SNAP_WEAK_REF(Tm3Missile, hit, "car"), SNAP_POD(Tm3Missile, target_serial),
+    SNAP_POD(Tm3Missile, hit_serial), SNAP_POD(Tm3Missile, contact.vx),
+    SNAP_POD(Tm3Missile, contact.vy), SNAP_POD(Tm3Missile, contact.vz),
+    SNAP_POD(Tm3Missile, hit_distance), SNAP_POD(Tm3Missile, linger), SNAP_POD(Tm3Missile, damage),
     SNAP_POD(Tm3Missile, volley_slot), SNAP_POD(Tm3Missile, surface_kind),
     SNAP_POD(Tm3Missile, world_hit), SNAP_WEAK_REF(Tm3Missile, world_owner, NULL),
     SNAP_POD(Tm3Missile, world_serial), { 0 } };

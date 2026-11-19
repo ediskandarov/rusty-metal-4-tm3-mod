@@ -175,7 +175,8 @@ static int32_t forward_speed(const int16_t forward[3], const int32_t velocity_q1
 
 /* 80032d80 projects body motion onto the car's forward direction before taking
    the fixed 136/4096 step. Both GTE scalings narrow to signed halfwords. */
-void Tm3AxelWaveStep(const int16_t forward[3], const int32_t body_velocity_q12[3], int16_t step[3])
+void Tm3BodyForwardStep(
+    const int16_t forward[3], const int32_t body_velocity_q12[3], int16_t step[3])
 {
     int32_t scaled[3];
     int16_t velocity[3];

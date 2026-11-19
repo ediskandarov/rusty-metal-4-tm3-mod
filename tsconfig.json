@@ -4,5 +4,5 @@
     "lib": ["ESNext", "DOM"],
     "allowJs": false
   },
-  "include": ["apps/*/src/**/*.ts", "packages/*/src/**/*.ts", "tests/**/*.ts"]
+  "include": ["apps/**/*.ts", "packages/*/src/**/*.ts", "tests/**/*.ts"]
 }

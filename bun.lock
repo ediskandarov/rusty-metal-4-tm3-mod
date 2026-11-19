@@ -9,6 +9,14 @@
         "@types/bun": "1.4.4",
       },
     },
+    "apps/build-cars": {
+      "name": "@rusty-metal-4/build-cars",
+      "dependencies": {
+        "@rusty-metal-4/disc": "workspace:*",
+        "@rusty-metal-4/tm3-resources": "workspace:*",
+        "@tm4/resources": "workspace:*",
+      },
+    },
     "apps/build-maps": {
       "name": "@rusty-metal-4/build-maps",
       "dependencies": {
@@ -51,6 +59,8 @@
     },
   },
   "packages": {
+    "@rusty-metal-4/build-cars": ["@rusty-metal-4/build-cars@workspace:apps/build-cars"],
+
     "@rusty-metal-4/build-maps": ["@rusty-metal-4/build-maps@workspace:apps/build-maps"],
 
     "@rusty-metal-4/build-shared": ["@rusty-metal-4/build-shared@workspace:apps/build-shared"],
