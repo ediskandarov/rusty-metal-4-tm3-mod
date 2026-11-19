@@ -1,0 +1,9 @@
+{
+  "name": "@rusty-metal-4/disc",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@tm4/resources": "workspace:*"
+  }
+}

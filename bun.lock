@@ -21,6 +21,12 @@
         "@tm4/dev-server-client": "workspace:*",
       },
     },
+    "packages/disc": {
+      "name": "@rusty-metal-4/disc",
+      "dependencies": {
+        "@tm4/resources": "workspace:*",
+      },
+    },
     "packages/tm3-resources": {
       "name": "@rusty-metal-4/tm3-resources",
       "dependencies": {
@@ -29,6 +35,8 @@
     },
   },
   "packages": {
+    "@rusty-metal-4/disc": ["@rusty-metal-4/disc@workspace:packages/disc"],
+
     "@rusty-metal-4/tm3-resources": ["@rusty-metal-4/tm3-resources@workspace:packages/tm3-resources"],
 
     "@tm4/dev-server-client": ["@tm4/dev-server-client@workspace:external/rusty-metal-4/packages/dev-server-client"],
