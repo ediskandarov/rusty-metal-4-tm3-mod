@@ -1,11 +1,13 @@
 import { mkdir } from "node:fs/promises";
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 import { openDataDisc } from "@rusty-metal-4/disc";
 import { readBlocks, splitVab, TextureRectangle } from "@rusty-metal-4/tm3-resources";
 import { readMr } from "@tm4/resources/compatibility/mr";
 import { binary, directory, stringEntry, writeMr } from "@tm4/resources/mods/mr-writer";
+
+import { buildSharedModule } from "./native.ts";
 
 function verified(bytes: Uint8Array<ArrayBuffer>, name: string, expected: string) {
   if (new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !== expected) {
@@ -68,10 +70,13 @@ const { values } = parseArgs({
     "tm3-disc": { type: "string" },
     "tm4-disc": { type: "string" },
     output: { type: "string", default: "build/TM3.MR" },
+    "game-build": { type: "string", default: "external/rusty-metal-4/build/diagnostic" },
   },
 });
 if (!values["tm3-disc"] || !values["tm4-disc"])
-  throw Error("Usage: bun run build:shared --tm3-disc DIR --tm4-disc DIR [--output FILE]");
+  throw Error(
+    "Usage: bun run build:shared --tm3-disc DIR --tm4-disc DIR [--output FILE] [--game-build DIR]",
+  );
 
 const tm3 = await openDataDisc(values["tm3-disc"]);
 const tm4 = await openDataDisc(values["tm4-disc"]);
@@ -106,12 +111,8 @@ for (const [id, bytes] of splitVab(sounds).entries()) {
 }
 root.folders.set("soundBanks", banks);
 
-// Registry stub for the shared behavior module shipped alongside the resource pack.
-const symbol = new TextEncoder().encode("mtm3fx.sym*\0");
-const module = new Uint8Array(Math.ceil((20 + symbol.length) / 4) * 4);
-new DataView(module.buffer).setUint32(16, 20, true);
-module.set(symbol, 20);
-root.files.set("behavior.mod", { ...binary(module), type: 6 });
+const wasm = await buildSharedModule(values["game-build"], resolve("build/shared"));
+root.files.set("behavior.mod", { ...binary(wasm), type: 6 });
 
 const archive = writeMr(root);
 await mkdir(dirname(values.output), { recursive: true });
