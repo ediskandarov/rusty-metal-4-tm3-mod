@@ -11,7 +11,6 @@ export interface CarDefinition {
   regeneration: number;
   animate: boolean;
   sideMounts: boolean;
-  prepareInput: boolean;
   testDefine: string;
   soundSha256?: string;
 }
@@ -30,7 +29,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 45,
     animate: true,
     sideMounts: false,
-    prepareInput: true,
     testDefine: "TM3_AUGER_TEST",
   },
   {
@@ -46,7 +44,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 60,
     animate: true,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_AXEL_TEST",
   },
   {
@@ -62,7 +59,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 50,
     animate: false,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_CLUBKID_TEST",
   },
   {
@@ -78,7 +74,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 60,
     animate: true,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_DARKSIDE_TEST",
   },
   {
@@ -94,7 +89,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 45,
     animate: true,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_FIRESTARTER_TEST",
   },
   {
@@ -110,7 +104,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 30,
     animate: false,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_FLOWER_TEST",
   },
   {
@@ -126,7 +119,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 60,
     animate: true,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_GRIMM_TEST",
   },
   {
@@ -142,7 +134,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 35,
     animate: false,
     sideMounts: false,
-    prepareInput: true,
     testDefine: "TM3_HAMMERHEAD_TEST",
   },
   {
@@ -158,7 +149,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 30,
     animate: true,
     sideMounts: true,
-    prepareInput: false,
     testDefine: "TM3_MINION_TEST",
   },
   {
@@ -174,7 +164,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 45,
     animate: true,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_OUTLAW_TEST",
   },
   {
@@ -190,7 +179,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 60,
     animate: false,
     sideMounts: true,
-    prepareInput: false,
     testDefine: "TM3_PRIMEVAL_TEST",
   },
   {
@@ -206,7 +194,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 45,
     animate: false,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_ROADKILL_TEST",
   },
   {
@@ -222,7 +209,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 45,
     animate: false,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_SPECTRE_TEST",
   },
   {
@@ -238,7 +224,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 60,
     animate: true,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_SWEET_TEST",
     soundSha256: "edf29a0b42254a75b53873b7b77537b105a29d6eb4b5f2e7f7ebd80bc0a0a559",
   },
@@ -255,7 +240,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 60,
     animate: false,
     sideMounts: false,
-    prepareInput: false,
     testDefine: "TM3_THUMPER_TEST",
   },
   {
@@ -271,7 +255,6 @@ export const cars: readonly CarDefinition[] = [
     regeneration: 60,
     animate: false,
     sideMounts: true,
-    prepareInput: false,
     testDefine: "TM3_WARTHOG_TEST",
   },
 ];

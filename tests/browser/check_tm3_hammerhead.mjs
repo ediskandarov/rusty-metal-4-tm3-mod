@@ -73,7 +73,7 @@ try {
     const before = sample();
     await steps(1, 65);
     const launch = sample();
-    if (launch[0] !== 60 || launch[2] !== before[2] - 1)
+    if (launch[0] !== 59 || launch[2] !== before[2] - 1)
       throw Error("Launch failed " + JSON.stringify({ before, launch }));
     if (!Module._WebNetCaptureLocalCheckpoint() || !Module._WebNetCapturePortableCheckpoint())
       throw Error(
@@ -83,11 +83,22 @@ try {
       savedTick = tick;
     async function drive() {
       const trace = [];
+      let fireAmmo;
       for (let i = 1; i <= 61; ++i) {
-        await steps(1, i % 2 ? 64 : 65);
+        if (i === 1) {
+          fireAmmo = Module._WebTestEquipWeapon(1);
+          if (!fireAmmo) throw Error("Cannot equip Fire during the special");
+        }
+        if (i === 36) call("test_select", Module._WebTestReplayCarAddress());
+        await steps(1, 64 | (i === 2 || i === 36 ? 1 : 0));
+        if (i === 2) {
+          const ammo = call("test_read", Module._WebTestReplayCarAddress(), 6);
+          if (ammo !== fireAmmo - 1 || sample()[0] <= 0)
+            throw Error("Fire was blocked during the active special");
+        }
         const state = sample();
         const hp = Module._WebTestWeaponTargetHealth();
-        if (state[0] !== Math.max(0, 60 - i) || state[2] !== launch[2])
+        if (state[0] !== Math.max(0, launch[0] - i) || state[2] !== launch[2])
           throw Error("Timer or firing on tick " + i + ": " + state);
         trace.push([state[3], hp]);
       }
@@ -130,6 +141,15 @@ try {
     if (!Module._WebNetBeginPortableReplay()) throw Error("Mid-contact restore failed");
     Module._WebNetEndReplay();
     equal(contact, sample(), "Previously hit target");
+    // Start the next ram on the first tick after expiry, before an idle process clears hits.
+    await steps(contact[0], 64);
+    Module._WebTestPlaceWeaponTarget(4000);
+    call("test_select", Module._WebTestReplayCarAddress());
+    const nextAmmo = sample()[2];
+    await steps(1, 65);
+    const nextRam = sample();
+    if (nextRam[0] !== 59 || nextRam[2] !== nextAmmo - 1 || nextRam[3] !== 0)
+      throw Error("Next ram must start with a fresh hit list: " + nextRam);
     if (!(await Module.ccall("WebTestRestartNetworkReplay", "number", [], [], { async: true })))
       throw Error("Rear setup failed");
     tick = 0;
@@ -143,7 +163,7 @@ try {
     call("test_weaken_target");
     await steps(1, 16384);
     const rear = sample();
-    if (rear[0] !== 60 || rear[1] !== 1 || rear[2] !== 1) throw Error("Rear combo failed: " + rear);
+    if (rear[0] !== 59 || rear[1] !== 1 || rear[2] !== 1) throw Error("Rear combo failed: " + rear);
     await steps(12);
     if (!sample()[3] || call("test_read", Module._WebTestReplayCarAddress(), 4))
       throw Error("Lethal rear contact failed: " + sample());

@@ -26,6 +26,11 @@ s32 CarMtm3hhConstructor(Car* car, void* context)
 }
 s32 CarMtm3hhProcess(Car* car, void* context)
 {
+    Hammerhead* state = context;
+    if (state->ticks > 0)
+        --state->ticks;
+    else
+        memset(state->hit_serials, 0, sizeof(state->hit_serials));
     WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
     return 1;
@@ -42,17 +47,6 @@ void CarMtm3hhClassDestructor(RegistryDirectory* directory)
 {
     WEB_MODULE("mtm3fx.sym", Tm3ResourcesRelease)();
 }
-void CarMtm3hhPrepareWeaponInput(Car* car, void* context)
-{
-    Hammerhead* state = context;
-    if (state->ticks > 0) {
-        --state->ticks;
-        car->controls.weapon_pressed = 0;
-        car->controls.weapon_held = 0;
-    } else {
-        memset(state->hit_serials, 0, sizeof(state->hit_serials));
-    }
-}
 
 static s16 ram_axis(const Car* car, s32 mode, int axis)
 {
@@ -63,6 +57,8 @@ static s16 ram_axis(const Car* car, s32 mode, int axis)
 s32 CarMtm3hhWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance* weapon, s32 mode)
 {
     Hammerhead* state = context;
+    if (state->ticks > 0)
+        return 0;
     const s32 x = ram_axis(car, mode, 0) * 4096;
     const s32 y = ram_axis(car, mode, 1) * 4096;
     const s32 z = ram_axis(car, mode, 2) * 4096;
@@ -71,6 +67,7 @@ s32 CarMtm3hhWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance
         p->net_force.vy += y;
         p->net_force.vz += z;
     }
+    memset(state->hit_serials, 0, sizeof(state->hit_serials));
     state->ticks = 60;
     state->mode = mode;
     /* TM3 SoundLoadVab maps the first Hammerhead tone (center 84) to pitch 981. */
@@ -154,6 +151,8 @@ static s32 test_read(Car* car, s32 field)
         return state->hit_serials[0];
     case 4:
         return GameInfo.players[1].car != NULL;
+    case 6:
+        return car->weapons[car->controls.selected_weapon].amount;
     default:
         return -1;
     }
@@ -191,7 +190,6 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(CarMtm3hhClassConstructor);
     EXPORT(CarMtm3hhClassDestructor);
     EXPORT(CarMtm3hhWeaponSpecialConstructor);
-    EXPORT(CarMtm3hhPrepareWeaponInput);
     EXPORT(InteractCarMtm3hhWithCar);
     return 0;
 }

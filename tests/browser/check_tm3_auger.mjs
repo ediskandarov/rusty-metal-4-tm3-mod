@@ -78,7 +78,7 @@ try {
     const before = sample();
     await steps(1, 65);
     const launch = sample();
-    if (launch[0] !== 60 || launch[2] !== before[2] - 1)
+    if (launch[0] !== 59 || launch[2] !== before[2] - 1)
       throw Error("Launch failed " + JSON.stringify({ before, launch }));
     let first;
     for (let i = 0; i < 32; ++i) {
@@ -107,12 +107,24 @@ try {
       savedTick = tick;
     async function drive() {
       const trace = [];
+      let fireAmmo;
       let previous = sample();
       for (let i = 0; i < first[0] + 95; ++i) {
-        await steps(1);
+        if (i === 0) {
+          fireAmmo = Module._WebTestEquipWeapon(1);
+          if (!fireAmmo) throw Error("Cannot equip Fire during the special");
+        }
+        if (i === 35) call("test_select", Module._WebTestReplayCarAddress());
+        await steps(1, i === 1 || i === 35 ? 1 : 0);
+        if (i === 1) {
+          const ammo = call("test_read", Module._WebTestReplayCarAddress(), 6);
+          if (ammo !== fireAmmo - 1 || sample()[0] <= 0)
+            throw Error("Fire was blocked during the active special");
+        }
         const state = sample();
         if (
           state[0] !== Math.max(0, previous[0] - 1) ||
+          state[2] !== first[2] ||
           state[4] !== ((previous[4] + state[1]) & 4095)
         )
           throw Error("Drill timer or pose differs at " + i + ": " + state);

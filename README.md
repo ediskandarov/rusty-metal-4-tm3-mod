@@ -26,6 +26,12 @@ Its `projectile.c` owns missile parameters, presentation and callbacks; helpers 
 motion, collisions and reusable effects. Outlaw and map pickups share lightning;
 Firestarter and Darkside share the same flamer. Cars choose how to combine them.
 
+Auger and Hammerhead deliberately allow other weapons during their drill/ram,
+unlike TM3's selected-weapon input lock. Reactivating the same special while it
+is active does not restart it or consume ammunition. Their state advances in
+the ordinary TM4 car process callback, after weapon handling and physics; the
+60-tick active period includes the activation tick. No pre-weapon input hook is required.
+
 A missile's immutable definition belongs to its module. Snapshots save its exported
 name and resolve it in the loaded module on restore, including its callbacks.
 Missing definitions reject the snapshot. Car-owned actors publish their snapshot

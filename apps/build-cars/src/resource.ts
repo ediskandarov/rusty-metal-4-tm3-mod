@@ -25,8 +25,6 @@ export async function buildCarResource(definition: CarDefinition, bytes: Uint8Ar
   special.files.set("name", stringEntry(definition.special));
   special.files.set("hudName", stringEntry(definition.hudName));
   const prefix = "Car" + definition.module[0]!.toUpperCase() + definition.module.slice(1);
-  if (definition.prepareInput)
-    special.files.set("inputFunc", stringEntry(`${prefix}PrepareWeaponInput`));
   special.files.set("launchFunc", stringEntry(`${prefix}WeaponSpecialConstructor`));
   for (const [name, value, type] of [
     ["initial", 2, 4],

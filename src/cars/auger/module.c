@@ -27,12 +27,6 @@ s32 CarMtm3agConstructor(Car* car, void* context)
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
     return 1;
 }
-s32 CarMtm3agProcess(Car* car, void* context)
-{
-    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
-    WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
-    return 1;
-}
 void CarMtm3agClassConstructor(RegistryDirectory* directory)
 {
     engine_settings = RegGetFileDataPS(directory, "tm3Engine");
@@ -59,6 +53,8 @@ static void set_pitch(AugerDrill* drill, s32 value)
 s32 CarMtm3agWeaponSpecialConstructor(Car* car, void* context, CarWeaponInstance* weapon, s32 mode)
 {
     AugerDrill* drill = context;
+    if (drill->active_ticks > 0)
+        return 0;
     drill->active_ticks = 60;
     drill->target = NULL;
     if (!drill->loop_sound)
@@ -98,13 +94,11 @@ static void turn_target(Car* car, AugerDrill* drill)
 }
 
 /* TM3 80018054 updates speed and pitch before accumulating the angle. */
-void CarMtm3agPrepareWeaponInput(Car* car, void* context)
+s32 CarMtm3agProcess(Car* car, void* context)
 {
     AugerDrill* drill = context;
     if (drill->active_ticks > 0) {
         --drill->active_ticks;
-        car->controls.weapon_pressed = 0;
-        car->controls.weapon_held = 0;
         drill->angular_speed = 682;
         if (drill->target)
             turn_target(car, drill);
@@ -120,6 +114,9 @@ void CarMtm3agPrepareWeaponInput(Car* car, void* context)
         }
     }
     drill->angle = (drill->angle + drill->angular_speed) & 4095;
+    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
+    WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
+    return 1;
 }
 
 u32 InteractCarMtm3agWithCar(Car* car, void* context, Car* other)
@@ -196,6 +193,8 @@ static s32 test_read(Car* car, s32 field)
         return state->angle;
     case 5:
         return state->loop_sound ? state->loop_sound->voices[0].pitch : 0;
+    case 6:
+        return car->weapons[car->controls.selected_weapon].amount;
     }
     return -1;
 }
@@ -220,7 +219,6 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 #endif
     EXPORT(CarMtm3agSizeof);
     EXPORT(InteractCarMtm3agWithCar);
-    EXPORT(CarMtm3agPrepareWeaponInput);
     EXPORT(CarMtm3agDisplayGroupTranslations);
     EXPORT(CarMtm3agConstructor);
     EXPORT(CarMtm3agProcess);
