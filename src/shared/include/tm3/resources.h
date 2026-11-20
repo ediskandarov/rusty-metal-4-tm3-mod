@@ -27,6 +27,7 @@ typedef struct {
     s32 sample, pitch_base, pitch_gain, volume_base, volume_gain;
 } Tm3EngineSettings;
 
+s32 Tm3DamageScenery(void* owner, s32 damage, s32 x, s32 y, s32 z);
 int Tm3StartFlamer(Car* car, const SVECTOR* mount);
 int Tm3ResourcesAcquire(void);
 int Tm3LoadSound(s32 id);

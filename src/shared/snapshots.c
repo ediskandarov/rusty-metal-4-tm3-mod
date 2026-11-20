@@ -1,4 +1,5 @@
 #include "decoration.h"
+#include "destruction.h"
 #include "effects/private.h"
 #include "flame.h"
 #include "flash.h"
@@ -11,6 +12,13 @@
 #include "tm3/missile.h"
 
 static const SnapshotType snapshot_types[] = {
+    { .name = "tm3Destroyable",
+        .size = sizeof(Tm3Destroyable),
+        .fields = Tm3DestroyableFields,
+        .validate = Tm3DestroyableValidate,
+        .needs_template = 1,
+        .baseline_removable = 1,
+        .hash_fields = 1 },
     { .name = "tm3ScreenFlash",
         .size = sizeof(Tm3ScreenFlash),
         .fields = Tm3ScreenFlashFields,

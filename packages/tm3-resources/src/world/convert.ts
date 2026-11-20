@@ -214,7 +214,7 @@ export async function convertWorld(
   );
   writeInstances(root, "tm3Transition", "released", transitions);
   const instances = writeWorldObjects(root, records, destroyables.startup);
-  writeStartupInstances(root, "destroyable", destroyables.startup);
+  writeStartupInstances(root, "tm3Destroyable", destroyables.startup);
   const navigation = readNavigation(at(world.blocks, 3).bytes);
   {
     const settings = at(world.blocks, 2).bytes;

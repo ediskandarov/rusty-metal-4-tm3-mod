@@ -70,12 +70,15 @@ Shared, car and scripted map packs embed Wasm in `behavior.mod` (MR type 6).
 Egypt owns Eye, Tokyo owns radar targeting and firing, and Hangar 18 owns saucer
 flight, its destruction reward and Spaceship. Other maps need no separate module: their
 scenery, transitions, materials and ordinary weapons use shared mechanisms.
+Staged scenery destruction is owned by the shared map class in
+`src/shared/world/destruction.c`. Stage geometry and released instances live in each
+map MR; the engine's stock destroyable class is unchanged.
 Map prop behavior is bound from the instance resource and restored with its template;
 callback addresses are never written into portable snapshots.
 Each Wasm module exports `Tm4ModuleExport`, imports shared memory, and uses no
 Asyncify. Car modules must be rebuilt against the same shared headers when
 their interface changes.
-`build:cars --test-hooks` enables the optional diagnostic exports.
+`build:cars --test-hooks` and `build:shared --test-hooks` enable diagnostic exports.
 
 Modules carry an `rm4.module` identity and load directly from MR through the engine’s shared loader.
 Before browser checks, build the engine’s MR preparation package:
@@ -103,3 +106,24 @@ bun run test:maps --disc ./disc-tm4
 Use `--map egypt`, `--map tokyo` or `--map hangar-18` for a focused run. Checks cover
 map weapons, beam audio/flash, saucer destruction and replay after local rollback
 and snapshot restoration in a fresh match.
+
+Staged destruction check (build shared with `--test-hooks`):
+
+```sh
+bun tests/browser/check_tm3_world.mjs --disc ./disc-tm4 --tm3-disc ./disc-tm3 --map london --drop-hits 3
+bun tests/browser/check_tm3_world.mjs --disc ./disc-tm4 --tm3-disc ./disc-tm3 --map london --stage-prefix 1 --drop-hits 2
+bun tests/browser/check_tm3_world.mjs --disc ./disc-tm4 --tm3-disc ./disc-tm3 --map london --check-transition
+```
+
+The checks cover pickup release, moving debris, and local/portable restoration
+before and between destruction stages. Damage uses the engine's bullet interaction dispatch.
+
+## TODO
+
+- [ ] Verify every TM4 and TM3 car special, ordinary weapon and car collision against
+  TM3 staged scenery and stock TM4 destroyables. Cover both `Tm3DamageScenery`
+  and the engine's interaction dispatch for `tm3Destroyable`; check for direct
+  `DestroyableApplyDamage` calls or class-name checks that bypass the new class.
+  Verify damage, stage changes, final pickup release, local rollback and portable
+  snapshot restoration. The current bullet-dispatch and focused car checks do not
+  cover every special attack.

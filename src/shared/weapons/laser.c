@@ -9,7 +9,6 @@
 #include "tm4/main/math3d.h"
 #include "tm4/main/object.h"
 #include "tm4/main/world.h"
-#include "tm4/modules/destry.h"
 #include <STDARG.H>
 #include <string.h>
 
@@ -59,12 +58,8 @@ static void process(Tm3MapBeam* beam)
     ObjectSetInteractionRadius(beam, VectorLength0(&delta) / 2);
     Tm4WorldHit hit = { 0 };
     if (IntersectWorldWithRay(&from, &to, 0, &hit) == 1) {
-        if (hit.owner && ObjectValidObject(hit.owner)
-            && !strcmp(ObjectGetHeader(hit.owner)->name, "destroyable"))
-            WEB_MODULE("destry", DestroyableApplyDamage)
-        (hit.owner, 800, to.vx, to.vy, to.vz);
-        else if (WorldTrackData[hit.surface.fields.material].kind == TM4_SURFACE_FALL_TO_DEATH)
-        {
+        if (!Tm3DamageScenery(hit.owner, 800, to.vx, to.vy, to.vz)
+            && WorldTrackData[hit.surface.fields.material].kind == TM4_SURFACE_FALL_TO_DEATH) {
             ObjectDestroy(beam);
             return;
         }

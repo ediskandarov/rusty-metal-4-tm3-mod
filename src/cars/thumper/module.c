@@ -7,7 +7,6 @@
 #include "tm4/main/object.h"
 #include "tm4/main/os.h"
 #include "tm4/modules/car_weapon.h"
-#include "tm4/modules/destry.h"
 #include <STDARG.H>
 #include <stdlib.h>
 #include <string.h>
@@ -57,8 +56,7 @@ static void segment_tick(Segment* segment)
     ObjectSetInteractionRadius(segment, half > 100 ? half : 100);
     Tm4WorldHit hit = { 0 };
     if (IntersectWorldWithRay(&previous, &segment->end, 0, &hit) == 1) {
-        if (hit.owner && !strcmp(ObjectGetHeader(hit.owner)->name, "destroyable"))
-            WEB_MODULE("destry", DestroyableApplyDamage)
+        WEB_MODULE("mtm3fx.sym", Tm3DamageScenery)
         (hit.owner, 16, segment->end.vx, segment->end.vy, segment->end.vz);
         ObjectDestroy(segment);
         return;

@@ -7,7 +7,6 @@
 #include "tm4/main/math3d.h"
 #include "tm4/main/object.h"
 #include "tm4/main/world.h"
-#include "tm4/modules/destry.h"
 #include <STDARG.H>
 #include <string.h>
 
@@ -55,12 +54,9 @@ static void damage_scenery(SVECTOR* position)
                 position->vy - Q12Round(radial * rsin(pitch)),
                 position->vz + Q12Round(radial * rsin(azimuth)), 0 };
             Tm4WorldHit hit = { 0 };
-            if (IntersectWorldWithRay(position, &end, 0, &hit) != 1 || !hit.owner
-                || !ObjectValidObject(hit.owner)
-                || strcmp(ObjectGetHeader(hit.owner)->name, "destroyable"))
+            if (IntersectWorldWithRay(position, &end, 0, &hit) != 1)
                 continue;
-            WEB_MODULE("destry", DestroyableApplyDamage)
-            (hit.owner, 500, end.vx, end.vy, end.vz);
+            Tm3DamageScenery(hit.owner, 500, end.vx, end.vy, end.vz);
         }
     }
 }

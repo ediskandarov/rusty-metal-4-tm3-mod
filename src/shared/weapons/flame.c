@@ -9,7 +9,6 @@
 #include "tm4/main/object.h"
 #include "tm4/main/system.h"
 #include "tm4/modules/car_effect.h"
-#include "tm4/modules/destry.h"
 #include <STDARG.H>
 #include <string.h>
 
@@ -79,9 +78,7 @@ static void flame_tick(Flame* flame)
     ObjectSetInteractionRadius(flame, half > 80 ? half : 80);
     Tm4WorldHit hit = { 0 };
     if (IntersectWorldWithRay(&previous, &flame->end, 0, &hit) == 1) {
-        if (hit.owner && !strcmp(ObjectGetHeader(hit.owner)->name, "destroyable"))
-            WEB_MODULE("destry", DestroyableApplyDamage)
-        (hit.owner, 4, flame->end.vx, flame->end.vy, flame->end.vz);
+        Tm3DamageScenery(hit.owner, 4, flame->end.vx, flame->end.vy, flame->end.vz);
         ObjectDestroy(flame);
         return;
     }

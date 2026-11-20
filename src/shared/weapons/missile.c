@@ -13,7 +13,6 @@
 #include "tm4/main/world.h"
 #include "tm4/modules/car_effect.h"
 #include "tm4/modules/car_weapon.h"
-#include "tm4/modules/destry.h"
 #include <STDARG.H>
 #include <stdio.h>
 #include <string.h>
@@ -117,10 +116,7 @@ static void drop_process(Tm3RainDrop* drop)
     ObjectSetInteractionRadius(drop, SquareRoot0(distance_squared(f->previous, f->position)) / 2);
     f->velocity[1] += 222;
     if (IntersectWorldWithRay(&start, &end, 0, &hit) == 1) {
-        if (hit.owner && ObjectValidObject(hit.owner)
-            && !strcmp(ObjectGetHeader(hit.owner)->name, "destroyable"))
-            WEB_MODULE("destry", DestroyableApplyDamage)
-        (hit.owner, 800, end.vx, end.vy, end.vz);
+        Tm3DamageScenery(hit.owner, 800, end.vx, end.vy, end.vz);
         Tm3GroundImpact(&end, ObjectGetHeader(drop)->participant, 128, 1, 800,
             WorldTrackData[hit.surface.fields.material].kind);
         ObjectDestroy(drop);
@@ -274,11 +270,9 @@ static int missile_step(Tm3Missile* missile)
     if (missile->world_hit) {
         void* owner = missile->world_owner;
         if (owner && ObjectValidObject(owner)
-            && ObjectGetHeader(owner)->serial == missile->world_serial
-            && !strcmp(ObjectGetHeader(owner)->name, "destroyable"))
-            WEB_MODULE("destry", DestroyableApplyDamage)
-        (owner, missile->damage, missile->flight.position[0], missile->flight.position[1],
-            missile->flight.position[2]);
+            && ObjectGetHeader(owner)->serial == missile->world_serial)
+            Tm3DamageScenery(owner, missile->damage, missile->flight.position[0],
+                missile->flight.position[1], missile->flight.position[2]);
         return missile_impact(missile, NULL);
     }
     if (hit) {

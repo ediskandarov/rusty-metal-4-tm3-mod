@@ -1,4 +1,4 @@
-/* global Module, tm4Port, HEAPU8, HEAPU16 */
+/* global Module, tm4Port, HEAPU8, HEAPU16, stackSave, stackAlloc, stackRestore, getWasmTableEntry */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
@@ -26,6 +26,7 @@ const { values } = parseArgs({
     "check-remote": { type: "boolean" },
     "check-weapons": { type: "boolean" },
     "drop-hits": { type: "string" },
+    "stage-prefix": { type: "string", default: "0" },
     site: { type: "string", default: "external/rusty-metal-4/build/diagnostic/site" },
     mods: { type: "string", default: "build/checks/fixture" },
     output: { type: "string", default: "build/checks/tm3-world" },
@@ -34,6 +35,8 @@ const { values } = parseArgs({
 });
 if (!values.disc || !values.map || !values["tm3-disc"])
   throw Error("--disc TM4_DISC --tm3-disc TM3_DISC --map MAP_ID required");
+const stagePrefix = Number(values["stage-prefix"]);
+assert.ok(Number.isInteger(stagePrefix) && stagePrefix >= 0 && stagePrefix <= 2);
 await prepareFixture(resolve(values.mods), "build/TM3.MR", "build/checks/cars");
 const mapWeapon = values["check-map-weapon"];
 assert.ok(!mapWeapon || ["Radar", "Eye"].includes(mapWeapon));
@@ -77,6 +80,26 @@ const session = await openTm3Car({
       ],
 });
 try {
+  await session.page.evaluate(() => {
+    globalThis.hitTm3Scenery = (animation) => {
+      const saved = stackSave();
+      try {
+        const bytes = new TextEncoder().encode("Tm3TestHitSceneryWithEvent\0");
+        const pointer = stackAlloc(bytes.length);
+        HEAPU8.set(bytes, pointer);
+        const fn = Module.ccall(
+          "WebDynamicModuleExport",
+          "number",
+          ["string", "number"],
+          ["mtm3fx.sym", pointer],
+        );
+        if (!fn) throw Error("Build shared with --test-hooks");
+        if (!getWasmTableEntry(fn)(animation)) throw Error("No matching scenery");
+      } finally {
+        stackRestore(saved);
+      }
+    };
+  });
   const reflections = await session.page.evaluate(() =>
     [Module._WorldReflectionTextureChrome, Module._WorldReflectionTextureSpecular].map((ptr) => {
       const page = HEAPU16[(ptr + 6) >>> 1];
@@ -112,7 +135,15 @@ try {
   assert.notEqual(initialHeight.ground, 0x4000, "Spawn has no supporting collision surface");
   assert.equal(initialHeight.y, initialHeight.ground - 96, "Spawn clearance over the live surface");
   const wheelEffects = await session.page.evaluate(
-    async ({ teleporters, checkWeapons, checkRemote, checkRain, mapWeapon, checkTransition }) => {
+    async ({
+      teleporters,
+      checkWeapons,
+      checkRemote,
+      checkRain,
+      mapWeapon,
+      checkTransition,
+      stagePrefix,
+    }) => {
       const peaks = { tm3TireMark: 0, tm3SurfaceParticle: 0 };
       Module.ccall("WebTestSnapshotObjects", null, ["string"], ["tm3WheelSurface"]);
       if (!tm4Port.testSnapshotObjects.length) throw Error("Missing wheel surface tracker");
@@ -130,7 +161,8 @@ try {
         carHandle,
         drove = false;
       for (let tick = 0; tick < 120; ++tick) {
-        if (checkTransition && tick >= 71 && tick <= 73) Module._WebTestHitSceneryWithEvent(1);
+        if (tick >= 110 && tick < 110 + stagePrefix) globalThis.hitTm3Scenery(0);
+        if (checkTransition && tick >= 71 && tick <= 73) globalThis.hitTm3Scenery(1);
         const weapon =
           checkWeapons &&
           [
@@ -207,6 +239,7 @@ try {
     },
     {
       checkTransition: values["check-transition"],
+      stagePrefix,
       teleporters: converted.metadata.teleporters,
       checkRemote: values["check-remote"],
       mapWeapon,
@@ -287,7 +320,7 @@ try {
           }
           if (tick - 120 < dropHits) {
             if (pickupCount() !== beforeDrop) throw Error("Pickup released before the final stage");
-            Module._WebTestHitSceneryWithEvent(0);
+            globalThis.hitTm3Scenery(0);
           }
           if (
             !Module._WebNetSetInput(

@@ -1,5 +1,6 @@
 #include "car_status_effects.h"
 #include "decoration.h"
+#include "destruction.h"
 #include "flash.h"
 #include "private.h"
 #include "prop.h"
@@ -38,7 +39,19 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
         return (OSWord)&Tm3StatusEffects;
     EXPORT(Tm3ContactEffects);
     EXPORT(Tm3TeleportEffect);
-    EXPORT(Tm3StageEffect);
+    EXPORT(Tm3DamageScenery);
+    EXPORT(Tm3DestroyableSizeof);
+    EXPORT(Tm3DestroyableInstanceConstructor);
+    EXPORT(Tm3DestroyableProcess);
+    EXPORT(Tm3DestroyableDestructor);
+    EXPORT(InteractBulletWithTm3Destroyable);
+    EXPORT(InteractWeaponProjectileWithTm3Destroyable);
+    EXPORT(InteractCarWithTm3Destroyable);
+    EXPORT(InteractExplosionShockWaveWithTm3Destroyable);
+    EXPORT(InteractWeaponRayBeamWithTm3Destroyable);
+#ifdef TM3_TEST_HOOKS
+    EXPORT(Tm3TestHitSceneryWithEvent);
+#endif
     EXPORT(Tm3ScreenEffect);
     EXPORT(Tm3FragmentImpact);
     EXPORT(Tm3TransitionSizeof);

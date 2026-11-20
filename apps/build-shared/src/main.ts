@@ -69,6 +69,7 @@ const { values } = parseArgs({
   args: args[0] === "--" ? args.slice(1) : args,
   options: {
     "tm3-disc": { type: "string" },
+    "test-hooks": { type: "boolean" },
     "tm4-disc": { type: "string" },
     output: { type: "string", default: "build/TM3.MR" },
     "game-build": { type: "string", default: "external/rusty-metal-4/build/diagnostic" },
@@ -118,6 +119,7 @@ const wasm = await compile({
   sources: sharedModuleSources,
   output: resolve("build/shared"),
   inverseRoot: true,
+  defines: values["test-hooks"] ? ["TM3_TEST_HOOKS=1"] : [],
 });
 root.files.set("behavior.mod", { ...binary(wasm), type: 6 });
 
