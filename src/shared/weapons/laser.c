@@ -43,7 +43,7 @@ static s32 construct(Tm3MapBeam* beam, va_list args)
     }
     ObjectSetPosition(beam, origin->vx, origin->vy, origin->vz);
     Tm3PlayLaserSound(beam);
-    Tm3FlashSet(0, 1);
+    Tm3FlashStart(0, 0);
     return 1;
 }
 
@@ -51,7 +51,6 @@ static s32 construct(Tm3MapBeam* beam, va_list args)
 static void process(Tm3MapBeam* beam)
 {
     Tm3ProjectileFlight* f = &beam->flight;
-    Tm3FlashStep(0);
     Tm3ProjectileAdvance(f);
     SVECTOR from = { f->previous[0], f->previous[1], f->previous[2], 0 };
     SVECTOR to = { f->position[0], f->position[1], f->position[2], 0 };
@@ -109,17 +108,12 @@ static void display(Tm3MapBeam* beam, Tm4OrderingTag* order, u8** cursor, u8* li
     Tm3DrawMapBeam(&beam->origin, beam->flight.position, &beam->pose, order, cursor, limit, view);
 }
 
-static void destroy_beam(void* object)
-{
-    Tm3FlashSet(0, 0);
-}
-
 int Tm3LaserRegister(RegistryDirectory* directory)
 {
     return ObjectFindClassIndex(beam_class) >= 0
         || (ObjectRegisterClass(beam_class, sizeof(Tm3MapBeam), directory,
                 (Tm4PackedConstructor)construct, NULL, (Tm4ObjectCallback)process,
-                (Tm4ObjectDisplayCallback)display, destroy_beam)
+                (Tm4ObjectDisplayCallback)display, NULL)
             && ObjectRegisterInteractionCallback("car", beam_class, hit_car));
 }
 

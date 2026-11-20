@@ -12,8 +12,11 @@ int Tm3MarkerLightning(unsigned marker, const Tm3LightningSettings* defaults)
             continue;
         Tm3LightningSettings settings = *defaults;
         settings.position = anchors[i];
+        settings.flash = 0;
         if (Tm3SpawnLightning(&settings))
             created = 1;
     }
+    if (created && defaults->flash)
+        Tm3FlashStart(1, defaults->duration + 1);
     return created;
 }

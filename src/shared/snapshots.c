@@ -1,6 +1,7 @@
 #include "decoration.h"
 #include "effects/private.h"
 #include "flame.h"
+#include "flash.h"
 #include "laser.h"
 #include "private.h"
 #include "prop.h"
@@ -10,6 +11,10 @@
 #include "tm3/missile.h"
 
 static const SnapshotType snapshot_types[] = {
+    { .name = "tm3ScreenFlash",
+        .size = sizeof(Tm3ScreenFlash),
+        .fields = Tm3ScreenFlashFields,
+        .hash_fields = 1 },
     { .name = "tm3TireMark",
         .size = sizeof(Tm3TireMark),
         .fields = Tm3TireMarkFields,

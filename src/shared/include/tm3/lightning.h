@@ -10,7 +10,7 @@ typedef struct {
 typedef struct {
     MATRIX initial_transform;
     OutlawBolt* bolts[16];
-    s32 age, angle, frame, range, force, damage, duration, flash;
+    s32 age, angle, frame, range, force, damage, duration;
 } OutlawEmitter;
 
 extern const SnapshotField Tm3BoltFields[], Tm3EmitterFields[];

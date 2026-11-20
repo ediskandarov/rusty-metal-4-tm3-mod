@@ -1,6 +1,7 @@
 #include "assets.h"
 #include "effects/private.h"
 #include "flame.h"
+#include "flash.h"
 #include "surface.h"
 #include "texture_bank.h"
 #include "tm3/lightning.h"
@@ -49,7 +50,8 @@ int Tm3ResourcesAcquire(void)
         if (!Tm3SpritesRegister(directory) || !Tm3ExplosionsRegister(directory)
             || !Tm3DebrisRegister(directory) || !Tm3ExplosionInteractionsRegister()
             || !Tm3SurfaceRegister(directory) || !Tm3FlamesRegister(directory)
-            || !Tm3MissilesRegister(directory) || !Tm3LightningRegister(directory)) {
+            || !Tm3MissilesRegister(directory) || !Tm3LightningRegister(directory)
+            || !Tm3FlashRegister(directory)) {
             WebTextureBankDestroy(Tm3TextureBank);
             Tm3TextureBank = 0;
             return 0;

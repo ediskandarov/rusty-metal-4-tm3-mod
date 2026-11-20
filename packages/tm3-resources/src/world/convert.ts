@@ -222,9 +222,10 @@ export async function convertWorld(
     const view = new DataView(settings.buffer, settings.byteOffset, settings.byteLength);
     if (at(world.blocks, 7).bytes.length) {
       // Class 20 reads these three channels at 80037c9c. Empty block 2 uses the EXE defaults.
-      const flash = new Uint8Array(8);
+      const flash = new Uint8Array(4);
       flash.set(settings.length ? settings.subarray(0x15, 0x18) : [255, 120, 120]);
-      put("screenFlash", flash, 18, flash.length);
+      put("flashColor", flash, 18, flash.length);
+      put("screenEffect", new TextEncoder().encode("Tm3ScreenEffect\0"), 2);
       put("fragmentImpact", new TextEncoder().encode("Tm3FragmentImpact\0"), 2);
     }
     if (settings.length) {

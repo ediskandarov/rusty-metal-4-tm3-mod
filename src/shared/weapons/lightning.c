@@ -112,15 +112,12 @@ static s32 emitter_init(OutlawEmitter* emitter, va_list args)
     emitter->force = settings->force;
     emitter->damage = settings->damage;
     emitter->duration = settings->duration;
-    emitter->flash = settings->flash;
     if (settings->transform)
         emitter->initial_transform = *settings->transform;
     else
         IdentifyMatrix(&emitter->initial_transform);
     ObjectSetPosition(emitter, settings->position.vx, settings->position.vy, settings->position.vz);
     Tm3PlayNamedSound(settings->sound, NULL, owner ? emitter : NULL, settings->pitch, 0);
-    if (emitter->flash)
-        Tm3FlashSet(1, 1);
     emitter->bolts[0] = create_bolt(emitter, -1);
     return emitter->bolts[0] != NULL;
 }
@@ -177,8 +174,6 @@ static void emitter_process(OutlawEmitter* emitter)
         ObjectSetPosition(emitter, p->vx, p->vy, p->vz);
     }
 
-    if (emitter->flash)
-        Tm3FlashStep(1);
     emitter_targets(emitter);
     ++emitter->age;
     if (emitter->age > emitter->duration) {
@@ -200,12 +195,6 @@ static void emitter_display(
     SVECTOR origin = { p->vx, p->vy, p->vz, 0 };
     Tm3DrawOutlawEmitter(emitter->angle, emitter->frame, &origin, ordering, cursor, limit, view);
 }
-static void destroy_emitter(void* emitter)
-{
-    if (((OutlawEmitter*)emitter)->flash)
-        Tm3FlashSet(1, 0);
-}
-
 int Tm3LightningRegister(RegistryDirectory* directory)
 {
     if (ObjectFindClassIndex(emitter_name) < 0
@@ -215,18 +204,22 @@ int Tm3LightningRegister(RegistryDirectory* directory)
             || !ObjectRegisterInteractionCallback("car", bolt_name, bolt_car)
             || !ObjectRegisterClass(emitter_name, sizeof(OutlawEmitter), directory,
                 (Tm4PackedConstructor)emitter_init, NULL, (Tm4ObjectCallback)emitter_process,
-                (Tm4ObjectDisplayCallback)emitter_display, destroy_emitter)))
+                (Tm4ObjectDisplayCallback)emitter_display, NULL)))
         return 0;
     return 1;
 }
 
 int Tm3SpawnLightning(const Tm3LightningSettings* settings)
 {
-    return (settings->owner
-                   ? ObjectCreateWithParticipant(emitter_name, OBJECT_DESTROY_WITH_OWNER,
-                         ObjectGetHeader(settings->owner)->participant, settings->owner, settings)
-                   : ObjectCreate(emitter_name, 0, settings))
+    int created
+        = (settings->owner
+                  ? ObjectCreateWithParticipant(emitter_name, OBJECT_DESTROY_WITH_OWNER,
+                        ObjectGetHeader(settings->owner)->participant, settings->owner, settings)
+                  : ObjectCreate(emitter_name, 0, settings))
         != NULL;
+    if (created && settings->flash)
+        Tm3FlashStart(1, settings->duration + 1);
+    return created;
 }
 
 const SnapshotField Tm3BoltFields[] = {
@@ -246,7 +239,6 @@ const SnapshotField Tm3EmitterFields[] = {
     SNAP_POD(OutlawEmitter, angle),
     SNAP_POD(OutlawEmitter, frame),
     SNAP_POD(OutlawEmitter, duration),
-    SNAP_POD(OutlawEmitter, flash),
     SNAP_POD(OutlawEmitter, range),
     SNAP_POD(OutlawEmitter, damage),
     SNAP_POD(OutlawEmitter, force),

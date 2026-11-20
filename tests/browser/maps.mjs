@@ -7,6 +7,7 @@ import { mapBehaviors } from "../../apps/build-maps/src/behavior.ts";
 import { maps } from "../../apps/build-maps/src/catalog.ts";
 import { readMr } from "../../external/rusty-metal-4/packages/resources/src/compatibility/mr.ts";
 import { prepareFixture, prepareMapFixture } from "./fixture.mjs";
+import { checkScreenFlash } from "./helpers/screen-flash.mjs";
 import { openTm3Car } from "./helpers/tm3.mjs";
 
 const { values } = parseArgs({
@@ -122,6 +123,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
                 : 0,
             );
             if ((id === "egypt" || id === "tokyo") && t === 121) {
+              if (count("tm3ScreenFlash") !== 1) throw Error("Missing beam flash object");
               if (count("tm3MapBeam") !== 1) throw Error("Missing map beam");
               if (id === "egypt" && count("tm3Eye")) throw Error("Eye marker survived firing");
               for (const [pitch, attached] of [
@@ -151,11 +153,14 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
             if (
               id === "north-pole" &&
               t === 122 &&
-              (!anchors || count("tm3OutlawEmitter") !== anchors)
+              (!anchors || count("tm3OutlawEmitter") !== anchors || count("tm3ScreenFlash") !== 1)
             )
               throw Error("Lightning emitter count differs");
             if (id === "hangar-18") {
-              if (t === 125 && (!anchors || count("tm3OutlawEmitter") !== anchors))
+              if (
+                t === 125 &&
+                (!anchors || count("tm3OutlawEmitter") !== anchors || count("tm3ScreenFlash") !== 1)
+              )
                 throw Error("Spaceship emitter count differs");
               debris ||= count("tm3Debris") > 0;
               reward ||=
@@ -245,6 +250,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
     await Bun.write(resolve(output, "result.json"), JSON.stringify(result, null, 2));
     assert.deepEqual(result.rollback, result.expected, map.id + " rollback");
     assert.deepEqual(result.portable, result.expected, map.id + " portable restore");
+    if (map.id === "tokyo") await checkScreenFlash(fixture.page);
     assert.ok(!fixture.log.some((line) => /PAGEERROR|Aborted|RuntimeError/.test(line)));
     console.log("PASS", map.id, module ?? "shared mechanisms");
   } finally {

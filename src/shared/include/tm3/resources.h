@@ -32,8 +32,7 @@ int Tm3ResourcesAcquire(void);
 int Tm3LoadSound(s32 id);
 void Tm3PlayNamedSound(
     char* name, const SVECTOR* position, void* owner, s32 pitch, s32 random_pitch);
-void Tm3FlashSet(s32 lightning, s32 enabled);
-void Tm3FlashStep(s32 lightning);
+void Tm3FlashStart(s32 lightning, s32 duration);
 void Tm3PlayLaserSound(void* beam);
 void Tm3ResourcesRelease(void);
 void Tm3SpawnSurfaceSprite(s32 profile, const SVECTOR* position, s32 size, const SVECTOR* velocity,

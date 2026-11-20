@@ -1,5 +1,6 @@
 #include "car_status_effects.h"
 #include "decoration.h"
+#include "flash.h"
 #include "private.h"
 #include "prop.h"
 #include "remote.h"
@@ -12,7 +13,6 @@
 #include "tm4/main/os.h"
 #include "tm4/modules/powerup.h"
 #include "world_contact.h"
-#include "world_flash.h"
 #include "world_weapons.h"
 #include <string.h>
 #include <strings.h>
@@ -39,6 +39,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3ContactEffects);
     EXPORT(Tm3TeleportEffect);
     EXPORT(Tm3StageEffect);
+    EXPORT(Tm3ScreenEffect);
     EXPORT(Tm3FragmentImpact);
     EXPORT(Tm3TransitionSizeof);
     EXPORT(Tm3TransitionInstanceConstructor);
