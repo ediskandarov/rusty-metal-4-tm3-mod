@@ -1,7 +1,5 @@
 #include "stage.h"
 #include "mod_api.h"
-#include "src/modules/frag/private.h"
-#include "tm4/main/math3d.h"
 #include "tm4/main/object.h"
 #include "tm4/main/system.h"
 #include "tm4/main/world.h"
@@ -54,17 +52,8 @@ void Tm3StageEffect(RegistryDirectory* stage, s32 x, s32 y, s32 z)
         for (s32 remaining = *refs++; remaining; --remaining) {
             Tm4DisplayFace* face = (void*)(faces + *refs++);
             const SVECTOR* base = vertices + *refs++;
-            u8 ids[4];
-            int count = WorldGetFaceVertexIndices(face, &ids[0], &ids[1], &ids[2], &ids[3]);
-            if (!count)
-                continue;
-            VECTOR sum = { 0 };
-            for (int i = 0; i < count; ++i) {
-                sum.vx += base[ids[i]].vx;
-                sum.vy += base[ids[i]].vy;
-                sum.vz += base[ids[i]].vz;
-            }
-            SVECTOR center = { sum.vx / count, sum.vy / count, sum.vz / count, 0 };
+            SVECTOR center;
+            WorldGetFaceCenterPoint(face, base, &center);
             int32_t outward[3] = { center.vx - x, -8 * abs(center.vy - y), center.vz - z };
             int16_t direction[3];
             Tm3ProjectileNormalize(outward, direction);
@@ -72,24 +61,7 @@ void Tm3StageEffect(RegistryDirectory* stage, s32 x, s32 y, s32 z)
             velocity.vx = direction[0] * (768 + rand() % 1536);
             velocity.vy = direction[1] * (768 + rand() % 1536);
             velocity.vz = direction[2] * (768 + rand() % 1536);
-            Fragment* shard = ObjectCreate("fragment", 0, face, base, &center, &velocity, NULL);
-            if (shard) {
-                // Class 14 rotates about the vertex centroid (800124bc).
-                /* 8001e578 and 80036d90: original gravity at two rounded 30 Hz steps. */
-                const s32 tm3Gravity = 1888, secondsQ18 = 8738;
-                s32 frameGravity = ((int64_t)(tm3Gravity << 12) * secondsQ18 + (1 << 17)) >> 18;
-                shard->gravity_step_q12 = ((int64_t)frameGravity * secondsQ18 + (1 << 17)) >> 18;
-                shard->radius = 0;
-                for (int i = 0; i < count; ++i) {
-                    SVECTOR* v = &shard->local_vertices[i];
-                    v->vx = base[ids[i]].vx - center.vx;
-                    v->vy = base[ids[i]].vy - center.vy;
-                    v->vz = base[ids[i]].vz - center.vz;
-                    s32 r = SquareRoot0(v->vx * v->vx + v->vy * v->vy + v->vz * v->vz);
-                    if (r > shard->radius)
-                        shard->radius = r;
-                }
-            }
+            ObjectCreate("fragment", 0, face, base, &center, &velocity, NULL);
         }
     }
     Tm3SpawnSprite(0, &origin, 500, NULL, 12, -1);
