@@ -2,9 +2,12 @@ import { convertCar, enableCarAnimations, namedVab } from "@rusty-metal-4/tm3-re
 import { binary, directory, stringEntry } from "@tm4/resources/mods/mr-writer";
 
 import type { CarDefinition } from "./catalog.ts";
+import { carReflections } from "./reflections/index.ts";
 
 export async function buildCarResource(definition: CarDefinition, bytes: Uint8Array<ArrayBuffer>) {
-  const { root, metadata, specialVab } = await convertCar(bytes);
+  const { root, metadata, specialVab } = await convertCar(bytes, 1, {
+    reflections: carReflections(definition.id),
+  });
   if (metadata.source_sha256 !== definition.sha256 || metadata.scale !== 1)
     throw Error(`${definition.file}: expected the TM3 USA v1.1 car at scale 1`);
   if (definition.animate) enableCarAnimations(root, metadata.groups);

@@ -1,5 +1,9 @@
 # TM3 resource pack for Rusty Metal 4
 
+[TM4 car reflections: original resources and transfer rules](docs/tm4-car-reflections.md).
+
+Car decisions: [Sweet Tooth](docs/tm3-sweet-tooth-reflections.md), [Auger](docs/tm3-auger-reflections.md), [Axel](docs/tm3-axel-reflections.md), [Club Kid](docs/tm3-clubkid-reflections.md), [Darkside](docs/tm3-darkside-reflections.md), [Firestarter](docs/tm3-firestarter-reflections.md), [Flower Power](docs/tm3-flower-power-reflections.md), [Mr. Grimm](docs/tm3-mr-grimm-reflections.md), [Hammerhead](docs/tm3-hammerhead-reflections.md), [Minion](docs/tm3-minion-reflections.md), [Outlaw](docs/tm3-outlaw-reflections.md), [Primeval](docs/tm3-primeval-reflections.md), [Roadkill](docs/tm3-roadkill-reflections.md), [Spectre](docs/tm3-spectre-reflections.md), [Thumper](docs/tm3-thumper-reflections.md), [Warthog](docs/tm3-warthog-reflections.md).
+
 ```text
 apps/wasm.ts               Common Wasm compiler invocation
 apps/build-shared/          TM3.MR builder
