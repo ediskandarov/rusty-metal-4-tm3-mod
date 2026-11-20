@@ -2,6 +2,7 @@
 #include "decoration.h"
 #include "private.h"
 #include "prop.h"
+#include "remote.h"
 #include "stage.h"
 #include "surface.h"
 #include "tm3/lightning.h"
@@ -28,6 +29,9 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     if (!strcmp(name, "__rm4_snapshot_types"))
         return (OSWord)Tm3SnapshotTypes();
     EXPORT(InteractCarWithPowerupTm3);
+    EXPORT(Tm3LaunchWorldProjectile);
+    EXPORT(Tm3LaunchLightning);
+    EXPORT(Tm3PlaceRemote);
     if (!strcmp(name, "Tm3WorldWeapons"))
         return (OSWord)&Tm3WorldWeapons;
     if (!strcmp(name, "Tm3StatusEffects"))

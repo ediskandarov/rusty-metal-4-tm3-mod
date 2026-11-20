@@ -4,7 +4,7 @@
 #include "tm4/main/os.h"
 #include <string.h>
 
-static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
+static s32 Tm3LaunchTokyoRadar(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
 {
     const SVECTOR* origin = WEB_MODULE("mtm3fx.sym", Tm3WorldMarker)(2);
     const MATRIX* radar = Tm3TokyoRadarPose(car);
@@ -14,33 +14,10 @@ static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
     return WEB_MODULE("mtm3fx.sym", Tm3LaunchMapBeam)(car, origin, &direction);
 }
 
-static s32 acquire(void)
-{
-    return WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).acquire();
-}
-
-static void configure(CarWeaponDescriptor* weapon)
-{
-    WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).configure(weapon);
-    if (!strcmp(weapon->name, "Proximity"))
-        weapon->launch = launch;
-}
-
-static void release(void)
-{
-    WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).release();
-}
-
-static const WebWorldWeapons weapons = {
-    acquire,
-    configure,
-    release,
-};
-
 __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 {
-    if (!strcmp(name, "Tm3TokyoWeapons"))
-        return (OSWord)&weapons;
+    if (!strcmp(name, "Tm3LaunchTokyoRadar"))
+        return (OSWord)Tm3LaunchTokyoRadar;
     if (!strcmp(name, "Tm3TokyoRadar"))
         return (OSWord)&Tm3TokyoRadar;
     return 0;

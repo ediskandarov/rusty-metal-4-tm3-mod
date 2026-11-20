@@ -184,14 +184,68 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
         if (!Module._WebNetBeginPortableReplay()) throw Error(tm4Port.portableCheckpointError);
         Module._WebNetEndReplay();
         const portable = run();
-        return { expected, rollback, portable, snapshotBytes: snapshot.length };
+        const mapChanges = [];
+        if (id === "hollywood") {
+          for (const world of [1, 0]) {
+            await Module.ccall("WebNetCancelMatch", null, [], [], { async: true });
+            const started = await Module.ccall(
+              "WebNetStartFfa",
+              "number",
+              [
+                "number",
+                "number",
+                "number",
+                "number",
+                "number",
+                "number",
+                "string",
+                "string",
+                "number",
+                "string",
+                "number",
+                "number",
+                "number",
+              ],
+              [
+                8,
+                3,
+                world,
+                12345,
+                0,
+                3,
+                "Crusher\nCrusher",
+                "0000000000000001\n0000000000000002",
+                90,
+                "Crusher",
+                27000,
+                20,
+                0,
+              ],
+              { async: true },
+            );
+            if (!started) throw Error("Map change failed: " + JSON.stringify(tm4Port.netSession));
+            const capacities = [Module._WebTestEquipWeapon(2), Module._WebTestEquipWeapon(8)];
+            if (capacities[0] !== (world ? 6 : 5) || capacities[1] !== (world ? 4 : 5))
+              throw Error("Weapon parameters leaked across maps: " + capacities);
+            if (!Module._WebTestEquipWeapon(1)) throw Error("Cannot equip Fire after map change");
+            tick = 0;
+            while (tick < 15) step();
+            const stockShots = tm4Port.projectileSpawns || 0;
+            step(1);
+            if (world ? (tm4Port.projectileSpawns || 0) <= stockShots : !count("tm3Missile"))
+              throw Error("Wrong launcher after map change");
+            if (world && count("tm3Missile")) throw Error("TM3 projectile on stock map");
+            mapChanges.push({ world, capacities });
+          }
+        }
+        return { expected, rollback, portable, snapshotBytes: snapshot.length, mapChanges };
       },
       { id: map.id, module, anchors, props },
     );
+    await Bun.write(resolve(output, "result.json"), JSON.stringify(result, null, 2));
     assert.deepEqual(result.rollback, result.expected, map.id + " rollback");
     assert.deepEqual(result.portable, result.expected, map.id + " portable restore");
     assert.ok(!fixture.log.some((line) => /PAGEERROR|Aborted|RuntimeError/.test(line)));
-    await Bun.write(resolve(output, "result.json"), JSON.stringify(result, null, 2));
     console.log("PASS", map.id, module ?? "shared mechanisms");
   } finally {
     await fixture.close();

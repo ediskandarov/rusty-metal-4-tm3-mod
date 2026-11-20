@@ -11,6 +11,7 @@ import { readNavigation } from "./navigation.ts";
 import { readWorldObjects } from "./objects.ts";
 import { readPickupModels } from "./pickup-models.ts";
 import { pickupTypes } from "./pickups.ts";
+import { writeWorldWeapons } from "./weapons.ts";
 
 export interface WorldConversionOptions {
   /** Force one UV/CLUT variant instead of selecting terrain textures by geometry detail. */
@@ -119,6 +120,7 @@ export async function convertWorld(
   const objects = directory();
   objects.folders.set("powerup", types);
   root.folders.set("objects", objects);
+  writeWorldWeapons(root, mapWeapon);
 
   for (const { name, type, mesh } of readPickupModels(at(world.blocks, 5).bytes))
     if (type !== "proximity" || name === mapWeapon) put("pickupModels/" + type, mesh);

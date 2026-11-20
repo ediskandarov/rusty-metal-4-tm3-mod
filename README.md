@@ -32,6 +32,10 @@ is active does not restart it or consume ammunition. Their state advances in
 the ordinary TM4 car process callback, after weapon handling and physics; the
 60-tick active period includes the activation tick. No pre-weapon input hook is required.
 
+Ordinary weapon parameters and `launchFunc` bindings are stored in map MR resources.
+The engine registers game defaults before world overrides, then loads individual cars.
+Weapon-set callbacks only acquire and release resources around the car-class lifetime.
+
 Map pickups keep TM3 collection rules and use TM4 rotation, bobbing, sparkle effects
 and respawn timing. No custom pickup-animation hook is required.
 

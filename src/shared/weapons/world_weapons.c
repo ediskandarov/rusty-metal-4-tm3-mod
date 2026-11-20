@@ -18,25 +18,21 @@ void* CarPrepareProjectileLaunch(Car*, CarWeaponInstance*, s32, MATRIX*, SVECTOR
 
 typedef struct {
     const char* name;
-    s16 initial, maximum;
     s16 profile;
     u32 trail_color;
 } WorldWeapon;
 
-/* SCUS_942.49: initial ammo and capacity at 8007e0f8, class-8 launch at 80033870.
-   Profile colours come from 8008a990/8008a5e8/8008aad8 after weapon initialization. */
+/* Class-8 launch at 80033870. Profile colours come from
+   8008a990/8008a5e8/8008aad8 after weapon initialization. */
 static const WorldWeapon weapons[] = {
-    { "Fire", 2, 10, Tm3ProjectileFire, 0x20ffff },
-    { "Homing", 0, 10, Tm3ProjectileHoming, 0xc000c0 },
-    { "Power", 0, 5, Tm3ProjectilePower, 0xf00000 },
-    { "Speed", 0, 30, Tm3ProjectileSpeed, 0x50 },
-    { "Napalm", 1, 10, Tm3ProjectileNapalm, 0x2080ff },
-    { "Proximity", 0, 10, -1, 0 }, /* Each map selects its own special pickup. */
-    { "Remote", 0, 5, -1, 0 },
-    { "Ricochet", 0, 3, Tm3ProjectileRicochet, 0 },
-    { "Rain", 0, 10, Tm3ProjectileRain, 0 },
-    { "Mortar", 0, 10, Tm3ProjectileMortar, 0x404040 },
-    { "Lightning", 0, 10, -1, 0 },
+    { "Fire", Tm3ProjectileFire, 0x20ffff },
+    { "Homing", Tm3ProjectileHoming, 0xc000c0 },
+    { "Power", Tm3ProjectilePower, 0xf00000 },
+    { "Speed", Tm3ProjectileSpeed, 0x50 },
+    { "Napalm", Tm3ProjectileNapalm, 0x2080ff },
+    { "Ricochet", Tm3ProjectileRicochet, 0 },
+    { "Rain", Tm3ProjectileRain, 0 },
+    { "Mortar", Tm3ProjectileMortar, 0x404040 },
 };
 
 static const WorldWeapon* definition(const char* name)
@@ -47,7 +43,7 @@ static const WorldWeapon* definition(const char* name)
     return NULL;
 }
 
-static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
+s32 Tm3LaunchWorldProjectile(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
 {
     const WorldWeapon* entry = definition(weapon->descriptor->name);
     MATRIX transform;
@@ -65,7 +61,7 @@ static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
     return missile != NULL;
 }
 
-static s32 lightning(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
+s32 Tm3LaunchLightning(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
 {
     const Tm3LightningSettings settings = {
         .range = 8192,
@@ -77,33 +73,6 @@ static s32 lightning(Car* car, void* context, CarWeaponInstance* weapon, s32 rea
         .pitch = 0x51c,
     };
     return Tm3MarkerLightning(3, &settings);
-}
-
-static void configure(CarWeaponDescriptor* weapon)
-{
-    const WorldWeapon* entry = definition(weapon->name);
-    if (!entry)
-        return;
-    if (!strcasecmp(entry->name, "Proximity")) {
-        char* title = RegGetFileDataS("/world/tm3MapWeapon");
-        if (!title)
-            return;
-        weapon->hud_name = title;
-        weapon->detonate = 0;
-    }
-    weapon->initial = entry->initial;
-    weapon->maximum = entry->maximum;
-    /* 8002cfbc and 80033d30: Speed uses 0x334 Q12 seconds, the others 0x1000. */
-    weapon->delay = entry->profile == Tm3ProjectileSpeed ? 6 : 30;
-    if (entry->profile == Tm3ProjectileRain)
-        weapon->detonate = 1;
-    if (!strcasecmp(entry->name, "Remote")) {
-        weapon->detonate = 1;
-        weapon->launch = Tm3PlaceRemote;
-    } else if (!strcasecmp(entry->name, "Lightning")) {
-        weapon->launch = lightning;
-    } else if (entry->profile >= 0)
-        weapon->launch = launch;
 }
 
 static s32 acquire(void)
@@ -120,7 +89,7 @@ static s32 acquire(void)
     return ready;
 }
 
-const WebWorldWeapons Tm3WorldWeapons = { acquire, configure, Tm3ResourcesRelease };
+const WebWorldWeapons Tm3WorldWeapons = { acquire, Tm3ResourcesRelease };
 
 s32 InteractCarWithPowerupTm3(Car* car, PowerupState* power)
 {

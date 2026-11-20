@@ -10,6 +10,14 @@ function resource(pickup?: string, motion?: number) {
   world.files.set("weaponSet", stringEntry("Tm3WorldWeapons"));
   if (pickup) world.files.set("tm3MapWeapon", stringEntry(pickup));
   root.folders.set("world", world);
+  if (pickup) {
+    let node = root;
+    for (const name of ["objects", "car", "weapon", "list", "Proximity"]) {
+      const child = directory();
+      node.folders.set(name, child);
+      node = child;
+    }
+  }
   const prop = directory();
   if (motion !== undefined) {
     const mesh = new Uint8Array(28);
@@ -17,7 +25,7 @@ function resource(pickup?: string, motion?: number) {
     prop.files.set("mesh", binary(mesh));
     let parent = root;
     for (const name of ["objects", "tm3Prop", "instances", "startup"]) {
-      const child = directory();
+      const child = parent.folders.get(name) ?? directory();
       parent.folders.set(name, child);
       parent = child;
     }
@@ -42,7 +50,14 @@ test("map weapons and moving props bind to their owning module", () => {
   ] as const) {
     const { root, world, prop } = resource(pickup, motion);
     const behavior = bindMapBehavior(id, root)!;
-    expect(text(world.files.get("weaponSet")?.bytes)).toBe(behavior.weaponSet);
+    expect(text(world.files.get("weaponSet")?.bytes)).toBe(behavior.weaponSet ?? "Tm3WorldWeapons");
+    const weapon = root.folders
+      .get("objects")!
+      .folders.get("car")!
+      .folders.get("weapon")!
+      .folders.get("list")!
+      .folders.get("Proximity")!;
+    expect(text(weapon.files.get("launchFunc")?.bytes)).toBe(behavior.launchFunc);
     expect(behavior.module.length).toBeLessThanOrEqual(8);
     if (handler) expect(text(prop.files.get("behavior")?.bytes)).toBe(handler);
   }
@@ -54,4 +69,10 @@ test("wrong map weapons and unsupported motion cannot silently use a different h
   expect(() => bindMapBehavior("egypt", resource("Eye", 1).root)).toThrow("no behavior");
   expect(() => bindMapBehavior("tokyo", resource("Radar", 2).root)).toThrow("no behavior");
   expect(() => bindMapBehavior("blimp", resource(undefined, 3).root)).toThrow("no behavior");
+});
+
+test("a map weapon cannot silently retain its stock launcher", () => {
+  const { root } = resource("Radar");
+  root.folders.get("objects")!.folders.delete("car");
+  expect(() => bindMapBehavior("tokyo", root)).toThrow("missing map weapon descriptor");
 });

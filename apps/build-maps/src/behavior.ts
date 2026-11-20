@@ -3,7 +3,8 @@ import { stringEntry } from "@tm4/resources/mods/mr-writer";
 
 interface MapBehavior {
   module: string;
-  weaponSet: string;
+  weaponSet?: string;
+  launchFunc: string;
   pickup: string;
   props: Readonly<Record<number, string>>;
   sources: readonly string[];
@@ -13,20 +14,21 @@ export const mapBehaviors: Readonly<Record<string, MapBehavior>> = {
   egypt: {
     module: "mt3egypt",
     weaponSet: "Tm3EgyptWeapons",
+    launchFunc: "Tm3UseEye",
     pickup: "Eye",
     props: {},
     sources: ["module.c", "eye.c"],
   },
   tokyo: {
     module: "mt3tokyo",
-    weaponSet: "Tm3TokyoWeapons",
+    launchFunc: "Tm3LaunchTokyoRadar",
     pickup: "Radar",
     props: { 1: "Tm3TokyoRadar" },
     sources: ["module.c", "radar.c"],
   },
   "hangar-18": {
     module: "mtm3h18",
-    weaponSet: "Tm3HangarWeapons",
+    launchFunc: "Tm3LaunchHangarSpaceship",
     pickup: "Spaceship",
     props: { 2: "Tm3HangarSaucer" },
     sources: ["module.c", "saucer.c"],
@@ -54,6 +56,16 @@ export function bindMapBehavior(id: string, root: MrDirectory): MapBehavior | un
     if (!handler) throw Error(`${id}/${name}: no behavior for prop motion ${motion}`);
     prop.files.set("behavior", stringEntry(handler));
   }
-  if (behavior) world.files.set("weaponSet", stringEntry(behavior.weaponSet));
+  if (behavior) {
+    const weapon = root.folders
+      .get("objects")
+      ?.folders.get("car")
+      ?.folders.get("weapon")
+      ?.folders.get("list")
+      ?.folders.get("Proximity");
+    if (!weapon) throw Error(`${id}: missing map weapon descriptor`);
+    weapon.files.set("launchFunc", stringEntry(behavior.launchFunc));
+    if (behavior.weaponSet) world.files.set("weaponSet", stringEntry(behavior.weaponSet));
+  }
   return behavior;
 }

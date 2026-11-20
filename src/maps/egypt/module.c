@@ -14,13 +14,6 @@ static s32 acquire(void)
     return 0;
 }
 
-static void configure(CarWeaponDescriptor* weapon)
-{
-    WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).configure(weapon);
-    if (!strcmp(weapon->name, "Proximity"))
-        weapon->launch = Tm3UseEye;
-}
-
 static void release(void)
 {
     WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).release();
@@ -28,12 +21,13 @@ static void release(void)
 
 static const WebWorldWeapons weapons = {
     acquire,
-    configure,
     release,
 };
 
 __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 {
+    if (!strcmp(name, "Tm3UseEye"))
+        return (OSWord)Tm3UseEye;
     if (!strcmp(name, "Tm3EgyptWeapons"))
         return (OSWord)&weapons;
     if (!strcmp(name, "__rm4_snapshot_types"))

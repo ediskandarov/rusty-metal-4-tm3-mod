@@ -7,7 +7,7 @@
 
 extern const Tm3PropBehavior Tm3HangarSaucer;
 
-static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
+static s32 Tm3LaunchHangarSpaceship(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
 {
     const Tm3LightningSettings settings = {
         .range = 6144,
@@ -21,33 +21,10 @@ static s32 launch(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
     return WEB_MODULE("mtm3fx.sym", Tm3MarkerLightning)(5, &settings);
 }
 
-static s32 acquire(void)
-{
-    return WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).acquire();
-}
-
-static void configure(CarWeaponDescriptor* weapon)
-{
-    WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).configure(weapon);
-    if (!strcmp(weapon->name, "Proximity"))
-        weapon->launch = launch;
-}
-
-static void release(void)
-{
-    WEB_MODULE("mtm3fx.sym", Tm3WorldWeapons).release();
-}
-
-static const WebWorldWeapons weapons = {
-    acquire,
-    configure,
-    release,
-};
-
 __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 {
-    if (!strcmp(name, "Tm3HangarWeapons"))
-        return (OSWord)&weapons;
+    if (!strcmp(name, "Tm3LaunchHangarSpaceship"))
+        return (OSWord)Tm3LaunchHangarSpaceship;
     if (!strcmp(name, "Tm3HangarSaucer"))
         return (OSWord)&Tm3HangarSaucer;
     return 0;
