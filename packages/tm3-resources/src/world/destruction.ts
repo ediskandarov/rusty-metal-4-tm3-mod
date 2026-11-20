@@ -141,7 +141,6 @@ export function convertDestroyables(
           break;
         }
         node.files.set("stageEffect", stringEntry("Tm3StageEffect"));
-        node.files.set("stageId", words([id, index]));
         node.files.set("hitPoints", words([hitPoints], 4));
         writeCollisions(node, active);
         if (active.length < indices.length) {

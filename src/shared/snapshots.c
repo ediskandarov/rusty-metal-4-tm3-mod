@@ -5,17 +5,10 @@
 #include "private.h"
 #include "prop.h"
 #include "remote.h"
-#include "stage.h"
 #include "surface.h"
 #include "tm3/lightning.h"
 #include "tm3/missile.h"
 
-static const SnapshotField stage_hide_fields[] = {
-    SNAP_POD(Tm3StageHide, group),
-    SNAP_POD(Tm3StageHide, stage),
-    SNAP_POD(Tm3StageHide, tick),
-    { 0 },
-};
 static const SnapshotType snapshot_types[] = {
     { .name = "tm3TireMark",
         .size = sizeof(Tm3TireMark),
@@ -28,10 +21,6 @@ static const SnapshotType snapshot_types[] = {
     { .name = "tm3SurfaceParticle",
         .size = sizeof(Tm3SurfaceParticle),
         .fields = Tm3SurfaceParticleFields,
-        .hash_fields = 1 },
-    { .name = "tm3StageHide",
-        .size = sizeof(Tm3StageHide),
-        .fields = stage_hide_fields,
         .hash_fields = 1 },
     { .name = "tm3Transition",
         .size = sizeof(Tm3Transition),

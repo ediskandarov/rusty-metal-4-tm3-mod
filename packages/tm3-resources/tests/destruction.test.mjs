@@ -87,7 +87,7 @@ test("a final stage enables replacement faces and passive colliders without assi
   expect(final.files.has("hitPoints")).toBe(false);
 });
 
-test("deferred destruction emits each authored face once in TER order", () => {
+test("destruction emits each authored fragment face once in TER order", () => {
   const f = fixture();
   const stage = () => f.run().startup.folders.get("tm3_group_0").files;
   expect(stage().has("stageEffect")).toBe(true);
@@ -96,6 +96,5 @@ test("deferred destruction emits each authored face once in TER order", () => {
   expect(stage).toThrow("Ambiguous destruction fragment vertex base");
   f.terrain.squares[0][0].first_vertex = 4;
   const files = stage();
-  expect([...new Uint32Array(files.get("stageId").bytes.buffer)]).toEqual([0, 0]);
   expect([...new Uint32Array(files.get("fragmentFaces").bytes.buffer)]).toEqual([2, 64, 4, 16, 4]);
 });

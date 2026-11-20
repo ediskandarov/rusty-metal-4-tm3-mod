@@ -34,7 +34,7 @@ The car converter applies TM3's friction adjustment (CAR offset `0x40`) to both 
 
 ### Destructible scenery
 
-Across 11 US v1.1 map resources, 81 of 87 groups convert to damageable scenery. Each stage uses its own damage threshold, visible faces at both detail levels, and collision polygons. A polygon that blocks the car without receiving damage keeps that distinction. Reaching the last stage reveals linked pickups at their original positions. Deferred stages keep their display faces for one more tick. Impact sprites and sounds use TM3’s surface table.
+Across 11 US v1.1 map resources, 81 of 87 groups convert to damageable scenery. Each stage uses its own damage threshold, visible faces at both detail levels, and collision polygons. A polygon that blocks the car without receiving damage keeps that distinction. Reaching the last stage reveals linked pickups at their original positions. Impact sprites and sounds use TM3’s surface table.
 
 London’s animated structure uses its separate 51-face mesh and the movement parameters of its last damageable stage. Five single-stage Warehouse groups and one London group without damage-receiving geometry remain static.
 

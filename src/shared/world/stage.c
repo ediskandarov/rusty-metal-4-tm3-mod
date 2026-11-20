@@ -1,43 +1,8 @@
 #include "stage.h"
 #include "mod_api.h"
 #include "tm4/main/object.h"
-#include "tm4/main/system.h"
 #include "tm4/main/world.h"
-#include <STDARG.H>
-#include <stdio.h>
 #include <stdlib.h>
-
-extern s32 WorldSetDisplayFaces(Tm4WorldInfoBundle* world, s32 enabled);
-static char hide_class[] = "tm3StageHide";
-
-static s32 construct(Tm3StageHide* hide, va_list arguments)
-{
-    hide->group = va_arg(arguments, int);
-    hide->stage = va_arg(arguments, int);
-    hide->tick = GetCurrentTime();
-    return 1;
-}
-
-static void process(Tm3StageHide* hide)
-{
-    if (hide->tick == GetCurrentTime())
-        return;
-    char path[80];
-    snprintf(
-        path, sizeof(path), "/objects/destroyable/instances/startup/tm3_group_%d", hide->group);
-    RegistryDirectory* stage = RegGetDirectoryPtrS(path);
-    for (int i = 0; stage && i < hide->stage; ++i)
-        stage = RegGetDirectoryPtrPS(stage, "next");
-    if (stage)
-        WorldSetDisplayFaces(WorldObjectGetInfo(stage), 0);
-    ObjectDestroy(hide);
-}
-
-int Tm3StageRegister(RegistryDirectory* directory)
-{
-    return ObjectRegisterClass(hide_class, sizeof(Tm3StageHide), directory,
-        (Tm4PackedConstructor)construct, NULL, (Tm4ObjectCallback)process, NULL, NULL);
-}
 
 void Tm3StageEffect(RegistryDirectory* stage, s32 x, s32 y, s32 z)
 {
@@ -46,9 +11,6 @@ void Tm3StageEffect(RegistryDirectory* stage, s32 x, s32 y, s32 z)
     if (refs) {
         u8* faces = RegGetFileDataS("/world/displayPolys/faceData");
         const SVECTOR* vertices = RegGetFileDataS("/world/displayPolys/vertexData");
-        const s32* id = RegGetFileDataPS(stage, "stageId");
-        if (ObjectCreate(hide_class, 0, id[0], id[1]))
-            WorldSetDisplayFaces(WorldObjectGetInfo(stage), 1);
         for (s32 remaining = *refs++; remaining; --remaining) {
             Tm4DisplayFace* face = (void*)(faces + *refs++);
             const SVECTOR* base = vertices + *refs++;
