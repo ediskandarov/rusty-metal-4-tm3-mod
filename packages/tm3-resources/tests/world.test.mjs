@@ -457,3 +457,33 @@ test("teleporter records become startup instances with original position, radius
   expect(instance.files.get("radius").bytes[0]).toBe(120);
   expect(converted.metadata.teleporters).toBe(1);
 });
+
+test("pickup types select TM3 collection and keep stock TM4 animation", async () => {
+  const f = fixture();
+  const { root } = await readMr((await convertWorld(f.ter(), images())).archive);
+  expect(root.folders.get("world").files.has("pickupRules")).toBe(false);
+  const types = root.folders.get("objects").folders.get("powerup");
+  const radius = types.files.get("collisionRadius").bytes;
+  expect(new DataView(radius.buffer, radius.byteOffset).getInt32(0, true)).toBe(40);
+  const text = (entry) => new TextDecoder().decode(entry.bytes).split("\0")[0];
+  for (const name of [
+    "fire",
+    "homing",
+    "power",
+    "speed",
+    "napalm",
+    "remote",
+    "ricochet",
+    "rain",
+    "mortar",
+    "lightning",
+    "health",
+    "healthFull",
+    "turbo",
+  ]) {
+    expect(text(types.folders.get(name).files.get("interact"))).toBe("Tm3");
+    expect(types.folders.get(name).files.has("animation")).toBe(false);
+  }
+  expect(types.folders.has("special")).toBe(false);
+  expect(types.folders.has("proximity")).toBe(false);
+});

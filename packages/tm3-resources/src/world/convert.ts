@@ -1,5 +1,5 @@
 import type { MrDirectory } from "@tm4/resources/compatibility/mr";
-import { binary, directory, writeMr } from "@tm4/resources/mods/mr-writer";
+import { binary, directory, stringEntry, writeMr } from "@tm4/resources/mods/mr-writer";
 
 import { at, Binary, requireValue } from "../shared/binary.ts";
 import { readTextureAnimations } from "./animation.ts";
@@ -10,6 +10,7 @@ import { writeInstances, writeStartupInstances, writeWorldObjects } from "./inst
 import { readNavigation } from "./navigation.ts";
 import { readWorldObjects } from "./objects.ts";
 import { readPickupModels } from "./pickup-models.ts";
+import { pickupTypes } from "./pickups.ts";
 
 export interface WorldConversionOptions {
   /** Force one UV/CLUT variant instead of selecting terrain textures by geometry detail. */
@@ -93,7 +94,6 @@ export async function convertWorld(
     put("weaponSet", new TextEncoder().encode("Tm3WorldWeapons\0"), 2);
     put("contactEffects", new TextEncoder().encode("Tm3ContactEffects\0"), 2);
     put("teleportEffect", new TextEncoder().encode("Tm3TeleportEffect\0"), 2);
-    put("pickupRules", new TextEncoder().encode("Tm3WorldPickups\0"), 2);
   }
   const records = readWorldObjects(world);
   const mapWeapons = new Set(
@@ -106,6 +106,20 @@ export async function convertWorld(
   requireValue(mapWeapons.size <= 1, "Conflicting map weapons share the Proximity inventory slot");
   const [mapWeapon] = mapWeapons;
   if (mapWeapon) put("tm3MapWeapon", new TextEncoder().encode(mapWeapon + "\0"), 2);
+  const types = directory();
+  const pickupRadius = new Uint8Array(4);
+  new DataView(pickupRadius.buffer).setInt32(0, 40, true);
+  types.files.set("collisionRadius", { ...binary(pickupRadius), type: 4 });
+  for (const { tm4Type } of pickupTypes) {
+    if (!tm4Type || (tm4Type === "proximity" && !mapWeapon)) continue;
+    const type = directory();
+    type.files.set("interact", stringEntry("Tm3"));
+    types.folders.set(tm4Type, type);
+  }
+  const objects = directory();
+  objects.folders.set("powerup", types);
+  root.folders.set("objects", objects);
+
   for (const { name, type, mesh } of readPickupModels(at(world.blocks, 5).bytes))
     if (type !== "proximity" || name === mapWeapon) put("pickupModels/" + type, mesh);
   const decorations = directory();

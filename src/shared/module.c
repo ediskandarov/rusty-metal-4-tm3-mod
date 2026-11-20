@@ -9,14 +9,14 @@
 #include "tm3/resources.h"
 #include "tm3/world.h"
 #include "tm4/main/os.h"
+#include "tm4/modules/powerup.h"
 #include "world_contact.h"
 #include "world_flash.h"
-#include "world_pickups.h"
 #include "world_weapons.h"
 #include <string.h>
 #include <strings.h>
 
-extern const WebWorldPickups Tm3WorldPickups;
+s32 InteractCarWithPowerupTm3(Car*, PowerupState*);
 extern const WebWorldWeapons Tm3WorldWeapons;
 extern const WebCarStatusEffects Tm3StatusEffects;
 
@@ -27,8 +27,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 {
     if (!strcmp(name, "__rm4_snapshot_types"))
         return (OSWord)Tm3SnapshotTypes();
-    if (!strcmp(name, "Tm3WorldPickups"))
-        return (OSWord)&Tm3WorldPickups;
+    EXPORT(InteractCarWithPowerupTm3);
     if (!strcmp(name, "Tm3WorldWeapons"))
         return (OSWord)&Tm3WorldWeapons;
     if (!strcmp(name, "Tm3StatusEffects"))

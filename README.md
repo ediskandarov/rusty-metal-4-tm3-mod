@@ -32,6 +32,9 @@ is active does not restart it or consume ammunition. Their state advances in
 the ordinary TM4 car process callback, after weapon handling and physics; the
 60-tick active period includes the activation tick. No pre-weapon input hook is required.
 
+Map pickups keep TM3 collection rules and use TM4 rotation, bobbing, sparkle effects
+and respawn timing. No custom pickup-animation hook is required.
+
 A missile's immutable definition belongs to its module. Snapshots save its exported
 name and resolve it in the loaded module on restore, including its callbacks.
 Missing definitions reject the snapshot. Car-owned actors publish their snapshot

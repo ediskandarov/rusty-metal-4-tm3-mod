@@ -8,7 +8,7 @@
 #include "tm4/main/game.h"
 #include "tm4/main/object.h"
 #include "tm4/modules/car_ai.h"
-#include "world_pickups.h"
+#include "tm4/modules/powerup.h"
 #include <string.h>
 #include <strings.h>
 
@@ -122,35 +122,7 @@ static s32 acquire(void)
 
 const WebWorldWeapons Tm3WorldWeapons = { acquire, configure, Tm3ResourcesRelease };
 
-static s32 handles(const char* name)
-{
-    if (!strcasecmp(name, "Proximity"))
-        return RegGetFileDataS("/world/tm3MapWeapon") != NULL;
-    return definition(name) || !strcasecmp(name, "health") || !strcasecmp(name, "healthFull")
-        || !strcasecmp(name, "turbo");
-}
-
-static void initialize_pickup(PowerupState* power)
-{
-    /* 8002bd2c chooses rand() % 1024; the stock constructor already took the draw. */
-    power->angle &= 1023;
-    ObjectSetInteractionRadius(power, 40);
-}
-
-static void update_pickup(PowerupState* power)
-{
-    if (power->position.fields.active == POWERUP_AVAILABLE) {
-        power->angle = (power->angle + 200) & 4095;
-        return;
-    }
-    if (power->inactive_ticks++ >= power->respawn_delay_ticks
-        && power->respawn_delay_ticks != POWERUP_RESPAWN_DISABLED) {
-        power->position.fields.active = POWERUP_AVAILABLE;
-        power->inactive_ticks = 0;
-    }
-}
-
-static s32 collect(Car* car, PowerupState* power)
+s32 InteractCarWithPowerupTm3(Car* car, PowerupState* power)
 {
     if (!strcasecmp(power->name, "turbo")) {
         car->turbo_fuel = car->maximum_turbo_fuel;
@@ -184,8 +156,7 @@ static s32 collect(Car* car, PowerupState* power)
         s32 space = match->descriptor->maximum - match->amount;
         match->amount += power->units < space ? power->units : space;
     }
+    power->sound = NULL;
     Tm3PlayNamedSound("tm3_s05", NULL, car, 2000, 0);
     return 1;
 }
-
-const WebWorldPickups Tm3WorldPickups = { handles, collect, initialize_pickup, update_pickup };
