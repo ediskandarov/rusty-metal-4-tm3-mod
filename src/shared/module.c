@@ -19,6 +19,9 @@
 #include <strings.h>
 
 s32 InteractCarWithPowerupTm3(Car*, PowerupState*);
+#ifdef TM3_TEST_HOOKS
+s32 Tm3TestPickupState(void);
+#endif
 extern const WebWorldWeapons Tm3WorldWeapons;
 extern const WebCarStatusEffects Tm3StatusEffects;
 
@@ -51,6 +54,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(InteractWeaponRayBeamWithTm3Destroyable);
 #ifdef TM3_TEST_HOOKS
     EXPORT(Tm3TestHitSceneryWithEvent);
+    EXPORT(Tm3TestPickupState);
 #endif
     EXPORT(Tm3ScreenEffect);
     EXPORT(Tm3FragmentImpact);

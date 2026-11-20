@@ -37,7 +37,8 @@ The engine registers game defaults before world overrides, then loads individual
 Weapon-set callbacks only acquire and release resources around the car-class lifetime.
 
 Map pickups keep TM3 collection rules and use TM4 rotation, bobbing, sparkle effects
-and respawn timing. No custom pickup-animation hook is required.
+and respawn timing. TM3 regeneration value 255 disables respawn in the mod’s
+collection handler. No custom pickup-animation hook is required.
 
 A missile's immutable definition belongs to its module. Snapshots save its exported
 name and resolve it in the loaded module on restore, including its callbacks.
@@ -127,3 +128,12 @@ before and between destruction stages. Damage uses the engine's bullet interacti
   Verify damage, stage changes, final pickup release, local rollback and portable
   snapshot restoration. The current bullet-dispatch and focused car checks do not
   cover every special attack.
+
+Pickup respawn check (build shared with `--test-hooks`):
+
+```sh
+bun tests/browser/pickup-respawn.mjs --disc ./disc-tm4
+```
+
+Checks one-use and respawning pickups, rollback before collection and portable
+restoration after collection.

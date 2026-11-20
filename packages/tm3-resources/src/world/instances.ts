@@ -47,7 +47,6 @@ export function writeWorldObjects(
       instance.files.set("type", stringEntry(type));
       instance.files.set("units", intEntry(units));
       instance.files.set("regenRate", intEntry(object.regeneration));
-      if (object.regeneration === 255) instance.files.set("singleUse", intEntry(1));
       if (group) {
         const events = group.folders.get("onDestroy") ?? directory();
         const event = directory();

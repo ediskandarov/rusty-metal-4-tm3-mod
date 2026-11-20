@@ -91,8 +91,12 @@ static s32 acquire(void)
 
 const WebWorldWeapons Tm3WorldWeapons = { acquire, Tm3ResourcesRelease };
 
+enum { TM3_PICKUP_NO_RESPAWN = 255 };
+
 s32 InteractCarWithPowerupTm3(Car* car, PowerupState* power)
 {
+    if (power->position.fields.regeneration_seconds == TM3_PICKUP_NO_RESPAWN)
+        power->respawn_delay_ticks = POWERUP_RESPAWN_DISABLED;
     if (!strcasecmp(power->name, "turbo")) {
         car->turbo_fuel = car->maximum_turbo_fuel;
     } else if (!strcasecmp(power->name, "health") || !strcasecmp(power->name, "healthFull")) {
@@ -129,3 +133,17 @@ s32 InteractCarWithPowerupTm3(Car* car, PowerupState* power)
     Tm3PlayNamedSound("tm3_s05", NULL, car, 2000, 0);
     return 1;
 }
+
+#ifdef TM3_TEST_HOOKS
+s32 Tm3TestPickupState(void)
+{
+    for (s32 list = 0; list < OBJECT_LIST_COUNT; ++list)
+        for (Tm4ObjectHeader* header = ObjectLists[list].first; header; header = header->next) {
+            if (strcmp(header->name, "powerup"))
+                continue;
+            const PowerupState* power = ObjectGetPayload(header);
+            return power->respawn_delay_ticks | (power->position.fields.active << 16);
+        }
+    return -1;
+}
+#endif

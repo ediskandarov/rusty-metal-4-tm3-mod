@@ -93,7 +93,8 @@ test("a group releases each linked pickup at its original placement", async () =
     expect(stringValue(event.files.get("class"))).toBe("powerup");
     const files = instances.folders.get("released").folders.get(name).files;
     expect(files.get("units").bytes[0]).toBe(units);
-    expect(files.get("singleUse").bytes[0]).toBe(1);
+    expect(files.get("regenRate").bytes[0]).toBe(255);
+    expect(files.has("singleUse")).toBe(false);
     expect(files.get("pos").bytes[0]).toBe(offset);
   }
 });
