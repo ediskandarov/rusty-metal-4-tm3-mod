@@ -25,6 +25,7 @@ function integer(value: number, type: number) {
 
 export function writeWorldWeapons(root: MrDirectory, mapWeapon: string | undefined) {
   const objects = root.folders.get("objects")!;
+  objects.folders.set("tm3WorldWeapons", directory());
   const car = directory(),
     weapon = directory(),
     list = directory();

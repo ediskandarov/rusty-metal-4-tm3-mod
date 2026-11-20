@@ -9,6 +9,7 @@
 #include "tm4/main/object.h"
 #include "tm4/modules/car_ai.h"
 #include "tm4/modules/powerup.h"
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -75,21 +76,32 @@ s32 Tm3LaunchLightning(Car* car, void* context, CarWeaponInstance* weapon, s32 r
     return Tm3MarkerLightning(3, &settings);
 }
 
-static s32 acquire(void)
+static int resources_acquired;
+
+void Tm3WorldWeaponsClassConstructor(RegistryDirectory* directory)
 {
-    if (!Tm3ResourcesAcquire())
-        return 0;
+    if (!Tm3ResourcesAcquire()) {
+        abort();
+    }
     RegistryDirectory* resources = RegGetDirectoryPtrS("/resourcePacks/tm3");
     static const u8 samples[] = { 5, 9, 11, 12, 13, 14, 15, 22, 23, 24, 26, 27, 28, 32 };
     int ready = Tm3LaserRegister(resources) && Tm3RemoteRegister(resources);
     for (size_t i = 0; ready && i < sizeof(samples) / sizeof(*samples); ++i)
         ready = Tm3LoadSound(samples[i]);
-    if (!ready)
+    if (!ready) {
         Tm3ResourcesRelease();
-    return ready;
+        abort();
+    }
+    resources_acquired = 1;
 }
 
-const WebWorldWeapons Tm3WorldWeapons = { acquire, Tm3ResourcesRelease };
+void Tm3WorldWeaponsClassDestructor(RegistryDirectory* directory)
+{
+    if (resources_acquired) {
+        Tm3ResourcesRelease();
+        resources_acquired = 0;
+    }
+}
 
 enum { TM3_PICKUP_NO_RESPAWN = 255 };
 

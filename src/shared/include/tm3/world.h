@@ -3,9 +3,9 @@
 
 #include "tm3/resources.h"
 #include "tm4/modules/car_weapon.h"
-#include "world_weapons.h"
 
-extern const WebWorldWeapons Tm3WorldWeapons;
+void Tm3WorldWeaponsClassConstructor(RegistryDirectory*);
+void Tm3WorldWeaponsClassDestructor(RegistryDirectory*);
 s32 Tm3LaunchWorldProjectile(Car*, void*, CarWeaponInstance*, s32);
 s32 Tm3LaunchLightning(Car*, void*, CarWeaponInstance*, s32);
 int Tm3LaunchMapBeam(Car* owner, const SVECTOR* origin, const SVECTOR* direction);

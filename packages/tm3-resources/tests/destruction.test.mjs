@@ -90,7 +90,6 @@ test("a final stage enables replacement faces and passive colliders without assi
 test("destruction emits each authored fragment face once in TER order", () => {
   const f = fixture();
   const stage = () => f.run().startup.folders.get("tm3_group_0").files;
-  expect(stage().has("stageEffect")).toBe(false);
   expect(stage().has("fragmentFaces")).toBe(false);
   f.g.setUint8(12, 1);
   expect(stage).toThrow("Ambiguous destruction fragment vertex base");

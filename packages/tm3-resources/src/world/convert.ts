@@ -94,7 +94,6 @@ export async function convertWorld(
   if (horizon) put("horiz.bin", horizonSource.slice(0, horizon.size));
   if (at(world.blocks, 7).bytes.length) {
     put("tm3WeaponMarkers", section("position_records"), 5, 128);
-    put("weaponSet", new TextEncoder().encode("Tm3WorldWeapons\0"), 2);
     put("contactEffects", new TextEncoder().encode("Tm3ContactEffects\0"), 2);
     put("teleportEffect", new TextEncoder().encode("Tm3TeleportEffect\0"), 2);
   }

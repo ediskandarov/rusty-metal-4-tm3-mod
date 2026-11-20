@@ -14,7 +14,6 @@
 #include "tm4/main/os.h"
 #include "tm4/modules/powerup.h"
 #include "world_contact.h"
-#include "world_weapons.h"
 #include <string.h>
 #include <strings.h>
 
@@ -22,7 +21,6 @@ s32 InteractCarWithPowerupTm3(Car*, PowerupState*);
 #ifdef TM3_TEST_HOOKS
 s32 Tm3TestPickupState(void);
 #endif
-extern const WebWorldWeapons Tm3WorldWeapons;
 extern const WebCarStatusEffects Tm3StatusEffects;
 
 #define EXPORT(symbol)                                                                             \
@@ -36,8 +34,8 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3LaunchWorldProjectile);
     EXPORT(Tm3LaunchLightning);
     EXPORT(Tm3PlaceRemote);
-    if (!strcmp(name, "Tm3WorldWeapons"))
-        return (OSWord)&Tm3WorldWeapons;
+    EXPORT(Tm3WorldWeaponsClassConstructor);
+    EXPORT(Tm3WorldWeaponsClassDestructor);
     if (!strcmp(name, "Tm3StatusEffects"))
         return (OSWord)&Tm3StatusEffects;
     EXPORT(Tm3ContactEffects);

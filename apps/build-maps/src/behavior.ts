@@ -1,9 +1,9 @@
 import type { MrDirectory } from "@tm4/resources/compatibility/mr";
-import { stringEntry } from "@tm4/resources/mods/mr-writer";
+import { directory, stringEntry } from "@tm4/resources/mods/mr-writer";
 
 interface MapBehavior {
   module: string;
-  weaponSet?: string;
+  className?: string;
   launchFunc: string;
   pickup: string;
   props: Readonly<Record<number, string>>;
@@ -13,7 +13,7 @@ interface MapBehavior {
 export const mapBehaviors: Readonly<Record<string, MapBehavior>> = {
   egypt: {
     module: "mt3egypt",
-    weaponSet: "Tm3EgyptWeapons",
+    className: "tm3Egypt",
     launchFunc: "Tm3UseEye",
     pickup: "Eye",
     props: {},
@@ -65,7 +65,8 @@ export function bindMapBehavior(id: string, root: MrDirectory): MapBehavior | un
       ?.folders.get("Proximity");
     if (!weapon) throw Error(`${id}: missing map weapon descriptor`);
     weapon.files.set("launchFunc", stringEntry(behavior.launchFunc));
-    if (behavior.weaponSet) world.files.set("weaponSet", stringEntry(behavior.weaponSet));
+    if (behavior.className)
+      root.folders.get("objects")!.folders.set(behavior.className, directory());
   }
   return behavior;
 }

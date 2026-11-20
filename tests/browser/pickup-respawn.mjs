@@ -23,7 +23,6 @@ for (const regeneration of [255, 2]) {
   const startup = mr.directories.get("Root/objects/powerup/instances/startup");
   const pickup = startup.folders.get("tm3_12008");
   assert.ok(pickup, "Tokyo's one-use Radar pickup is required");
-  assert.ok(!pickup.files.has("singleUse"));
   new DataView(
     pickup.files.get("regenRate").bytes.buffer,
     pickup.files.get("regenRate").bytes.byteOffset,

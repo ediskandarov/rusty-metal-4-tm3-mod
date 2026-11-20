@@ -36,6 +36,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
   const module = mapBehaviors[map.id]?.module;
   const { site, archive } = prepareMapFixture(root, module, values.site);
   const world = root.folders.get("world");
+  assert.ok(root.folders.get("objects").folders.has("tm3WorldWeapons"));
   const markers = world.files.get("tm3WeaponMarkers").bytes;
   let anchors = 0;
   const marker = map.id === "north-pole" ? 3 : 5;
@@ -58,6 +59,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
         await Bun.file(resolve(values.maps, map.file + ".IMG")).arrayBuffer(),
       ),
     },
+    playerCars: map.id === "egypt" ? ["Crusher", "Crusher"] : undefined,
     cars: [{ stem: "mtm3sw", title: "TM3 Sweet Tooth", directory: "tm3sweet", file: "SWEET.MR" }],
   });
   try {
