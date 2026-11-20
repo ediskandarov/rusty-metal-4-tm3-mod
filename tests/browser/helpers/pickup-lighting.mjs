@@ -13,8 +13,12 @@ export async function checkPickupLighting(page) {
         HEAPU8.set(bytes, ptr);
         return ptr;
       };
-      const power = globalThis.LDSO.loadedLibsByName["/modules/o_power.wasm"];
-      const slot = power.exports.Tm4ModuleExport(string("PowerupScreenDisplay"));
+      const slot = Module.ccall(
+        "WebDynamicModuleExport",
+        "number",
+        ["string", "number"],
+        ["o_power.sym", string("PowerupScreenDisplay")],
+      );
       if (!slot) throw Error("Missing native pickup renderer");
       const render = getWasmTableEntry(slot);
       const model = Module.ccall(

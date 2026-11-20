@@ -7,6 +7,7 @@ import { discDirectorySources } from "@tm4/resources/host/disc";
 import { loadDisc } from "@tm4/resources/loader/loader";
 import { directory, stringEntry, writeMr } from "@tm4/resources/mods/mr-writer";
 
+import { prepareModuleResources } from "../../../external/rusty-metal-4/packages/mr-preparation/js/host.ts";
 import { launchBrowser } from "../../../external/rusty-metal-4/tests/browser/helpers/browser.mjs";
 
 export async function openTm3Car({
@@ -69,22 +70,18 @@ export async function openTm3Car({
     assets.files.set(path, model);
     rows.push([String(sector), String(model.length), path]);
     sector += Math.ceil(model.length / 2048);
-    assets.files.set(
-      `/modules/${config.stem}.wasm`,
-      new Uint8Array(
-        await Bun.file(`${mods}/${config.directory}/${config.stem}.wasm`).arrayBuffer(),
-      ),
-    );
   }
   assets.files.set(
     "/DATA/files.tsv",
     new TextEncoder().encode(rows.map((r) => r.join("\t")).join("\n") + "\n"),
   );
-  assets.files.set(
-    "/modules/mtm3fx.wasm",
-    new Uint8Array(await Bun.file(mods + "/tm3resources/mtm3fx.wasm").arrayBuffer()),
-  );
-  const modules = [...new Bun.Glob("modules/*.wasm").scanSync({ cwd: site })];
+  const modules = new Map();
+  for (const path of new Bun.Glob("*.wasm").scanSync({ cwd: resolve(site, "modules") }))
+    modules.set(
+      path.replace(/\.wasm$/, ".sym"),
+      new Uint8Array(await Bun.file(resolve(site, "modules", path)).arrayBuffer()),
+    );
+  await prepareModuleResources(assets.files, modules);
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -126,15 +123,11 @@ export async function openTm3Car({
     });
     await page.goto(server.url.href);
     await page.evaluate(
-      async ({ files, modules }) => {
+      async ({ files }) => {
         const data = await Promise.all([
           ...files.map(async (path) => [
             path,
             new Uint8Array(await (await fetch("/assets" + path)).arrayBuffer()),
-          ]),
-          ...modules.map(async (path) => [
-            "/" + path,
-            new Uint8Array(await (await fetch("/" + path)).arrayBuffer()),
           ]),
         ]);
         globalThis.Module = {
@@ -161,7 +154,7 @@ export async function openTm3Car({
           },
         };
       },
-      { files: [...assets.files.keys()], modules },
+      { files: [...assets.files.keys()] },
     );
     await page.addScriptTag({ url: new URL("tm4_web.js", server.url).href });
     await page.waitForFunction(() => globalThis.ready || globalThis.failure, null, {

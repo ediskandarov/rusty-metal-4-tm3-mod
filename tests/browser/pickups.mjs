@@ -34,7 +34,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
     )
   ).root;
   const module = mapBehaviors[map.id]?.module;
-  const { site, archive } = await prepareMapFixture(root, module, values.site, output);
+  const { site, archive } = prepareMapFixture(root, module, values.site);
   const fixture = await openTm3Car({
     disc: values.disc,
     site,

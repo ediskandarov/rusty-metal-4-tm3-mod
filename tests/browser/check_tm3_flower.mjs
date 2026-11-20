@@ -28,14 +28,17 @@ const { page, log } = fixture;
 try {
   const result = await page.evaluate(async () => {
     function call(name, ...args) {
-      const lib = globalThis.LDSO.loadedLibsByName["/modules/mtm3fp.wasm"];
-      if (!lib) throw Error("Flower Power module was not loaded");
       const saved = stackSave();
       const raw = new TextEncoder().encode(name + "\0");
       const p = stackAlloc(raw.length);
       HEAPU8.set(raw, p);
       try {
-        const i = lib.exports.Tm4ModuleExport(p);
+        const i = Module.ccall(
+          "WebDynamicModuleExport",
+          "number",
+          ["string", "number"],
+          ["mtm3fp.sym", p],
+        );
         if (!i) throw Error("Missing " + name);
         return getWasmTableEntry(i)(...args);
       } finally {

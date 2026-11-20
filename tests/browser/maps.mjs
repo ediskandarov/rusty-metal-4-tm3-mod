@@ -34,7 +34,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
     )
   ).root;
   const module = mapBehaviors[map.id]?.module;
-  const { site, archive } = await prepareMapFixture(root, module, values.site, output);
+  const { site, archive } = prepareMapFixture(root, module, values.site);
   const world = root.folders.get("world");
   const markers = world.files.get("tm3WeaponMarkers").bytes;
   let anchors = 0;
@@ -63,7 +63,10 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
   try {
     const result = await fixture.page.evaluate(
       async ({ id, module, anchors, props }) => {
-        if (module && !globalThis.LDSO.loadedLibsByName["/modules/" + module + ".wasm"])
+        if (
+          module &&
+          !Module.ccall("WebNativeModuleLoaded", "number", ["string"], [module + ".sym"])
+        )
           throw Error("Map module was not loaded");
         const count = (name) => {
           Module.ccall("WebTestSnapshotObjects", null, ["string"], [name]);

@@ -35,7 +35,7 @@ const directory = join(mods, "tm3conversion");
 await mkdir(directory, { recursive: true });
 await mkdir(output, { recursive: true });
 const compile = await createModuleBuilder(gameBuild);
-await compile({
+const behavior = await compile({
   name: "mtm3cv",
   sources: [resolve("tests/native/conversion.c")],
   output: directory,
@@ -146,10 +146,6 @@ for (const name of [
   const corners = geometry(source, result),
     wheels = expectedWheels(source);
   // Test resource conversion without borrowing a stock car's special behavior.
-  const symbol = new TextEncoder().encode("mtm3cv.sym*\0"),
-    behavior = new Uint8Array(32);
-  new DataView(behavior.buffer).setUint32(16, 20, true);
-  behavior.set(symbol, 20);
   result.root.files.set("behavior.mod", { ...binary(behavior), type: 6 });
   await Bun.write(join(directory, `${name}.MR`), writeMr(result.root));
   const fixture = await openTm3Car({
@@ -165,13 +161,17 @@ for (const name of [
     const runtime = await fixture.page.evaluate(
       async ({ name }) => {
         function call(name, ...args) {
-          const lib = globalThis.LDSO.loadedLibsByName["/modules/mtm3cv.wasm"];
           const saved = stackSave(),
             raw = new TextEncoder().encode(name + "\0"),
             p = stackAlloc(raw.length);
           HEAPU8.set(raw, p);
           try {
-            const i = lib.exports.Tm4ModuleExport(p);
+            const i = Module.ccall(
+              "WebDynamicModuleExport",
+              "number",
+              ["string", "number"],
+              ["mtm3cv.sym", p],
+            );
             if (!i) throw Error("Missing diagnostic " + name);
             return getWasmTableEntry(i)(...args);
           } finally {

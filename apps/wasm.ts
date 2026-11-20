@@ -1,6 +1,7 @@
 import { mkdir, realpath } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
+import { nameModule } from "@tm4/resources/mods/modules";
 import { $ } from "bun";
 
 const root = resolve(import.meta.dir, "..");
@@ -78,7 +79,11 @@ export async function createModuleBuilder(gameBuild: string) {
       .cwd(engine)
       .nothrow();
     if (result.exitCode) throw Error(`${name}: compilation failed (${result.exitCode})`);
-    const bytes = new Uint8Array(await Bun.file(destination).arrayBuffer());
+    const bytes = nameModule(
+      new Uint8Array(await Bun.file(destination).arrayBuffer()),
+      `${name}.sym`,
+    );
+    await Bun.write(destination, bytes);
     const module = await WebAssembly.compile(bytes);
     const imports = WebAssembly.Module.imports(module);
     const exports = WebAssembly.Module.exports(module);

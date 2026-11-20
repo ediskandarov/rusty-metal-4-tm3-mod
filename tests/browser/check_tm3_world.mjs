@@ -52,12 +52,7 @@ const built = (
     new Uint8Array(await Bun.file(resolve("build/maps", map.file + ".MR")).arrayBuffer()),
   )
 ).root;
-const prepared = await prepareMapFixture(
-  built,
-  mapBehaviors[map.id]?.module,
-  resolve(values.site),
-  resolve(values.output),
-);
+const prepared = prepareMapFixture(built, mapBehaviors[map.id]?.module, resolve(values.site));
 const session = await openTm3Car({
   disc: values.disc,
   site: prepared.site,

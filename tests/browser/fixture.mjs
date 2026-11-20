@@ -1,15 +1,22 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
+import { moduleName } from "@tm4/resources/mods/modules";
+
 import { cars } from "../../apps/build-cars/src/catalog.ts";
 import { readMr } from "../../external/rusty-metal-4/packages/resources/src/compatibility/mr.ts";
-import {
-  binary,
-  writeMr,
-} from "../../external/rusty-metal-4/packages/resources/src/mods/mr-writer.ts";
+import { writeMr } from "../../external/rusty-metal-4/packages/resources/src/mods/mr-writer.ts";
 
-// Only test packaging is adapted until the port accepts raw Wasm behavior.mod.
-// Compiled Wasm bytes are unchanged. Production builders always embed them.
+function verifyBehavior(root, stem) {
+  const wasm = root.files.get("behavior.mod")?.bytes;
+  if (!stem) {
+    if (wasm) throw Error("Unexpected map module");
+    return;
+  }
+  if (!wasm || moduleName(wasm) !== stem + ".sym")
+    throw Error("Missing or mismatched Wasm behavior: " + stem);
+}
+
 export async function prepareFixture(output, shared, carDirectory) {
   for (const item of [
     { directory: "tm3resources", file: "TM3", stem: "mtm3fx" },
@@ -20,49 +27,15 @@ export async function prepareFixture(output, shared, carDirectory) {
     })),
   ]) {
     const input = item.stem === "mtm3fx" ? shared : resolve(carDirectory, item.file + ".MR");
-    const root = (await readMr(new Uint8Array(await Bun.file(input).arrayBuffer()))).root;
-    const wasm = root.files.get("behavior.mod")?.bytes;
-    if (!wasm || !WebAssembly.validate(wasm)) throw Error(input + ": missing Wasm behavior");
+    const bytes = new Uint8Array(await Bun.file(input).arrayBuffer());
+    verifyBehavior((await readMr(bytes)).root, item.stem);
     const folder = resolve(output, item.directory);
     await mkdir(folder, { recursive: true });
-    await Bun.write(resolve(folder, item.stem + ".wasm"), wasm);
-    const name = new TextEncoder().encode(item.stem + ".sym*\0");
-    const descriptor = new Uint8Array(Math.ceil((20 + name.length) / 4) * 4);
-    new DataView(descriptor.buffer).setUint32(16, 20, true);
-    descriptor.set(name, 20);
-    root.files.set("behavior.mod", { ...binary(descriptor), type: 6 });
-    await Bun.write(resolve(folder, item.file + ".MR"), writeMr(root));
+    await Bun.write(resolve(folder, item.file + ".MR"), bytes);
   }
 }
 
-export async function prepareMapFixture(root, module, engineSite, output) {
-  const { readdir, realpath, symlink } = await import("node:fs/promises");
-  const site = resolve(output, "site");
-  await mkdir(resolve(site, "modules"), { recursive: true });
-  const link = async (source, target) => {
-    try {
-      await symlink(await realpath(source), target);
-    } catch (error) {
-      if (error.code !== "EEXIST") throw error;
-    }
-  };
-  for (const name of await readdir(engineSite)) {
-    if (name === "modules") continue;
-    await link(resolve(engineSite, name), resolve(site, name));
-  }
-  for (const name of await readdir(resolve(engineSite, "modules"))) {
-    if (name === module + ".wasm") continue;
-    await link(resolve(engineSite, "modules", name), resolve(site, "modules", name));
-  }
-  const wasm = root.files.get("behavior.mod")?.bytes;
-  if (module) {
-    if (!wasm || !WebAssembly.validate(wasm)) throw Error("Missing map Wasm " + module);
-    await Bun.write(resolve(site, "modules", module + ".wasm"), wasm);
-    const name = new TextEncoder().encode(module + ".sym*\0");
-    const descriptor = new Uint8Array(Math.ceil((20 + name.length) / 4) * 4);
-    new DataView(descriptor.buffer).setUint32(16, 20, true);
-    descriptor.set(name, 20);
-    root.files.set("behavior.mod", { ...binary(descriptor), type: 6 });
-  } else if (wasm) throw Error("Unexpected map module");
-  return { site, archive: writeMr(root) };
+export function prepareMapFixture(root, module, engineSite) {
+  verifyBehavior(root, module);
+  return { site: resolve(engineSite), archive: writeMr(root) };
 }

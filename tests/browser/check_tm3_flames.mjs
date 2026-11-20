@@ -39,14 +39,17 @@ for (const [stem, title, file] of [
   try {
     const result = await page.evaluate(async (stem) => {
       function call(name, ...args) {
-        const lib = globalThis.LDSO.loadedLibsByName["/modules/" + stem + ".wasm"];
-        if (!lib) throw Error("Flamer module was not loaded");
         const saved = stackSave();
         const raw = new TextEncoder().encode(name + "\0");
         const p = stackAlloc(raw.length);
         HEAPU8.set(raw, p);
         try {
-          const i = lib.exports.Tm4ModuleExport(p);
+          const i = Module.ccall(
+            "WebDynamicModuleExport",
+            "number",
+            ["string", "number"],
+            [stem + ".sym", p],
+          );
           if (!i) throw Error("Missing " + name);
           return getWasmTableEntry(i)(...args);
         } finally {

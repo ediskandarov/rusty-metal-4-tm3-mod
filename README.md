@@ -77,10 +77,12 @@ Asyncify. Car modules must be rebuilt against the same shared headers when
 their interface changes.
 `build:cars --test-hooks` enables the optional diagnostic exports.
 
-**Loading is pending:** the current port loader expects a PS1 module descriptor
-and external `/modules/*.wasm` files. It needs support for raw Wasm MR entries
-before it can load this archive directly. The module itself is compiled and
-checked against the engine's exports.
+Modules carry an `rm4.module` identity and load directly from MR through the engine’s shared loader.
+Before browser checks, build the engine’s MR preparation package:
+
+```sh
+bun run --cwd external/rusty-metal-4 build:mr-preparation
+```
 
 Execution-boundary check (requires built shared and all cars with `--test-hooks`):
 
@@ -90,7 +92,7 @@ bun run test:execution --disc ./disc-tm4
 
 It fires all 16 specials, verifies missile ownership across Wasm modules, and
 compares replay after local rollback and snapshot restore in a fresh match.
-The test adapts archive packaging for the current loader without changing Wasm.
+Tests use the built archives unchanged; stock disc modules use the engine’s MR preparation pipeline.
 
 Map check (requires built shared, maps and cars with `--test-hooks`):
 

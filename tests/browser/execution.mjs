@@ -59,13 +59,17 @@ for (const start of [0, 8]) {
     const result = await fixture.page.evaluate(
       async (stems) => {
         function address(stem, name) {
-          const module = globalThis.LDSO.loadedLibsByName["/modules/" + stem + ".wasm"];
           const mark = stackSave();
           try {
             const bytes = new TextEncoder().encode(name + "\0");
             const ptr = stackAlloc(bytes.length);
             HEAPU8.set(bytes, ptr);
-            const slot = module.exports.Tm4ModuleExport(ptr);
+            const slot = Module.ccall(
+              "WebDynamicModuleExport",
+              "number",
+              ["string", "number"],
+              [stem + ".sym", ptr],
+            );
             return slot;
           } finally {
             stackRestore(mark);
