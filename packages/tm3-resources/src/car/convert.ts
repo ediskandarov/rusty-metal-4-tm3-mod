@@ -97,8 +97,16 @@ function number(root: MrDirectory, path: string, value: number, type = 4) {
 function text(root: MrDirectory, path: string, value: string) {
   put(root, path, new TextEncoder().encode(value + "\0"), 2);
 }
+/** Sparse reflection strengths by source LOD and face index; omitted faces stay matte. */
+export type CarReflections = readonly ReadonlyMap<number, number>[];
+
+export interface CarConversionOptions {
+  reflections?: CarReflections;
+}
+
 interface Item {
   face: CarFace;
+  reflection: number;
   points: number[][];
   normals: number[][];
 }
@@ -174,7 +182,7 @@ function padVertices(vertices: number[][]) {
 }
 function encode(items: Item[]): Chunk {
   const result: Chunk = { faces: [], vertices: [], normals: [] };
-  for (const { face, points, normals } of items) {
+  for (const { face, points, normals, reflection } of items) {
     const vi: number[] = [],
       ni: number[] = [];
     for (const [corner, point] of points.entries()) {
@@ -189,7 +197,7 @@ function encode(items: Item[]): Chunk {
     const uv = face.uv;
     result.faces.push(
       concat([
-        new Uint8Array([face.command & 0x7f, face.command & 0x80 ? 1 : 0, 0, 0]),
+        new Uint8Array([face.command & 0x7f, face.command & 0x80 ? 1 : 0, reflection, 0]),
         new Uint8Array(at(uv, 0)),
         shorts([face.clut], false),
         new Uint8Array(at(uv, 1)),
@@ -221,7 +229,12 @@ function chunks(items: Item[]) {
   if (pending.length) result.push(encode(pending));
   return result;
 }
-function geometry(root: MrDirectory, meshes: CarModel[], scale: number) {
+function geometry(
+  root: MrDirectory,
+  meshes: CarModel[],
+  scale: number,
+  reflections?: CarReflections,
+) {
   const allFaces: Uint8Array[] = [],
     allVertices: number[][] = [],
     allNormals: number[][] = [];
@@ -248,7 +261,7 @@ function geometry(root: MrDirectory, meshes: CarModel[], scale: number) {
       }
       const center = scaled(sourceCenter, scale);
       const frames = group.frames.map(([first, count, start, vertexCount], frame) => {
-        const items = mesh.faces.slice(first, first + count).map((face) => {
+        const items = mesh.faces.slice(first, first + count).map((face, index) => {
           const corners = (face.command & 0x7f) === 0x24 ? 3 : 4;
           let points = face.indices
             .slice(0, corners)
@@ -256,7 +269,12 @@ function geometry(root: MrDirectory, meshes: CarModel[], scale: number) {
           // The selector also drives visibility. Only flagged groups store pivot-relative vertices.
           if (group.flag && !wheel && slot >= 4)
             points = points.map((p) => p.map((v, i) => integer(v + at(center, i))));
-          return { face, points, normals: [] as number[][] };
+          return {
+            face,
+            points,
+            normals: [] as number[][],
+            reflection: reflections?.[lod]?.get(first + index) ?? 0,
+          };
         });
         // Stationary body panels share seams; independently transformed parts do not.
         const key = frame + ":" + (slot < 0 ? "body" : gi);
@@ -409,11 +427,31 @@ function bounds(mesh: CarModel, params: CarParameters, scale: number) {
   return [scaled(low, scale), scaled(high, scale)];
 }
 /** Resource conversion only: behavior and game-policy choices remain in the mod. */
-export async function convertCar(source: Uint8Array<ArrayBuffer>, scale = 1) {
+export async function convertCar(
+  source: Uint8Array<ArrayBuffer>,
+  scale = 1,
+  options: CarConversionOptions = {},
+) {
   requireValue(Number.isFinite(scale) && scale > 0, "Scale must be finite and positive");
   const car = readCar(source),
     root = directory();
-  const groups = geometry(root, car.models, scale);
+  const { reflections } = options;
+  if (reflections) {
+    requireValue(reflections.length === car.models.length, "Reflections must specify every LOD");
+    for (const [lod, model] of car.models.entries()) {
+      for (const [face, value] of at(reflections, lod)) {
+        requireValue(
+          Number.isInteger(face) && face >= 0 && face < model.faces.length,
+          `Reflection face outside source r${lod}: ${face}`,
+        );
+        requireValue(
+          Number.isInteger(value) && value >= 0 && value <= 255,
+          `Reflection outside byte range at r${lod}/${face}: ${value}`,
+        );
+      }
+    }
+  }
+  const groups = geometry(root, car.models, scale, reflections);
   tuning(root, car.parameters);
   const box = bounds(at(car.models, 0), car.parameters, scale);
   for (const [axis, key] of ["physicsBoxWidth", "physicsBoxHeight", "physicsBoxLength"].entries()) {

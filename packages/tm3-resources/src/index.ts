@@ -7,6 +7,7 @@ export type { CarModel, CarGroup, CarFace } from "./car/model.ts";
 export { parameterFields, readParameters } from "./car/parameters.ts";
 export type { CarParameters } from "./car/parameters.ts";
 export { convertCar } from "./car/convert.ts";
+export type { CarReflections, CarConversionOptions } from "./car/convert.ts";
 export { readTerrain } from "./world/terrain.ts";
 export type { Terrain, TerrainFace, TerrainGroup } from "./world/terrain.ts";
 export { WorldVram } from "./world/textures.ts";

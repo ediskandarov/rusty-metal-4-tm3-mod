@@ -738,3 +738,65 @@ test("body seams use TM4 winding and equal face weights, preserving creases, mov
   expect(await firstCorner(4, -64, 0)).toEqual([0, 0, 4096]);
   expect(await firstCorner(-1, -64, 12)).toEqual([0, 0, 4096]);
 });
+
+test("source reflection assignments survive splitting, shared groups and unequal damage frames", async () => {
+  const model = splitMeshFixture([32, 1]);
+  const source = carFixture([model, model, model]);
+  const original = source.slice();
+  const reflections = [
+    new Map([
+      [0, 20],
+      [31, 48],
+    ]),
+    new Map([[0, 30]]),
+    new Map(),
+  ];
+  const baseline = await convertCar(source);
+  const converted = await convertCar(source, 1, { reflections });
+  expect(source).toEqual(original);
+  const resolution = converted.root.folders.get("display").folders.get("resolution");
+  const faces = resolution.files.get("FaceList").bytes;
+  const baselineFaces = baseline.root.folders
+    .get("display")
+    .folders.get("resolution")
+    .files.get("FaceList").bytes;
+  for (const [lod, groups] of converted.metadata.groups.entries()) {
+    expect(groups.filter((g) => g.source_group === 0)).toHaveLength(2);
+    for (const group of groups) {
+      const bytes = resolution.folders
+        .get(`r${lod}`)
+        .folders.get("Groups")
+        .files.get(group.name).bytes;
+      const record = new DataView(bytes.buffer, bytes.byteOffset);
+      for (const frame of [0, 12]) {
+        const start = record.getInt16(frame, true),
+          count = record.getInt16(frame + 2, true);
+        for (let i = start; i < start + count; i++) {
+          // The synthetic UV stores the source face number, independent of output ordering.
+          const sourceFace = faces[i * 24 + 4];
+          expect(faces[i * 24 + 2]).toBe(reflections[lod].get(sourceFace) ?? 0);
+        }
+      }
+    }
+  }
+  const expected = baselineFaces.slice();
+  for (let i = 2; i < expected.length; i += 24) expected[i] = faces[i];
+  expect(faces).toEqual(expected);
+  for (const name of ["VertexList", "VertexNormalList"])
+    expect(resolution.files.get(name).bytes).toEqual(
+      baseline.root.folders.get("display").folders.get("resolution").files.get(name).bytes,
+    );
+});
+
+test("invalid reflection indices and strengths fail before emitting an archive", async () => {
+  const source = carFixture();
+  await expect(convertCar(source, 1, { reflections: [] })).rejects.toThrow("every LOD");
+  for (const face of [-1, 0.5, 2])
+    await expect(
+      convertCar(source, 1, { reflections: [new Map([[face, 30]]), new Map(), new Map()] }),
+    ).rejects.toThrow("Reflection face outside");
+  for (const value of [-1, 256, 0.5, NaN])
+    await expect(
+      convertCar(source, 1, { reflections: [new Map([[0, value]]), new Map(), new Map()] }),
+    ).rejects.toThrow("Reflection outside byte");
+});
