@@ -8,12 +8,12 @@ From the repository root:
 
 ```sh
 bun packages/tm3-resources/src/cli.ts convert-car 'SWEET.CAR;1' --output build/tm3/SWEET.MR
-bun packages/tm3-resources/src/cli.ts convert-world 'HOLLYWD.TER;1' 'HOLLYWD.IMG;1' --output build/tm3/HOLLYWD.MR
+bun packages/tm3-resources/src/cli.ts convert-world 'HOLLYWD.TER;1' 'HOLLYWD.IMG;1' --tm4-game ./GAME.MR --output build/tm3/HOLLYWD.MR
 ```
 
 Use `inspect-car` or `inspect-world` with the same input files to print a JSON report.
 
-`convert-world` exports resources. Use `bun run build:maps --tm3-disc ./disc-tm3`
+`convert-world` exports resources. Use `bun run build:maps --tm3-disc ./disc-tm3 --tm4-disc ./disc-tm4`
 from the mod root to attach map-specific Wasm and bind moving-object behavior.
 Maps also need the shared TM3 module and the port's world texture bank. The map
 weapon set applies to stock TM4 cars too.
@@ -42,7 +42,7 @@ London’s animated structure uses its separate 51-face mesh and the movement pa
 
 All 281 item placements convert, including 32 items revealed by destruction.
 
-Items on the ground use the original block-5 meshes and vertex colours. TM3 pickup rules supply the interaction radius, spin, sound, ammo limits and healing percentages. Health pickups use the map’s separate health regeneration rate.
+Items on the ground use the original block-5 meshes and vertex colours in a standard TM4 `power.bin`. TM4 computes their normals and supplies lighting, rotation, bobbing and sparkle effects. Models with no TM3 replacement, including the special-weapon HUD icon, come from TM4 GAME.MR. TM3 pickup rules supply the interaction radius, sound, ammo limits and healing percentages. Health pickups use the map’s separate health regeneration rate.
 
 The shared module handles Fire, Homing, Power, Speed, Napalm and Mortar. Ricochet reflects off the surface normal. Rain splits into six projectiles. Remote detonates on the second press. Lightning and Spaceship use emitters placed by the map. Tokyo fires its radar beam from the dish. In Egypt the first press drops the Eye marker and the second fires at it. Each map-specific weapon uses the spare Proximity inventory slot.
 

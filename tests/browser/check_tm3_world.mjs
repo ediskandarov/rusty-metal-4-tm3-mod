@@ -40,9 +40,12 @@ assert.ok(!mapWeapon || ["Radar", "Eye"].includes(mapWeapon));
 const map = maps.find((map) => map.id === values.map);
 if (!map) throw Error("Unknown map " + values.map);
 const disc = await openDataDisc(values["tm3-disc"]);
+const tm4 = await openDataDisc(values.disc);
+const game = await readMr(await tm4("/DATA/GAME.MR"));
 const converted = await convertWorld(
   await disc("/WORLDS/" + map.file + ".TER"),
   await disc("/WORLDS/" + map.file + ".IMG"),
+  { powerupResources: game.directories.get("Root/objects/powerup") },
 );
 const built = (
   await readMr(

@@ -7,6 +7,7 @@ import { mapBehaviors } from "../../apps/build-maps/src/behavior.ts";
 import { maps } from "../../apps/build-maps/src/catalog.ts";
 import { readMr } from "../../external/rusty-metal-4/packages/resources/src/compatibility/mr.ts";
 import { prepareFixture, prepareMapFixture } from "./fixture.mjs";
+import { checkPickupLighting } from "./helpers/pickup-lighting.mjs";
 import { openTm3Car } from "./helpers/tm3.mjs";
 
 const { values } = parseArgs({
@@ -49,6 +50,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
     cars: [{ stem: "mtm3sw", title: "TM3 Sweet Tooth", directory: "tm3sweet", file: "SWEET.MR" }],
   });
   try {
+    await checkPickupLighting(fixture.page);
     const result = await fixture.page.evaluate(async () => {
       let tick = 0;
       const step = () => {
@@ -119,7 +121,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
       "PASS",
       map.id,
       result.pickup.name,
-      "collection, stock sparkle, audio, rollback, fresh restore",
+      "lighting, collection, stock sparkle, audio, rollback, fresh restore",
     );
   } finally {
     await fixture.close();

@@ -5,7 +5,7 @@ import { directory, stringValue, writeMr } from "@tm4/resources/mods/mr-writer";
 
 import { writeWorldObjects } from "../src/world/instances.ts";
 import { readWorldObjects } from "../src/world/objects.ts";
-import { readPickupModels } from "../src/world/pickup-models.ts";
+import { convertPickupModels, readPickupModels } from "../src/world/pickup-models.ts";
 
 test("TER pickups retain their native type, coordinates, quantity and base respawn interval in MR", async () => {
   const rows = [
@@ -117,4 +117,116 @@ test("ground models preserve authored face colours and resolve local vertex and 
   bytes[0x9c + 20 + 4] = 3;
   expect(() => readPickupModels(bytes)).toThrow("vertex outside group");
   expect(() => readPickupModels(bytes.subarray(0, bytes.length - 1))).toThrow("Truncated");
+});
+
+function pickupModelFixture() {
+  const types = [
+    "health",
+    "fire",
+    "power",
+    "homing",
+    "ricochet",
+    "lightning",
+    "napalm",
+    "remote",
+    "speed",
+    "rain",
+    "mortar",
+    "freezeRemote",
+    "mirv",
+    "proximity",
+    "rain2",
+    "turbo",
+    "autolob",
+    "healthFull",
+    "special",
+  ];
+  function model(count, header) {
+    const bytes = new Uint8Array(header + count * 20 + count * 3 * 8);
+    const view = new DataView(bytes.buffer);
+    view.setUint32(count * 8, count, true);
+    view.setUint32(count * 8 + 4, count * 3, true);
+    for (let i = 0; i < count; ++i) {
+      bytes.set([3, 1], i * 8);
+      view.setUint16(i * 8 + 2, i * 3, true);
+      view.setUint32(i * 8 + 4, i * 20, true);
+      bytes.set([i + 1, 100, 200, 0x30, 0, 1, 2, 255], header + i * 20);
+      const vertices = header + count * 20 + i * 24;
+      view.setInt16(vertices + 8, 32, true);
+      view.setInt16(vertices + 18, -32, true);
+    }
+    return bytes;
+  }
+  const stock = model(19, 0xac),
+    tm3 = model(17, 0x9c),
+    defaults = directory();
+  defaults.files.set("power.bin", { bytes: stock });
+  types.forEach((type, i) => {
+    const entry = directory(),
+      bytes = new Uint8Array(4);
+    new DataView(bytes.buffer).setUint32(0, i, true);
+    entry.files.set("geometryIndex", { bytes });
+    defaults.folders.set(type, entry);
+  });
+  return { stock, tm3, defaults };
+}
+
+function nativePart(bytes, index) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const faces = bytes[index * 8 + 1],
+    vertices = bytes[index * 8];
+  const faceStart = 0xac + view.getUint32(index * 8 + 4, true);
+  const vertexStart =
+    0xac + view.getUint32(0x98, true) * 20 + view.getUint16(index * 8 + 2, true) * 8;
+  return [
+    bytes.slice(faceStart, faceStart + faces * 20),
+    bytes.slice(vertexStart, vertexStart + vertices * 8),
+  ];
+}
+
+test("native power.bin replaces mapped meshes and preserves TM4-only models and inputs", () => {
+  const { stock, tm3, defaults } = pickupModelFixture();
+  const before = [stock.slice(), tm3.slice()];
+  for (const [name, tm3Index] of [
+    ["Radar", 11],
+    ["Eye", 12],
+    ["Spaceship", 13],
+  ]) {
+    // Use sliced Buffer inputs, whose backing storage does not start at byte zero.
+    const padded = Buffer.concat([Buffer.alloc(7), tm3, Buffer.alloc(9)]);
+    const result = convertPickupModels(padded.subarray(7, 7 + tm3.length), defaults, name);
+    const view = new DataView(result.buffer);
+    expect(result.length).toBe(
+      0xac + view.getUint32(0x98, true) * 20 + view.getUint32(0x9c, true) * 8,
+    );
+    expect([...result.slice(0xa0, 0xa8)]).toEqual(Array(8).fill(0));
+    expect(nativePart(result, 13)[0][0]).toBe(tm3Index + 1);
+    expect(nativePart(result, 15)[0][0]).toBe(15); // Turbo remaps 14 -> 15.
+    expect(nativePart(result, 17)[0][0]).toBe(16); // Full health remaps 15 -> 17.
+    for (const slot of [11, 12, 14, 16, 18])
+      expect(nativePart(result, slot)).toEqual(nativePart(stock, slot));
+    const fire = readPickupModels(tm3)[1].mesh;
+    expect(nativePart(result, 1)).toEqual([fire.slice(8, 28), fire.slice(28)]);
+  }
+  expect(nativePart(convertPickupModels(tm3, defaults, undefined), 13)).toEqual(
+    nativePart(stock, 13),
+  );
+  expect(stock).toEqual(before[0]);
+  expect(tm3).toEqual(before[1]);
+});
+
+test("native pickup conversion rejects broken stock streams, indices and conflicting mappings", () => {
+  const { stock, tm3, defaults } = pickupModelFixture();
+  defaults.files.set("power.bin", { bytes: stock.subarray(0, stock.length - 1) });
+  expect(() => convertPickupModels(tm3, defaults, undefined)).toThrow("streams");
+  defaults.files.set("power.bin", { bytes: stock });
+  stock[0xac + 18 * 20 + 4] = 3;
+  expect(() => convertPickupModels(tm3, defaults, undefined)).toThrow("vertex outside group");
+  stock[0xac + 18 * 20 + 4] = 0;
+  defaults.folders.get("fire").files.get("geometryIndex").bytes[0] = 0;
+  expect(() => convertPickupModels(tm3, defaults, undefined)).toThrow("Conflicting");
+  defaults.folders.get("fire").files.get("geometryIndex").bytes[0] = 19;
+  expect(() => convertPickupModels(tm3, defaults, undefined)).toThrow("slot");
+  defaults.folders.delete("fire");
+  expect(() => convertPickupModels(tm3, defaults, undefined)).toThrow("geometryIndex");
 });

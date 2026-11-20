@@ -9,11 +9,13 @@ import { readWorld, validateWorldTextures } from "./index.ts";
 import { writeInstances, writeStartupInstances, writeWorldObjects } from "./instances.ts";
 import { readNavigation } from "./navigation.ts";
 import { readWorldObjects } from "./objects.ts";
-import { readPickupModels } from "./pickup-models.ts";
+import { convertPickupModels } from "./pickup-models.ts";
 import { pickupTypes } from "./pickups.ts";
 import { writeWorldWeapons } from "./weapons.ts";
 
 export interface WorldConversionOptions {
+  /** TM4 GAME.MR objects/powerup directory; required when TER contains pickup meshes. */
+  powerupResources?: MrDirectory;
   /** Force one UV/CLUT variant instead of selecting terrain textures by geometry detail. */
   textureVariant?: 0 | 1;
 }
@@ -122,8 +124,17 @@ export async function convertWorld(
   root.folders.set("objects", objects);
   writeWorldWeapons(root, mapWeapon);
 
-  for (const { name, type, mesh } of readPickupModels(at(world.blocks, 5).bytes))
-    if (type !== "proximity" || name === mapWeapon) put("pickupModels/" + type, mesh);
+  const pickupModels = at(world.blocks, 5).bytes;
+  if (pickupModels.length) {
+    requireValue(
+      options.powerupResources,
+      "TM4 powerup resources are required for pickup conversion",
+    );
+    types.files.set(
+      "power.bin",
+      binary(convertPickupModels(pickupModels, options.powerupResources, mapWeapon)),
+    );
+  }
   const decorations = directory();
   const props = directory();
   const textureSection = terrain.sections.find((entry) => entry.name === "textures")!;

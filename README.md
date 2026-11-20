@@ -51,7 +51,7 @@ its diagnostic player first. Emscripten (`emcc`) must be on `PATH`.
 bun install
 bun run build:shared --tm3-disc ./disc-tm3 --tm4-disc ./disc-tm4
 bun run build:cars --tm3-disc ./disc-tm3
-bun run build:maps --tm3-disc ./disc-tm3
+bun run build:maps --tm3-disc ./disc-tm3 --tm4-disc ./disc-tm4
 bun run check
 bun run test
 ```

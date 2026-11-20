@@ -2,6 +2,8 @@ import { mkdir, open, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
+import { readMr } from "@tm4/resources/compatibility/mr";
+
 import { convertCar } from "./car/convert.ts";
 import { readCar } from "./car/index.ts";
 import { convertWorld } from "./world/convert.ts";
@@ -16,6 +18,7 @@ const { positionals, values } = parseArgs({
     output: { type: "string" },
     scale: { type: "string" },
     "texture-variant": { type: "string" },
+    "tm4-game": { type: "string" },
   },
 });
 const command = positionals[0],
@@ -27,7 +30,7 @@ if (
   positionals.length !== (command.endsWith("world") ? 3 : 2)
 )
   throw Error(
-    "Usage: inspect-car CAR [--output REPORT.json] | convert-car CAR --output CAR.MR [--scale 1] | inspect-world TER IMG [--output REPORT.json] | convert-world TER IMG --output MAP.MR [--texture-variant 0|1]",
+    "Usage: inspect-car CAR [--output REPORT.json] | convert-car CAR --output CAR.MR [--scale 1] | inspect-world TER IMG [--output REPORT.json] | convert-world TER IMG --tm4-game GAME.MR --output MAP.MR [--texture-variant 0|1]",
   );
 if (command !== "convert-car" && values.scale !== undefined)
   throw Error("--scale only applies to convert-car");
@@ -72,11 +75,14 @@ if (command === "convert-world") {
     metadata = output.slice(0, -3) + ".conversion.json",
     imageOutput = output.slice(0, -3) + ".IMG";
   const image = new Uint8Array(await Bun.file(positionals[2]!).arrayBuffer());
-  const result = await convertWorld(
-    bytes,
-    image,
-    variant === undefined ? {} : { textureVariant: variant === "1" ? 1 : 0 },
-  );
+  if (!values["tm4-game"]) throw Error("convert-world requires --tm4-game GAME.MR");
+  const game = await readMr(new Uint8Array(await Bun.file(values["tm4-game"]).arrayBuffer()));
+  const powerupResources = game.directories.get("Root/objects/powerup");
+  if (!powerupResources) throw Error("Missing TM4 powerup resources");
+  const result = await convertWorld(bytes, image, {
+    powerupResources,
+    ...(variant === undefined ? {} : { textureVariant: variant === "1" ? 1 : 0 }),
+  });
   await writeNewFiles([
     [output, result.archive],
     [imageOutput, result.imageArchive],
