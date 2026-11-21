@@ -1,6 +1,9 @@
 #ifndef TM3_SHARED_AUDIO_H
 #define TM3_SHARED_AUDIO_H
+#include "port/extensions/surface_effects.h"
 #include "tm3/resources.h"
+
+void Tm3SurfaceAudio(Car* car, const Rm4SurfaceFrame* frame);
 
 void Tm3PlayVoice(
     char* name, const SVECTOR* position, void* owner, s32 pitch, s32 random_pitch, s32 volume);

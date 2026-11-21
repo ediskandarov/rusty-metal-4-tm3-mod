@@ -94,7 +94,6 @@ export async function convertWorld(
   if (horizon) put("horiz.bin", horizonSource.slice(0, horizon.size));
   if (at(world.blocks, 7).bytes.length) {
     put("tm3WeaponMarkers", section("position_records"), 5, 128);
-    put("contactEffects", new TextEncoder().encode("Tm3ContactEffects\0"), 2);
     put("teleportEffect", new TextEncoder().encode("Tm3TeleportEffect\0"), 2);
   }
   const records = readWorldObjects(world);
@@ -371,7 +370,7 @@ export async function convertWorld(
         requireValue(count > 0 && first + count <= tiles, "Invalid surface effect texture range");
       }
     }
-    put("wheelSurfaceClass", new TextEncoder().encode("tm3WheelSurface\0"), 2);
+    put("surfaceEffects", new TextEncoder().encode("Tm3SurfaceEffects\0"), 2);
     put("wheelMaterials", sourceSurfaces);
     put("wheelAtlas", atlas.slice(200, 200 + tiles * 8));
   }

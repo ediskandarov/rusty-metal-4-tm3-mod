@@ -13,13 +13,13 @@
 #include "tm3/world.h"
 #include "tm4/main/os.h"
 #include "tm4/modules/powerup.h"
-#include "world_contact.h"
 #include <string.h>
 #include <strings.h>
 
 s32 InteractCarWithPowerupTm3(Car*, PowerupState*);
 #ifdef TM3_TEST_HOOKS
 s32 Tm3TestPickupState(void);
+int Tm3TestSurface(int action, int material, int offset);
 #endif
 extern const WebCarStatusEffects Tm3StatusEffects;
 
@@ -38,7 +38,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3WorldWeaponsClassDestructor);
     if (!strcmp(name, "Tm3StatusEffects"))
         return (OSWord)&Tm3StatusEffects;
-    EXPORT(Tm3ContactEffects);
+    EXPORT(Tm3SurfaceEffects);
     EXPORT(Tm3TeleportEffect);
     EXPORT(Tm3DamageScenery);
     EXPORT(Tm3DestroyableSizeof);
@@ -53,6 +53,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 #ifdef TM3_TEST_HOOKS
     EXPORT(Tm3TestHitSceneryWithEvent);
     EXPORT(Tm3TestPickupState);
+    EXPORT(Tm3TestSurface);
 #endif
     EXPORT(Tm3ScreenEffect);
     EXPORT(Tm3FragmentImpact);

@@ -1,5 +1,6 @@
 #ifndef TM3_SURFACE_H
 #define TM3_SURFACE_H
+#include "port/extensions/surface_effects.h"
 #include "snapshot_types.h"
 #include "tm3/resources.h"
 
@@ -16,8 +17,10 @@ typedef struct {
 } Tm3WheelSurface;
 extern const SnapshotField Tm3TireMarkFields[];
 int Tm3RegisterTireMarks(RegistryDirectory* directory);
-void Tm3TrackWheel(Tm3WheelSurface*, int wheel, const CarWheel*, const SVECTOR*, const u8* row);
-void Tm3UpdateSkidSound(Tm3WheelSurface*, Car*, const CarParticle*);
+extern const Rm4SurfaceEffects Tm3SurfaceEffects;
+void Tm3TrackWheel(Tm3WheelSurface*, int wheel, const Rm4WheelContact*, const u8* row);
+void Tm3UpdateSkidSound(Tm3WheelSurface*, Car*, const Rm4WheelContact*);
+void Tm3ResetSkidSound(Tm3WheelSurface*, Car*);
 typedef struct {
     SVECTOR position, velocity;
     s16 width, height, rise;

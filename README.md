@@ -108,6 +108,15 @@ Use `--map egypt`, `--map tokyo` or `--map hangar-18` for a focused run. Checks 
 map weapons, beam audio/flash, saucer destruction and replay after local rollback
 and snapshot restoration in a fresh match.
 
+Surface-effects check (uses the built Washington map and shared module with `--test-hooks`):
+
+```sh
+bun tests/browser/surface-effects.mjs --disc ./disc-tm4
+```
+
+Exercises marks, dust, splash and spray through the engine contact adapter, including
+material changes, airborne wheels, the real teleport path, car removal and local/portable replay.
+
 Staged destruction check (build shared with `--test-hooks`):
 
 ```sh

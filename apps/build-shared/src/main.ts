@@ -116,7 +116,10 @@ root.folders.set("soundBanks", banks);
 const compile = await createModuleBuilder(values["game-build"]);
 const wasm = await compile({
   name: "mtm3fx",
-  sources: sharedModuleSources,
+  sources: [
+    ...sharedModuleSources,
+    ...(values["test-hooks"] ? [resolve("tests/shared/surface_runtime.c")] : []),
+  ],
   output: resolve("build/shared"),
   inverseRoot: true,
   defines: values["test-hooks"] ? ["TM3_TEST_HOOKS=1"] : [],

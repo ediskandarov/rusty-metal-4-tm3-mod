@@ -47,30 +47,28 @@ static void finish(Tm3WheelSurface* tracker, int wheel)
 }
 
 // 80021890 constructs the ribbon across the actual movement, tangent to the contact plane.
-void Tm3TrackWheel(
-    Tm3WheelSurface* tracker, int wheel, const CarWheel* w, const SVECTOR* contact, const u8* row)
+void Tm3TrackWheel(Tm3WheelSurface* tracker, int wheel, const Rm4WheelContact* hit, const u8* row)
 {
-    const CarParticle* hit = w->response_particle;
-    if (!contact || !row[4] || hit->slip_speed_q12 <= 0x400000) {
+    if (!hit || !row[4] || hit->slip_speed_q12 <= 0x400000) {
         finish(tracker, wheel);
         return;
     }
-    SVECTOR movement = { hit->position.vx - hit->previous_position.vx,
-        hit->position.vy - hit->previous_position.vy, hit->position.vz - hit->previous_position.vz,
-        0 };
-    SVECTOR side = { 0 };
-    OuterProductSSS12(&movement, &hit->normal, &side);
+    const SVECTOR* contact = &hit->position;
+    SVECTOR movement = hit->movement, normal = hit->normal, side = { 0 };
+    OuterProductSSS12(&movement, &normal, &side);
     int32_t tangent[3] = { side.vx, side.vy, side.vz };
     int16_t direction[3];
     Tm3ProjectileNormalize(tangent, direction);
     SVECTOR ends[2] = { *contact, *contact };
     for (int i = 0; i < 2; ++i) {
-        int width = (i ? -w->width : w->width) / 2;
+        int width = (i ? -hit->width : hit->width) / 2;
         ends[i].vx += Q12MulRound(width, direction[0]);
         ends[i].vy += Q12MulRound(width, direction[1]);
         ends[i].vz += Q12MulRound(width, direction[2]);
         ends[i].pad = 0;
     }
+    if (tracker->active[wheel] && tracker->active[wheel]->material != hit->material)
+        finish(tracker, wheel);
     Tm3TireMark* mark = tracker->active[wheel];
     int shade = 17 * WorldGetLight(contact->vx, contact->vz);
     if (mark) {
@@ -137,7 +135,7 @@ static char* skid_name(int sample)
     return sample == 9 ? "tm3_s09" : "tm3_s27";
 }
 
-void Tm3UpdateSkidSound(Tm3WheelSurface* tracker, Car* car, const CarParticle* contact)
+void Tm3UpdateSkidSound(Tm3WheelSurface* tracker, Car* car, const Rm4WheelContact* contact)
 {
     const u8* rows = RegGetFileDataS("/world/wheelMaterials");
     const u8* row = contact ? rows + contact->material * 32 : NULL;
@@ -148,6 +146,8 @@ void Tm3UpdateSkidSound(Tm3WheelSurface* tracker, Car* car, const CarParticle* c
         ObjectDestroy(sound);
         sound = NULL;
     }
+    if (!sound)
+        tracker->skid_sample = 0;
     if (sample) {
         int pitch = 1962 + (((int64_t)(contact->slip_speed_q12 - 0x400000) * 34 + 131072) >> 18);
         if (!sound) {
@@ -156,9 +156,11 @@ void Tm3UpdateSkidSound(Tm3WheelSurface* tracker, Car* car, const CarParticle* c
             tracker->skid_volume = 255;
             tracker->skid_sample = sample;
         }
+        tracker->skid_volume = 255;
         if (sound)
             for (int i = 0; i < sound->voice_count; ++i) {
                 SoundEmitterVoice* v = &sound->voices[i];
+                v->volume = v->volume_base;
                 v->pitch_mode = SOUND_PITCH_FIXED;
                 v->pitch = v->pitch_base = pitch;
             }
@@ -173,6 +175,16 @@ void Tm3UpdateSkidSound(Tm3WheelSurface* tracker, Car* car, const CarParticle* c
                 v->volume = v->volume_base * tracker->skid_volume / 255;
             }
     }
+}
+
+void Tm3ResetSkidSound(Tm3WheelSurface* tracker, Car* car)
+{
+    if (tracker->skid_sample) {
+        SoundEmitter* sound = SoundPlaying(car, skid_name(tracker->skid_sample));
+        if (sound)
+            ObjectDestroy(sound);
+    }
+    tracker->skid_sample = tracker->skid_volume = 0;
 }
 
 int Tm3RegisterTireMarks(RegistryDirectory* directory)

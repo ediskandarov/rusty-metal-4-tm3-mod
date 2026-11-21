@@ -70,20 +70,16 @@ void Tm3PlayLaserSound(void* beam)
 
 /* Contact at 800213a8 uses speed * 8 gain. A suspension hit at 80021d20
    requires two wheels and cannot interrupt the same car's active landing voice. */
-static void contact_sound(Car* car, s32 speed)
+void Tm3SurfaceAudio(Car* car, const Rm4SurfaceFrame* frame)
 {
-    Tm3PlayVoice("tm3_s23", NULL, car, 1308, 1, speed * 8);
+    if (frame->impact_speed >= 0)
+        Tm3PlayVoice("tm3_s23", NULL, car, 1308, 1, frame->impact_speed * 8);
+    int compressed = 0;
+    for (int i = 0; i < RM4_SURFACE_WHEELS; ++i)
+        compressed += frame->wheels[i].compression >= 24;
+    if (compressed >= 2 && frame->contacts && frame->upright && !SoundPlaying(car, "tm3_s24"))
+        Tm3PlayVoice("tm3_s24", NULL, car, 1308, 1, 256);
 }
-
-static int landing_sound(Car* car)
-{
-    if (SoundPlaying(car, "tm3_s24"))
-        return 0;
-    Tm3PlayVoice("tm3_s24", NULL, car, 1308, 1, 256);
-    return 1;
-}
-
-const WebWorldContactEffects Tm3ContactEffects = { 24, 2, contact_sound, landing_sound };
 
 void Tm3TeleportEffect(Car* car)
 {

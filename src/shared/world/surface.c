@@ -1,4 +1,5 @@
 #include "surface.h"
+#include "audio.h"
 #include "mod_api.h"
 #include "tm3/projectile_motion.h"
 #include "tm4/fixed.h"
@@ -64,45 +65,59 @@ static s32 tracker_init(Tm3WheelSurface* t, va_list args)
     return 1;
 }
 
-static void tracker_tick(Tm3WheelSurface* tracker)
+static void tracker_step(void* instance, const Rm4SurfaceFrame* frame)
 {
+    Tm3WheelSurface* tracker = instance;
     Car* car = ObjectGetHeader(tracker)->owner;
-    const CarParticle* loudest = NULL;
-    for (CarWheel* wheel = car->wheels; wheel <= car->wheel_end; ++wheel) {
-        const CarParticle* hit = wheel->response_particle;
-        int index = wheel - car->wheels;
-        if (!wheel->group || !hit || !(hit->contact_state & 1)) {
-            Tm3TrackWheel(tracker, index, wheel, NULL, NULL);
+    const Rm4WheelContact* loudest = NULL;
+    for (int index = 0; index < RM4_SURFACE_WHEELS; ++index) {
+        const Rm4WheelContact* contact = &frame->wheels[index];
+        if (!contact->touching) {
+            Tm3TrackWheel(tracker, index, NULL, NULL);
+            memset(tracker->delay[index], 0, sizeof(tracker->delay[index]));
             continue;
         }
-        const u8* row = material(hit->material);
-        SVECTOR local = wheel->group->center.vector, position = { 0 };
-        local.vy += wheel->direction.fields.displacement + wheel->radius;
-        ApplyMatrixSV(&car->transform, &local, &position);
-        position.vx += car->transform.t[0];
-        position.vy += car->transform.t[1];
-        position.vz += car->transform.t[2];
-        Tm3TrackWheel(tracker, index, wheel, &position, row);
-        if (row[4] && hit->slip_speed_q12 > 0x400000
-            && (!loudest || hit->slip_speed_q12 > loudest->slip_speed_q12))
-            loudest = hit;
-        VECTOR velocity = { Q12Round(hit->velocity_q12.vx), Q12Round(hit->velocity_q12.vy),
-            Q12Round(hit->velocity_q12.vz), 0 };
+        const u8* row = material(contact->material);
+        Tm3TrackWheel(tracker, index, contact, row);
+        if (row[4] && contact->slip_speed_q12 > 0x400000
+            && (!loudest || contact->slip_speed_q12 > loudest->slip_speed_q12))
+            loudest = contact;
+        VECTOR velocity = contact->velocity;
         int speed = VectorLength0(&velocity);
         for (int family = Splash; family <= Spray; ++family) {
             if (speed < minimum_speed[family] || !row[material_offset[family]])
                 continue;
-            u8* delay = &tracker->delay[wheel - car->wheels][family];
+            u8* delay = &tracker->delay[index][family];
             if (*delay) {
                 --*delay;
                 continue;
             }
-            ObjectCreate(particle_class, 0, family, hit->material, &position, &velocity, speed);
+            ObjectCreate(
+                particle_class, 0, family, contact->material, &contact->position, &velocity, speed);
             *delay = 5;
         }
     }
     Tm3UpdateSkidSound(tracker, car, loudest);
+    Tm3SurfaceAudio(car, frame);
 }
+
+static void tracker_reset(void* instance, Rm4SurfaceReset reason)
+{
+    Tm3WheelSurface* tracker = instance;
+    for (int index = 0; index < RM4_SURFACE_WHEELS; ++index)
+        Tm3TrackWheel(tracker, index, NULL, NULL);
+    memset(tracker->delay, 0, sizeof(tracker->delay));
+    Tm3ResetSkidSound(tracker, ObjectGetHeader(tracker)->owner);
+}
+
+const Rm4SurfaceEffects Tm3SurfaceEffects = {
+    .version = RM4_SURFACE_EFFECTS_VERSION,
+    .size = sizeof(Rm4SurfaceEffects),
+    .flags = RM4_SURFACE_REPLACE_CONTACT_AUDIO,
+    .instance_class = "tm3WheelSurface",
+    .step = tracker_step,
+    .reset = tracker_reset,
+};
 
 static int velocity_step(s32 value, int fraction)
 {
@@ -272,7 +287,7 @@ int Tm3SurfaceRegister(RegistryDirectory* dir)
 {
     return Tm3RegisterTireMarks(dir)
         && ObjectRegisterClass(tracker_class, sizeof(Tm3WheelSurface), dir,
-            (Tm4PackedConstructor)tracker_init, NULL, (Tm4ObjectCallback)tracker_tick, NULL, NULL)
+            (Tm4PackedConstructor)tracker_init, NULL, NULL, NULL, NULL)
         && ObjectRegisterClass(particle_class, sizeof(Tm3SurfaceParticle), dir,
             (Tm4PackedConstructor)particle_init, NULL, (Tm4ObjectCallback)particle_tick,
             (Tm4ObjectDisplayCallback)particle_draw, NULL);
