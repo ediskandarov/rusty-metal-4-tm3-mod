@@ -118,7 +118,9 @@ const wasm = await compile({
   name: "mtm3fx",
   sources: [
     ...sharedModuleSources,
-    ...(values["test-hooks"] ? [resolve("tests/shared/surface_runtime.c")] : []),
+    ...(values["test-hooks"]
+      ? [resolve("tests/shared/surface_runtime.c"), resolve("tests/shared/teleport_appearance.c")]
+      : []),
   ],
   output: resolve("build/shared"),
   inverseRoot: true,

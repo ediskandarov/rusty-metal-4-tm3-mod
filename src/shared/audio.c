@@ -81,11 +81,6 @@ void Tm3SurfaceAudio(Car* car, const Rm4SurfaceFrame* frame)
         Tm3PlayVoice("tm3_s24", NULL, car, 1308, 1, 256);
 }
 
-void Tm3TeleportEffect(Car* car)
-{
-    Tm3PlayNamedSound("tm3_s11", NULL, car, 1600, 0);
-}
-
 void Tm3PlaySound(s32 id, const SVECTOR* position, s32 pitch, s32 random_pitch)
 {
     char name[24];

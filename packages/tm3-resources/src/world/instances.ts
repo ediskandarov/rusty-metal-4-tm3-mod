@@ -59,7 +59,7 @@ export function writeWorldObjects(
     } else {
       instance.files.set("dest", vectorEntry([...object.destination, 0, ...object.heading, 0], 15));
       instance.files.set("radius", intEntry(object.radius));
-      instance.files.set("triggerOnly", intEntry(1));
+      instance.files.set("appearance", stringEntry("none"));
       teleporters.folders.set(name, instance);
     }
     instance.files.set("pos", vectorEntry([...object.position, 0], 5));

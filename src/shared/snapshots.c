@@ -1,3 +1,6 @@
+#ifdef TM3_TEST_HOOKS
+#include "../../tests/shared/teleport_appearance.h"
+#endif
 #include "decoration.h"
 #include "destruction.h"
 #include "effects/private.h"
@@ -12,6 +15,13 @@
 #include "tm3/missile.h"
 
 static const SnapshotType snapshot_types[] = {
+#ifdef TM3_TEST_HOOKS
+    { .name = "tm3TestPortalVisual",
+        .size = sizeof(Tm3TestPortalVisual),
+        .fields = Tm3TestPortalFields,
+        .baseline_removable = 1,
+        .hash_fields = 1 },
+#endif
     { .name = "tm3Destroyable",
         .size = sizeof(Tm3Destroyable),
         .fields = Tm3DestroyableFields,

@@ -4,5 +4,4 @@
 #include "tm3/resources.h"
 
 const SnapshotType* Tm3SnapshotTypes(void);
-void Tm3TeleportEffect(Car* car);
 #endif

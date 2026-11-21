@@ -1,3 +1,6 @@
+#ifdef TM3_TEST_HOOKS
+#include "../../tests/shared/teleport_appearance.h"
+#endif
 #include "car_status_effects.h"
 #include "decoration.h"
 #include "destruction.h"
@@ -7,6 +10,7 @@
 #include "remote.h"
 #include "stage.h"
 #include "surface.h"
+#include "teleport.h"
 #include "tm3/lightning.h"
 #include "tm3/missile.h"
 #include "tm3/resources.h"
@@ -39,7 +43,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     if (!strcmp(name, "Tm3StatusEffects"))
         return (OSWord)&Tm3StatusEffects;
     EXPORT(Tm3SurfaceEffects);
-    EXPORT(Tm3TeleportEffect);
+    EXPORT(Tm3TeleportEffects);
     EXPORT(Tm3DamageScenery);
     EXPORT(Tm3DestroyableSizeof);
     EXPORT(Tm3DestroyableInstanceConstructor);
@@ -54,6 +58,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3TestHitSceneryWithEvent);
     EXPORT(Tm3TestPickupState);
     EXPORT(Tm3TestSurface);
+    EXPORT(Tm3TestPortal);
 #endif
     EXPORT(Tm3ScreenEffect);
     EXPORT(Tm3FragmentImpact);

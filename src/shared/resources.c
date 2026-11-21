@@ -1,3 +1,6 @@
+#ifdef TM3_TEST_HOOKS
+#include "../../tests/shared/teleport_appearance.h"
+#endif
 #include "assets.h"
 #include "effects/private.h"
 #include "flame.h"
@@ -51,7 +54,11 @@ int Tm3ResourcesAcquire(void)
             || !Tm3DebrisRegister(directory) || !Tm3ExplosionInteractionsRegister()
             || !Tm3SurfaceRegister(directory) || !Tm3FlamesRegister(directory)
             || !Tm3MissilesRegister(directory) || !Tm3LightningRegister(directory)
-            || !Tm3FlashRegister(directory)) {
+            || !Tm3FlashRegister(directory)
+#ifdef TM3_TEST_HOOKS
+            || !Tm3TestPortalRegister(directory)
+#endif
+        ) {
             WebTextureBankDestroy(Tm3TextureBank);
             Tm3TextureBank = 0;
             return 0;

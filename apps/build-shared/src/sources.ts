@@ -40,4 +40,5 @@ export const sharedModuleSources = [
   "shared/world/destruction.c",
   "shared/world/surface.c",
   "shared/world/tire_marks.c",
+  "shared/world/teleport.c",
 ].map((file) => resolve(sourceRoot, file));

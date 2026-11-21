@@ -457,6 +457,12 @@ test("teleporter records become startup instances with original position, radius
   expect(words("dest")).toEqual([44, -55, 66, 0, 0, 0, 4096, 0]);
   expect(instance.files.get("radius").bytes[0]).toBe(120);
   expect(converted.metadata.teleporters).toBe(1);
+  const text = (entry) => new TextDecoder().decode(entry.bytes).replace(/\0.*$/s, "");
+  expect(text(instance.files.get("appearance"))).toBe("none");
+  expect(instance.files.has("triggerOnly")).toBe(false);
+  const resources = converted.root.folders.get("world");
+  expect(text(resources.files.get("teleportEffects"))).toBe("Tm3TeleportEffects");
+  expect(resources.files.has("teleportEffect")).toBe(false);
 });
 
 test("pickup types select TM3 collection", async () => {

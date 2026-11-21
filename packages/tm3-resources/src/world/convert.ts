@@ -94,8 +94,8 @@ export async function convertWorld(
   if (horizon) put("horiz.bin", horizonSource.slice(0, horizon.size));
   if (at(world.blocks, 7).bytes.length) {
     put("tm3WeaponMarkers", section("position_records"), 5, 128);
-    put("teleportEffect", new TextEncoder().encode("Tm3TeleportEffect\0"), 2);
   }
+  put("teleportEffects", new TextEncoder().encode("Tm3TeleportEffects\0"), 2);
   const records = readWorldObjects(world);
   const mapWeapons = new Set(
     records.flatMap((record) =>
