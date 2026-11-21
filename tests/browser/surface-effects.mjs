@@ -41,7 +41,7 @@ try {
     const check = (ok, why) => {
       if (!ok) throw Error(why);
     };
-    const probe = (action, material = 1, offset = 0) => {
+    const rawProbe = (action, material = 1, offset = 0) => {
       const slot = Module.ccall(
         "WebDynamicModuleExport",
         "number",
@@ -56,6 +56,14 @@ try {
         Module._WebCheckpointArenaSelect(0);
       }
     };
+    const probe = (action, material = 1, offset = 0) => {
+      const before = rawProbe(7);
+      const result = rawProbe(action, material, offset);
+      // Destroying the whole car also runs gameplay teardown, outside this adapter.
+      if (action !== 6)
+        check(rawProbe(7) === before, `Surface action ${action} consumed gameplay randomness`);
+      return result;
+    };
     const count = (name) => {
       Module.ccall("WebTestSnapshotObjects", null, ["string"], [name]);
       return tm4Port.testSnapshotObjects.length;
@@ -68,6 +76,10 @@ try {
       check(!tm4Port.netMatch.unsupported, tm4Port.netMatch.unsupported);
     };
     while (tick < 120) step();
+    const gameplaySeed = rawProbe(7);
+    check(rawProbe(8, 0) === 1, "Stock sound emitter failed");
+    check(rawProbe(7) !== gameplaySeed, "Stock sound RNG behavior changed");
+    check(probe(8, 1) === 1, "Cosmetic sound emitter failed or retained constructor flags");
     check(count("tm3WheelSurface") === 2, "Each car must own one surface instance");
     check(probe(4) > 0, "Physics did not deliver grounded wheel contacts");
     check(probe(0) === 1 && probe(3) === 15, "No tire marks");

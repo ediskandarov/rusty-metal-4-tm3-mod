@@ -1,17 +1,31 @@
 /* Synthetic wheel contacts exercise the real engine adapter and loaded mod classes.
    Only linked into diagnostic modules; production effects never inspect physics. */
+#include "port/extensions/sound.h"
 #include "surface.h"
 #include "tm4/main/game.h"
 #include "tm4/main/object.h"
+#include "tm4/main/sound.h"
+#include "tm4/main/system.h"
 #include <stdlib.h>
 #include <string.h>
 
 int Tm3TestSurface(int action, int material, int offset)
 {
+    if (action == 7)
+        return randseed();
     Car* car = GameInfo.players[0].car;
     if (!car || !car->surface_effects.instance)
         return -1;
     Tm3WheelSurface* tracker = car->surface_effects.instance;
+    if (action == 8) {
+        SoundEmitter* sound = ObjectCreate("soundEmitter", OBJECT_FOLLOW_OWNER, car, "tm3_s00",
+            material ? RM4_SOUND_EFFECT_RANDOM : 0);
+        if (!sound)
+            return -1;
+        int valid = sound->flags >= 0 && sound->flags < SOUND_EMITTER_FLAG_LIMIT;
+        ObjectDestroy(sound);
+        return valid;
+    }
     if (action == 2) {
         WebSurfaceEffectsStep(car);
         return 1;

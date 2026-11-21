@@ -7,6 +7,7 @@
 #include "tm4/main/math3d.h"
 #include "tm4/main/object.h"
 #include "tm4/main/render.h"
+#include "tm4/main/system.h"
 #include "tm4/main/world.h"
 #include <STDARG.H>
 #include <psyz/gte.h>
@@ -133,9 +134,10 @@ static s32 particle_init(Tm3SurfaceParticle* p, va_list args)
     const VECTOR* v = va_arg(args, const VECTOR*);
     int speed = va_arg(args, int);
     const u8* effect = material(p->material) + material_offset[p->family];
-    p->frame = rand() % effect[3];
+    /* The engine snapshots this effect stream separately from gameplay randomness. */
+    p->frame = randrand() % effect[3];
     p->timer = effect[3] > 1 ? effect[4] : -1;
-    p->flip = rand() & 1;
+    p->flip = randrand() & 1;
     p->shade = 17 * WorldGetLight(p->position.vx, p->position.vz);
     p->rise = 0;
     p->velocity = (SVECTOR) { 0 };
@@ -145,7 +147,7 @@ static s32 particle_init(Tm3SurfaceParticle* p, va_list args)
         p->height = clamp(speed / 4, 512, 1280);
         p->rise = clamp(speed / 8 + 40, 0, 160);
         if (effect[6]) {
-            int sample = effect[5] + rand() % effect[6];
+            int sample = effect[5] + randrand() % effect[6];
             Tm3PlayNamedSound(sample == 12 ? "tm3_s12" : "tm3_s28", &p->position, NULL, 1308, 0);
         }
     } else {
@@ -158,8 +160,8 @@ static s32 particle_init(Tm3SurfaceParticle* p, va_list args)
             p->height = speed / 32;
         } else {
             p->velocity.vy = -clamp(Q12MulRound(136, Q12MulRound(1365, speed)), 0, 24);
-            p->width = clamp(Q12MulRound(64, speed) + rand() % 16 - 8, 16, 32);
-            p->height = clamp(Q12MulRound(64, speed) + rand() % 16 - 8, 16, 32);
+            p->width = clamp(Q12MulRound(64, speed) + randrand() % 16 - 8, 16, 32);
+            p->height = clamp(Q12MulRound(64, speed) + randrand() % 16 - 8, 16, 32);
         }
     }
     ObjectSetPosition(p, p->position.vx, p->position.vy, p->position.vz);

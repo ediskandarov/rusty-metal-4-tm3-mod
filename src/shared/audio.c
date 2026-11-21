@@ -1,4 +1,5 @@
 #include "audio.h"
+#include "port/extensions/sound.h"
 #include "private.h"
 #include "tm4/fixed.h"
 #include "tm4/main/math3d.h"
@@ -38,10 +39,11 @@ void Tm3PlayVoice(
     if (random_pitch)
         pitch = pitch - 128 + randrand() % 256;
     SoundEmitter* emitter = owner
-        ? ObjectCreate("soundEmitter", OBJECT_FOLLOW_OWNER, owner, name, 0)
-        : position ? ObjectCreate("soundEmitter", 0, name, SOUND_EMITTER_POSITION, position->vx,
-                         position->vy, position->vz)
-                   : ObjectCreate("soundEmitter", 0, name, 0);
+        ? ObjectCreate("soundEmitter", OBJECT_FOLLOW_OWNER, owner, name, RM4_SOUND_EFFECT_RANDOM)
+        : position
+        ? ObjectCreate("soundEmitter", 0, name, SOUND_EMITTER_POSITION | RM4_SOUND_EFFECT_RANDOM,
+              position->vx, position->vy, position->vz)
+        : ObjectCreate("soundEmitter", 0, name, RM4_SOUND_EFFECT_RANDOM);
     if (!emitter)
         return;
     if (pitch <= 0)
