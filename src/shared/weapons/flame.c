@@ -1,6 +1,6 @@
 #include "flame.h"
-#include "mod_api.h"
 #include "module_import.h"
+#include "snapshot_types.h"
 #include "tm3/resources.h"
 #include "tm4/fixed.h"
 #include "tm4/main/box.h"

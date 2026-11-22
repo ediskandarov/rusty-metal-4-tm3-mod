@@ -1,6 +1,6 @@
 #include "eye.h"
-#include "mod_api.h"
 #include "module_import.h"
+#include "snapshot_types.h"
 #include "tm4/main/game.h"
 #include "tm4/main/math3d.h"
 #include "tm4/main/object.h"

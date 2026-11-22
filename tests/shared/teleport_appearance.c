@@ -1,6 +1,6 @@
 /* Diagnostic appearance: exercise normal callbacks, ownership and snapshots. */
 #include "teleport_appearance.h"
-#include "mod_api.h"
+#include "snapshot_types.h"
 #include "tm4/main/object.h"
 #include <string.h>
 

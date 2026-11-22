@@ -1,6 +1,5 @@
 #ifndef TM3_EFFECTS_PRIVATE_H
 #define TM3_EFFECTS_PRIVATE_H
-#include "mod_api.h"
 #include "snapshot_types.h"
 #include "tm3/resources.h"
 #include "tm4/main/object.h"

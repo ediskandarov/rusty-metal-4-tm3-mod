@@ -1,6 +1,6 @@
 #include "surface.h"
 #include "audio.h"
-#include "mod_api.h"
+#include "snapshot_types.h"
 #include "tm3/projectile_motion.h"
 #include "tm4/fixed.h"
 #include "tm4/gpu_packet.h"

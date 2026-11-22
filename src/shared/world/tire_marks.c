@@ -1,4 +1,4 @@
-#include "mod_api.h"
+#include "snapshot_types.h"
 #include "surface.h"
 #include "tm4/fixed.h"
 #include "tm4/gpu_packet.h"

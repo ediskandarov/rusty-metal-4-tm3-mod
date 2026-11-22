@@ -7,6 +7,7 @@ import { mapBehaviors } from "../../apps/build-maps/src/behavior.ts";
 import { maps } from "../../apps/build-maps/src/catalog.ts";
 import { readMr } from "../../external/rusty-metal-4/packages/resources/src/compatibility/mr.ts";
 import { prepareFixture, prepareMapFixture, weaponSlots } from "./fixture.mjs";
+import { checkObjectLifecycle } from "./helpers/object-lifecycle.mjs";
 import { checkScreenFlash } from "./helpers/screen-flash.mjs";
 import { openTm3Car } from "./helpers/tm3.mjs";
 
@@ -271,13 +272,15 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
               { async: true },
             );
             if (!started) throw Error("Map change failed: " + JSON.stringify(tm4Port.netSession));
+            const equip = (id) =>
+              Module.ccall("WebTestEquipWeaponProfile", "number", ["string"], [id]);
             const capacities = [
-              Module._WebTestEquipWeapon(world ? 2 : slots.tm3Power),
-              Module._WebTestEquipWeapon(world ? 8 : slots.tm3Remote),
+              equip(world ? "power" : "tm3Power"),
+              equip(world ? "remote" : "tm3Remote"),
             ];
             if (capacities[0] !== (world ? 6 : 5) || capacities[1] !== (world ? 4 : 5))
               throw Error("Weapon parameters leaked across maps: " + capacities);
-            if (!Module._WebTestEquipWeapon(world ? 1 : slots.tm3Fire))
+            if (!equip(world ? "fire" : "tm3Fire"))
               throw Error("Cannot equip Fire after map change");
             tick = 0;
             while (tick < 15) step();
@@ -297,6 +300,11 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
     assert.deepEqual(result.rollback, result.expected, map.id + " rollback");
     assert.deepEqual(result.portable, result.expected, map.id + " portable restore");
     if (map.id === "tokyo") await checkScreenFlash(fixture.page);
+    await checkObjectLifecycle(fixture.page, {
+      module,
+      props,
+      car: map.id === "egypt" || map.id === "hollywood" ? "Crusher" : "TM3 Sweet Tooth",
+    });
     assert.ok(!fixture.log.some((line) => /PAGEERROR|Aborted|RuntimeError/.test(line)));
     console.log("PASS", map.id, module ?? "shared mechanisms");
   } finally {

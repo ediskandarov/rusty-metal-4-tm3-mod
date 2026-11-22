@@ -1,9 +1,10 @@
 #include "tm3/lightning.h"
-#include "mod_api.h"
 #include "module_import.h"
+#include "snapshot_types.h"
 #include "tm4/main/game.h"
 #include "tm4/main/geometry.h"
 #include "tm4/main/math3d.h"
+#include "tm4/main/object.h"
 #include <stdlib.h>
 #include <string.h>
 static char bolt_name[] = "tm3OutlawBolt", emitter_name[] = "tm3OutlawEmitter";

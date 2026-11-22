@@ -1,5 +1,4 @@
 #include "stage.h"
-#include "mod_api.h"
 #include "tm4/main/object.h"
 #include "tm4/main/world.h"
 #include <stdlib.h>

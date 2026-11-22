@@ -1,5 +1,5 @@
 #include "flash.h"
-#include "mod_api.h"
+#include "snapshot_types.h"
 #include "tm3/resources.h"
 #include "tm4/main/object.h"
 #include "tm4/main/system.h"
