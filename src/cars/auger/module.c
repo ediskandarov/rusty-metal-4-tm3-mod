@@ -114,7 +114,6 @@ s32 CarMtm3agProcess(Car* car, void* context)
         }
     }
     drill->angle = (drill->angle + drill->angular_speed) & 4095;
-    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
     return 1;
 }

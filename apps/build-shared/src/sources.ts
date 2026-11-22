@@ -6,6 +6,7 @@ export const sharedModuleSources = [
   "shared/audio.c",
   "shared/body.c",
   "shared/car.c",
+  "shared/turbo.c",
   "shared/effects/billboard.c",
   "shared/effects/debris.c",
   "shared/effects/explosion.c",

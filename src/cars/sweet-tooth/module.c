@@ -177,7 +177,6 @@ s32 CarMtm3swProcess(Car* car, void* context)
 {
     SweetCar* state = context;
     WEB_MODULE("mtm3fx.sym", Tm3BodyAnimate)(Tm3SweetTooth, &state->animation, 0);
-    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
     return 1;
 }

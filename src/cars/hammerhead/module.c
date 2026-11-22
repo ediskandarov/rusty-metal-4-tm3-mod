@@ -31,7 +31,6 @@ s32 CarMtm3hhProcess(Car* car, void* context)
         --state->ticks;
     else
         memset(state->hit_serials, 0, sizeof(state->hit_serials));
-    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
     return 1;
 }

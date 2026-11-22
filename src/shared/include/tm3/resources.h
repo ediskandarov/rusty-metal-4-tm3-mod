@@ -43,7 +43,6 @@ void Tm3DrawFire(int frame, int width, int height, const SVECTOR* center, Tm4Ord
     u8** cursor, u8* limit, MATRIX* view);
 void Tm3SpawnSprite(
     s32 profile, const SVECTOR* position, s32 size, const SVECTOR* velocity, s32 fps, s32 sound);
-void Tm3CarTurboProcess(Car* car);
 void Tm3CarEngineProcess(Car* car, const Tm3EngineSettings* settings);
 void Tm3SpawnProjectileSmoke(const int16_t position[3]);
 void Tm3SpawnBurstParticles(const SVECTOR* position);

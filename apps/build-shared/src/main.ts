@@ -94,6 +94,15 @@ const sources = [
 const root = directory();
 root.folders.set("weaponAiCategories", weaponAiCategories());
 root.files.set("resourcePack", stringEntry("tm3"));
+const turbo = directory();
+const turboProfile = directory();
+turboProfile.files.set("class", stringEntry("tm3Turbo"));
+// Keep the current loop until the original TM3 turbo sample is identified.
+turboProfile.files.set("sound", stringEntry("turboLoop"));
+for (const [name, value] of Object.entries({ sprite: 2, size: 100, fps: 12 }))
+  turboProfile.files.set(name, integerEntry(value));
+turbo.folders.set("default", turboProfile);
+root.folders.set("turbo", turbo);
 for (const [name, block, hash] of sources) {
   root.files.set(name, binary(verified(block.bytes, name, hash)));
 }
@@ -123,6 +132,7 @@ const wasm = await compile({
     ...(values["test-hooks"]
       ? [
           resolve("tests/shared/surface_runtime.c"),
+          resolve("tests/shared/turbo.c"),
           resolve("tests/shared/teleport_appearance.c"),
           resolve("tests/shared/weapon_profiles.c"),
         ]

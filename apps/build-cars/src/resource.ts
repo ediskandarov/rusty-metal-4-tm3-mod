@@ -58,6 +58,10 @@ export async function buildCarResource(definition: CarDefinition, bytes: Uint8Ar
     throw Error(`${definition.file}: missing engine parameters`);
   const settings = new Uint8Array(20);
   engine.forEach((value, i) => new DataView(settings.buffer).setInt32(i * 4, value, true));
+  const turboEffect = directory();
+  turboEffect.files.set("profile", stringEntry("/resourcePacks/tm3/turbo/default"));
+  // TM3 emits at the car origin; other cars can supply a local position (SVECTOR).
+  root.folders.set("turboEffect", turboEffect);
   root.files.set("statusEffects", stringEntry("Tm3StatusEffects"));
   root.files.set("tm3Engine", { type: 4, arraySize: engine.length, bytes: settings });
   root.files.set("engineSoundName", stringEntry(`tm3_s${String(engine[0]).padStart(2, "0")}`));

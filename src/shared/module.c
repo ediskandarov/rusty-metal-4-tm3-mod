@@ -23,6 +23,7 @@
 s32 InteractCarWithPowerupTm3(Car*, PowerupState*);
 #ifdef TM3_TEST_HOOKS
 s32 Tm3TestPickupState(void);
+s32 Tm3TestTurbo(Car*, s32);
 s32 Tm3TestWeaponProfiles(s32, s32, s32);
 s32 Tm3TestWeaponAi(s32, s32, s32);
 int Tm3TestSurface(int action, int material, int offset);
@@ -61,6 +62,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 #ifdef TM3_TEST_HOOKS
     EXPORT(Tm3TestHitSceneryWithEvent);
     EXPORT(Tm3TestPickupState);
+    EXPORT(Tm3TestTurbo);
     EXPORT(Tm3TestWeaponProfiles);
     EXPORT(Tm3TestWeaponAi);
     EXPORT(Tm3TestSurface);
@@ -106,7 +108,6 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3LoadSound);
     EXPORT(Tm3PlayNamedSound);
     EXPORT(Tm3SpawnSprite);
-    EXPORT(Tm3CarTurboProcess);
     EXPORT(Tm3CarEngineProcess);
     EXPORT(Tm3BodyAnimate);
     EXPORT(Tm3BodyGroupPose);

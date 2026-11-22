@@ -13,8 +13,15 @@
 #include "surface.h"
 #include "tm3/lightning.h"
 #include "tm3/missile.h"
+#include "turbo.h"
 
 static const SnapshotType snapshot_types[] = {
+    { .name = "tm3Turbo",
+        .size = sizeof(Tm3Turbo),
+        .fields = Tm3TurboFields,
+        .validate = Tm3TurboValidate,
+        .baseline_removable = 1,
+        .hash_fields = 1 },
 #ifdef TM3_TEST_HOOKS
     { .name = "tm3TestPortalVisual",
         .size = sizeof(Tm3TestPortalVisual),

@@ -10,6 +10,7 @@
 #include "tm3/lightning.h"
 #include "tm3/missile.h"
 #include "tm4/main/object.h"
+#include "turbo.h"
 
 #include <stdlib.h>
 
@@ -54,7 +55,7 @@ int Tm3ResourcesAcquire(void)
             || !Tm3DebrisRegister(directory) || !Tm3ExplosionInteractionsRegister()
             || !Tm3SurfaceRegister(directory) || !Tm3FlamesRegister(directory)
             || !Tm3MissilesRegister(directory) || !Tm3LightningRegister(directory)
-            || !Tm3FlashRegister(directory)
+            || !Tm3FlashRegister(directory) || !Tm3TurboRegister(directory)
 #ifdef TM3_TEST_HOOKS
             || !Tm3TestPortalRegister(directory)
 #endif

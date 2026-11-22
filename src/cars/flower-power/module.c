@@ -21,7 +21,6 @@ s32 CarMtm3fpConstructor(Car* car, void* context)
 }
 s32 CarMtm3fpProcess(Car* car, void* context)
 {
-    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
     return 1;
 }

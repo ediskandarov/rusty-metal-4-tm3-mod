@@ -70,6 +70,8 @@ for (const [stem, title, file] of [
           if (tm4Port.netMatch.unsupported) throw Error(tm4Port.netMatch.unsupported);
         }
       }
+      // The target is participant 1; the placement helper forgets its selection on restart.
+      const targetHealth = () => Module._WebTestAiState(1, 8);
       const sample = () =>
         Array.from({ length: 6 }, (_, i) =>
           call("test_read", Module._WebTestReplayCarAddress(), i),
@@ -79,7 +81,18 @@ for (const [stem, title, file] of [
         return Array.from(tm4Port.netCapturedState);
       };
       const equal = (a, b, label) => {
-        if (a.length !== b.length || a.some((v, i) => v !== b[i])) throw Error(label + " differs");
+        const index = a.findIndex((v, i) => v !== b[i]);
+        if (a.length !== b.length || index >= 0)
+          throw Error(
+            label +
+              " differs " +
+              JSON.stringify({
+                index,
+                expected: a.slice(Math.max(0, index - 7), index + 14),
+                actual: b.slice(Math.max(0, index - 7), index + 14),
+                lengths: [a.length, b.length],
+              }),
+          );
       };
       const dark = stem === "mtm3ds";
       let freeze = 0;
@@ -121,20 +134,14 @@ for (const [stem, title, file] of [
         freeze = Math.max(freeze, first[5]);
         if (first[3] && first[2] && (!dark || freeze > 0)) break;
       }
-      if (
-        !first[1] ||
-        !first[2] ||
-        !first[3] ||
-        (dark && !freeze) ||
-        Module._WebTestWeaponTargetHealth() >= health
-      )
+      if (!first[1] || !first[2] || !first[3] || (dark && !freeze) || targetHealth() >= health)
         throw Error(
           "Flame contact " +
             JSON.stringify({
               launch,
               first,
               health,
-              hp: Module._WebTestWeaponTargetHealth(),
+              hp: targetHealth(),
               freeze,
             }),
         );
@@ -151,7 +158,7 @@ for (const [stem, title, file] of [
         const trace = [];
         for (let i = 0; i < 175; ++i) {
           await steps(1);
-          trace.push([...sample(), Module._WebTestWeaponTargetHealth()]);
+          trace.push([...sample(), targetHealth()]);
         }
         return trace;
       }

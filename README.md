@@ -162,3 +162,16 @@ bun tests/browser/pickup-respawn.mjs --disc ./disc-tm4
 
 Checks one-use and respawning pickups, rollback before collection and portable
 restoration after collection.
+
+## Turbo profiles
+
+Cars share `/resourcePacks/tm3/turbo/default` through `turboEffect/profile`.
+The `tm3Turbo` class owns smoke and the loop; car modules no longer invoke a turbo
+helper individually. Its profile supplies sprite, size, fps and an optional loaded
+looping sound name. The current loop remains `turboLoop` pending identification of
+the TM3 sample. See the port's [turbo contract](external/rusty-metal-4/docs/design/turbo.md)
+for mounts, lifecycle and snapshot requirements.
+
+```sh
+bun tests/browser/check_tm3_turbo.mjs --disc /path/to/TM4
+```

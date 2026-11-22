@@ -19,12 +19,3 @@ void Tm3CarEngineProcess(Car* car, const Tm3EngineSettings* settings)
         voice->volume = 127 * volume / 256;
     }
 }
-
-void Tm3CarTurboProcess(Car* car)
-{
-    if (!car->controls.turbo_active || car->turbo_fuel <= 0)
-        return;
-    /* TM3 CarProcess (800185a4) emits at the car origin, without an exhaust mount. */
-    SVECTOR origin = { car->transform.t[0], car->transform.t[1], car->transform.t[2], 0 };
-    Tm3SpawnSprite(2, &origin, 100, NULL, 12, -2);
-}

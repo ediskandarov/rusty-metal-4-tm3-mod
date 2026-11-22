@@ -34,7 +34,6 @@ s32 CarMtm3fsProcess(Car* car, void* context)
     /* TM3 car+0x72 is the first front wheel steering halfword (80020070). */
     WEB_MODULE("mtm3fx.sym", Tm3BodyAnimate)
     (Tm3Firestarter, &state->animation, car->wheels[0].steering);
-    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)(car);
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)(car, engine_settings);
     return 1;
 }

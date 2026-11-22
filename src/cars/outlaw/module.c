@@ -32,8 +32,6 @@ s32 CarMtm3olConstructor(Car* car, void* context)
 s32 CarMtm3olProcess(Car* car, void* context)
 {
     WEB_MODULE("mtm3fx.sym", Tm3BodyAnimate)(Tm3Outlaw, context, 0);
-    WEB_MODULE("mtm3fx.sym", Tm3CarTurboProcess)
-    (car);
     WEB_MODULE("mtm3fx.sym", Tm3CarEngineProcess)
     (car, engine_settings);
     return 1;
