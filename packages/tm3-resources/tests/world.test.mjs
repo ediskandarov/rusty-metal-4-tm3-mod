@@ -11,6 +11,8 @@ import {
 import { readMr } from "@tm4/resources/compatibility/mr";
 import { binary, directory } from "@tm4/resources/mods/mr-writer";
 
+import { convertStartpoints } from "../src/world/spawns.ts";
+
 const pickupNames = [
   "fire",
   "power",
@@ -86,6 +88,7 @@ function fixture(vertexCount = 4, objectSize = 12) {
     u32 = (o, v) => view.setUint32(o, v, true);
   bytes.fill(0xff, 0, 0x2000);
   u16(0, 0);
+  u16((32 * 64 + 32) * 2, 0);
   u16(0x2000, 128);
   u16(0x2008, 4096);
   u16(0x2810, 1);
@@ -120,6 +123,24 @@ function fixture(vertexCount = 4, objectSize = 12) {
   u16(objects + 10, objectSize);
   view.setInt32(collisions + 4, -4096, true);
   view.setInt16(collisions + 12 + 6, 4, true);
+  view.setInt16(collisions + 12 + 2 * 8 + 6, -1, true);
+  view.setInt16(collisions + 44 + 6, 1, true);
+  [
+    [0, 0, -256],
+    [256, 0, -256],
+    [256, 0, 256],
+    [0, 0, 256],
+  ].forEach((point, i) => {
+    point.forEach((value, axis) => view.setInt16(collisions + 12 + i * 8 + axis * 2, value, true));
+  });
+  [
+    [256, 0, 0],
+    [0, 0, 512],
+    [-256, 0, 0],
+    [0, 0, -512],
+  ].forEach((edge, i) => {
+    edge.forEach((value, axis) => view.setInt16(collisions + 44 + i * 8 + axis * 2, value, true));
+  });
   bytes.set([128, 64, 32, 0x24, 0, 1, 2, 255], faces);
   bytes[faces + 10] = 1;
   u32(faces + 12, 0x1f800340);
@@ -137,11 +158,11 @@ function fixture(vertexCount = 4, objectSize = 12) {
     p.forEach((v, j) => view.setInt16(vertices + i * 8 + j * 2, v, true));
     view.setInt16(vertices + i * 8 + 6, 1234, true);
   });
-  const ter = () =>
+  const ter = (settings = new Uint8Array()) =>
     container([
       bytes,
       new Uint8Array(),
-      new Uint8Array(),
+      settings,
       new Uint8Array([...new TextEncoder().encode("AI DATA\0"), ...new Uint8Array(20)]),
       ...Array.from({ length: 4 }, () => new Uint8Array()),
     ]);
@@ -280,7 +301,7 @@ for (const textureVariant of [0, 1]) {
     // Source pointer slots and destruction IDs must not leak into TM4 runtime state.
     f.bytes.fill(0xcd, f.squares + 12, f.squares + 40);
     f.view.setInt16(f.collisions + 26, 0, true);
-    f.view.setInt16(f.collisions + 34, 123, true);
+    f.view.setInt16(f.collisions + 42, 123, true);
     f.view.setInt16(f.collisions + 50, 1, true);
     const ter = f.ter(),
       img = images();
@@ -341,10 +362,12 @@ for (const textureVariant of [0, 1]) {
         for (let x = rectangle.x; x < rectangle.x + rectangle.width; ++x)
           expect(bankView.getUint16((y * 1024 + x) * 2, true)).toBe(vram.word(x, y));
     const startpoints = root.files.get("startpoints");
-    expect(root.files.get("spawnGroundClearance").bytes).toEqual(Uint8Array.of(96, 0, 0, 0));
+    expect(root.files.has("spawnGroundClearance")).toBe(false);
     expect(startpoints.type).toBe(26);
     expect(startpoints.arraySize).toBe(1);
-    expect(startpoints.bytes).toEqual(f.bytes.slice(0x2000, 0x2010));
+    const expectedPoint = f.bytes.slice(0x2000, 0x2010);
+    new DataView(expectedPoint.buffer).setInt16(2, -96, true);
+    expect(startpoints.bytes).toEqual(expectedPoint);
     expect([ter, img]).toEqual(before);
   });
 }
@@ -523,4 +546,77 @@ test("pickup types select TM3 collection", async () => {
   }
   expect(types.folders.has("special")).toBe(false);
   expect(types.folders.has("proximity")).toBe(false);
+});
+
+test("map rendering exports background colour without source renderer budgets", async () => {
+  const f = fixture();
+  const settings = new Uint8Array(312);
+  settings.set([35, 50, 70]);
+  settings.fill(0xab, 4, 12);
+  // Even invalid source face budgets are irrelevant to the port renderer.
+  const view = new DataView(settings.buffer);
+  [1001, 1000, -1, 0].forEach((value, i) => view.setInt16(0x12c + i * 2, value, true));
+  const result = await convertWorld(f.ter(settings), images());
+  const world = result.root.folders.get("world");
+  expect(world.files.has("renderSettings")).toBe(false);
+  const render = world.folders.get("renderSettings");
+  expect([...render.files.keys()]).toEqual(["backgroundColor"]);
+  expect(render.files.get("backgroundColor").bytes).toEqual(Uint8Array.of(35, 50, 70, 0));
+});
+
+test("spawn baking retains engine Q12 rounding, heading and input bytes", () => {
+  const f = fixture();
+  f.view.setInt32(f.collisions, 1024, true);
+  f.view.setInt16(f.collisions + 14, 3, true);
+  const terrain = readTerrain(f.bytes);
+  const records = Buffer.from(f.bytes.subarray(0x2000, 0x2400));
+  const before = records.slice().toString("hex");
+  const result = convertStartpoints(terrain, records, new Uint8Array());
+  // Plane Y is 35 at X=128, but the engine's vertical ray reports 32.
+  expect(new DataView(result.buffer).getInt16(2, true)).toBe(-64);
+  expect(result.slice(8, 14)).toEqual(new Uint8Array(records.subarray(8, 14)));
+  expect(records.toString("hex")).toBe(before);
+});
+
+test("spawn baking rejects missing or changing floors", () => {
+  const f = fixture(),
+    terrain = readTerrain(f.bytes);
+  const records = f.bytes.subarray(0x2000, 0x2400);
+  terrain.collisions[0].edge_vectors_raw[0][3] = 0;
+  expect(() => convertStartpoints(terrain, records, new Uint8Array())).toThrow(
+    "permanent topmost floor",
+  );
+  terrain.collisions[0].edge_vectors_raw[0][3] = 1;
+  terrain.collisions[0].vertices_raw[2][3] = 0;
+  expect(() => convertStartpoints(terrain, records, new Uint8Array())).toThrow(
+    "permanent topmost floor",
+  );
+  terrain.collisions[0].vertices_raw[2][3] = -1;
+  const groups = new Uint8Array(316);
+  groups[0] = 1;
+  new DataView(groups.buffer).setUint32(8 + 68, 1, true);
+  expect(() => convertStartpoints(terrain, records, groups)).toThrow("permanent topmost floor");
+  terrain.grid.fill(65535);
+  expect(() => convertStartpoints(terrain, records, new Uint8Array())).toThrow(
+    "outside world grid",
+  );
+});
+
+test("changing geometry below permanent ground does not prevent baking", () => {
+  const f = fixture(),
+    terrain = readTerrain(f.bytes);
+  const lower = structuredClone(terrain.collisions[0]);
+  lower.vertices_raw.forEach((vertex) => (vertex[1] = 200));
+  lower.vertices_raw[2][3] = 0;
+  terrain.collisions.push(lower);
+  terrain.collision_indices = [0, 1];
+  terrain.square_collision_ranges[0] = [0, 2];
+  const records = f.bytes.subarray(0x2000, 0x2400);
+  expect(
+    new DataView(convertStartpoints(terrain, records, new Uint8Array()).buffer).getInt16(2, true),
+  ).toBe(-96);
+  lower.vertices_raw.forEach((vertex) => (vertex[1] = -200));
+  expect(() => convertStartpoints(terrain, records, new Uint8Array())).toThrow(
+    "permanent topmost floor",
+  );
 });

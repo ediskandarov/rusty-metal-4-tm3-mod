@@ -50,6 +50,12 @@ Map pickups keep TM3 collection rules and use TM4 rotation, bobbing, sparkle eff
 and respawn timing. TM3 regeneration value 255 disables respawn in the mod’s
 collection handler. No custom pickup-animation hook is required.
 
+Map conversion bakes TM3's ground-minus-96 spawn placement into TM4 startpoints,
+including the engine's Q12 ray rounding. All 84 points on the ten shipped maps have
+permanent topmost floors. Blimp's first point has destructible geometry underneath
+that floor, so destroying it does not change spawn height. Conversion rejects a
+point without a permanent topmost floor instead of adding a runtime placement rule.
+
 A missile's immutable definition belongs to its module. Snapshots save its exported
 name and resolve it in the loaded module on restore, including its callbacks.
 Missing definitions reject the snapshot. Car-owned actors publish their snapshot

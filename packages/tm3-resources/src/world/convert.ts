@@ -12,6 +12,7 @@ import { readNavigation } from "./navigation.ts";
 import { readWorldObjects } from "./objects.ts";
 import { convertPickupModels } from "./pickup-models.ts";
 import { pickupTypes } from "./pickups.ts";
+import { convertStartpoints } from "./spawns.ts";
 import { mapWeaponProfile, tm3WeaponProfile, writeWorldWeapons } from "./weapons.ts";
 
 export interface WorldConversionOptions {
@@ -63,26 +64,12 @@ export async function convertWorld(
     new DataView(bytes.buffer).setInt32(0, value, true);
     put(path, bytes, type);
   }
-  // TM3's spawn selector at 8004460c/80044668 ignores records with X=Z=0.
-  const spawnBytes = section("spawn_records");
-  const spawnView = new DataView(spawnBytes.buffer, spawnBytes.byteOffset, spawnBytes.byteLength);
-  const spawns = [];
-  for (let index = 0; index < 64; ++index) {
-    const offset = index * 16;
-    if (spawnView.getInt16(offset, true) === 0 && spawnView.getInt16(offset + 4, true) === 0)
-      continue;
-    spawns.push(spawnBytes.subarray(offset, offset + 16));
-  }
-  requireValue(spawns.length > 0, "Map has no active spawn points");
-  const startpoints = new Uint8Array(spawns.length * 16);
-  spawns.forEach((spawn, index) => {
-    startpoints.set(spawn, index * 16);
-    new DataView(startpoints.buffer).setInt16(index * 16 + 6, 0, true);
-    new DataView(startpoints.buffer).setInt16(index * 16 + 14, 0, true);
-  });
-  put("startpoints", startpoints, 26, spawns.length);
-  // SCUS_942.49 8004478C samples the current floor at X/Z and subtracts 0x60.
-  number("spawnGroundClearance", 96);
+  const startpoints = convertStartpoints(
+    terrain,
+    section("spawn_records"),
+    section("destruction_groups"),
+  );
+  put("startpoints", startpoints, 26, startpoints.length / 16);
   const animationRecords = section("animation_records_raw");
   const animationPixels = section("animation_pixels_raw");
   const animationCount = new DataView(source.buffer, source.byteOffset).getUint16(0x2830, true);
@@ -233,11 +220,10 @@ export async function convertWorld(
       put("fragmentEffects", new TextEncoder().encode("Tm3FragmentEffects\0"), 2);
     }
     if (settings.length) {
-      // 8003d408 paints the background tile. 8003db70 selects the face budgets per viewport.
-      const render = new Uint8Array(20);
-      render.set(settings.subarray(0, 3));
-      render.set(settings.subarray(0x12c, 0x134), 12);
-      put("renderSettings", render, 18, render.length);
+      // 8003d408 paints the background tile. Face budgets belong to the port renderer.
+      const background = new Uint8Array(4);
+      background.set(settings.subarray(0, 3));
+      put("renderSettings/backgroundColor", background);
     }
     // TM3 0x80048834 selects block 2 or the defaults at 0x8007b918.
     number("ai/powerupRegenRate", settings.length ? view.getInt16(0x10e, true) : 4096, 13);
@@ -423,7 +409,7 @@ export async function convertWorld(
     ter_sha256: await hash(ter),
     img_sha256: await hash(img),
     texture_variant: variant ?? "by-detail",
-    startpoints: spawns.length,
+    startpoints: startpoints.length / 16,
     navigation_nodes: navigation.nodes,
     navigation_links: navigation.links,
     texture_animations: animations.length,

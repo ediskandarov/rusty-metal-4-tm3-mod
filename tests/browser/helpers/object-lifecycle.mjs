@@ -1,4 +1,4 @@
-/* global Module, tm4Port */
+/* global Module, tm4Port, HEAP16 */
 import assert from "node:assert/strict";
 
 export async function checkObjectLifecycle(page, { module, car, props }) {
@@ -58,6 +58,29 @@ export async function checkObjectLifecycle(page, { module, car, props }) {
           { async: true },
         );
         if (!started) throw Error("Map reload failed");
+        if (!world) {
+          const points = Module.ccall(
+            "RegGetFileDataS",
+            "number",
+            ["string"],
+            ["/world/startpoints"],
+          );
+          const count = Module.ccall(
+            "RegGetFileArraySizeS",
+            "number",
+            ["string"],
+            ["/world/startpoints"],
+          );
+          for (let i = 0; i < count; ++i) {
+            const point = points + i * 16;
+            const x = HEAP16[point >>> 1],
+              y = HEAP16[(point + 2) >>> 1],
+              z = HEAP16[(point + 4) >>> 1];
+            if (y !== Module._WorldGetHeight(x, z) - 96)
+              throw Error(`Baked spawn ${i} differs from engine ground query`);
+          }
+        }
+
         Module.ccall("WebTestSnapshotObjects", null, ["string"], ["tm3Prop"]);
         if (!world && tm4Port.testSnapshotObjects.length !== props)
           throw Error("Startup instances changed on reload");
