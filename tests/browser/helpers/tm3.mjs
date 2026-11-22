@@ -94,7 +94,7 @@ export async function openTm3Car({
       if (path === "/favicon.ico") return new Response(null, { status: 204, headers });
       if (path === "/")
         return new Response(
-          '<!doctype html><canvas id="canvas" width="960" height="720"></canvas>',
+          '<!doctype html><style>canvas{width:960px;height:720px}:root:fullscreen canvas{width:100vw;height:100vh}</style><canvas id="canvas" width="960" height="720"></canvas>',
           {
             headers: { ...headers, "Content-Type": "text/html" },
           },

@@ -10,5 +10,7 @@ typedef struct {
 } Tm3ScreenFlash;
 extern const SnapshotField Tm3ScreenFlashFields[];
 int Tm3FlashRegister(RegistryDirectory* directory);
-s32 Tm3ScreenEffect(CVECTOR* color);
+#ifdef TM3_TEST_HOOKS
+s32 Tm3TestScreenFlash(void);
+#endif
 #endif

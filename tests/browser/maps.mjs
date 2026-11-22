@@ -185,7 +185,14 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
                   throw Error("Missing beam voice");
             }
             if ((id === "egypt" || id === "tokyo") && t >= 121 && t <= 123) {
-              const flash = Module._WebTestWorldFlash();
+              const flash = getWasmTableEntry(
+                Module.ccall(
+                  "WebDynamicModuleExport",
+                  "number",
+                  ["string", "string"],
+                  ["mtm3fx.sym", "Tm3TestScreenFlash"],
+                ),
+              )();
               if (flash < 0) throw Error("Missing map flash");
               const rgb = [flash & 255, (flash >>> 8) & 255, (flash >>> 16) & 255];
               if (previousFlash && rgb.some((v, i) => v !== Math.max(0, previousFlash[i] - 12)))

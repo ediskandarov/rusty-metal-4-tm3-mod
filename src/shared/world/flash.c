@@ -1,6 +1,8 @@
 #include "flash.h"
+#include "port/extensions/screen_objects.h"
 #include "snapshot_types.h"
 #include "tm3/resources.h"
+#include "tm4/main/game.h"
 #include "tm4/main/object.h"
 #include "tm4/main/system.h"
 #include <stdlib.h>
@@ -45,10 +47,32 @@ static void process(Tm3ScreenFlash* flash)
     }
 }
 
+static void display(const void* object, Rm4ScreenDraw* draw)
+{
+    const Tm3ScreenFlash* flash = object;
+    if (!flash->color.cd)
+        return;
+    struct {
+        TILE tile;
+        DR_TPAGE page;
+    }* packets = Rm4ScreenAllocate(draw, sizeof(*packets));
+    if (!packets)
+        return;
+    setTile(&packets->tile);
+    setSemiTrans(&packets->tile, 1);
+    setXY0(&packets->tile, draw->bounds.x, draw->bounds.y);
+    setWH(&packets->tile, draw->bounds.w, draw->bounds.h);
+    setRGB0(&packets->tile, flash->color.r, flash->color.g, flash->color.b);
+    setDrawTPage(&packets->page, 0, GameInfo.dither, 0x60);
+    addPrim(draw->ordering_table, &packets->tile);
+    addPrim(draw->ordering_table, &packets->page);
+}
+
 int Tm3FlashRegister(RegistryDirectory* directory)
 {
     return ObjectRegisterClass(flash_class, sizeof(Tm3ScreenFlash), directory,
-        (Tm4PackedConstructor)construct, NULL, (Tm4ObjectCallback)process, NULL, NULL);
+               (Tm4PackedConstructor)construct, NULL, (Tm4ObjectCallback)process, NULL, NULL)
+        && Rm4ScreenObjectRegister(flash_class, display);
 }
 
 void Tm3FlashStart(s32 lightning, s32 duration)
@@ -69,14 +93,15 @@ void Tm3FlashStart(s32 lightning, s32 duration)
     ObjectCreate(flash_class, 0, &color, lightning, duration);
 }
 
-s32 Tm3ScreenEffect(CVECTOR* color)
+#ifdef TM3_TEST_HOOKS
+s32 Tm3TestScreenFlash(void)
 {
     const Tm3ScreenFlash* flash = current_flash();
     if (!flash || !flash->color.cd)
-        return 0;
-    *color = flash->color;
-    return 1;
+        return -1;
+    return flash->color.r | (flash->color.g << 8) | (flash->color.b << 16);
 }
+#endif
 
 const SnapshotField Tm3ScreenFlashFields[] = {
     SNAP_POD(Tm3ScreenFlash, color.r),

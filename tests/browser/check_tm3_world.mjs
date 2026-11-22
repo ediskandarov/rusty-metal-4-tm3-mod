@@ -356,7 +356,14 @@ try {
           if (mapWeapon && tick === 121 && countClass("tm3MapBeam") !== 1)
             throw Error("Missing " + mapWeapon + " beam in " + phase);
           if (mapWeapon && tick >= 121 && tick <= 123) {
-            const color = Module._WebTestWorldFlash();
+            const color = getWasmTableEntry(
+              Module.ccall(
+                "WebDynamicModuleExport",
+                "number",
+                ["string", "string"],
+                ["mtm3fx.sym", "Tm3TestScreenFlash"],
+              ),
+            )();
             if (color < 0) throw Error("Missing map flash during " + phase);
             const rgb = [color & 255, (color >> 8) & 255, color >> 16];
             if (

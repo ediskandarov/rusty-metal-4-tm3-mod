@@ -1,8 +1,21 @@
-/* global Module, tm4Port, stackSave, stackAlloc, stackRestore, HEAPU32 */
+/* global getWasmTableEntry, Module, tm4Port, stackSave, stackAlloc, stackRestore, HEAPU32 */
 import assert from "node:assert/strict";
 
 export async function checkScreenFlash(page) {
+  const viewport = page.viewportSize();
+  await page.setViewportSize({ width: 1280, height: 720 });
   const result = await page.evaluate(async () => {
+    const flashColor = () => {
+      // Resolve again after a portable restore, which reloads the module.
+      const address = Module.ccall(
+        "WebDynamicModuleExport",
+        "number",
+        ["string", "string"],
+        ["mtm3fx.sym", "Tm3TestScreenFlash"],
+      );
+      if (!address) throw Error("Missing flash diagnostic");
+      return getWasmTableEntry(address)();
+    };
     let tick = tm4Port.netMatch.tick;
     const step = () => {
       for (let slot = 0; slot < 2; slot++)
@@ -49,29 +62,55 @@ export async function checkScreenFlash(page) {
     simulate(() => Module._ObjectDestroy(first));
     step();
     step();
-    if (count() !== 1 || Module._WebTestWorldFlash() < 0) throw Error("Missing independent flash");
+    if (count() !== 1 || flashColor() < 0) throw Error("Missing independent flash");
+    const capture = async (name) => {
+      // Fill both presentation buffers after a resize or snapshot restore.
+      for (let frame = 0; frame < 3; ++frame) {
+        step();
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (!Module._WebNetCaptureState()) throw Error("Cannot capture state before drawing");
+      const before = JSON.stringify(Array.from(tm4Port.netCapturedState));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await globalThis.capturePhase(name);
+      if (
+        !Module._WebNetCaptureState() ||
+        before !== JSON.stringify(Array.from(tm4Port.netCapturedState))
+      )
+        throw Error("Screen rendering changed simulation state");
+    };
+    await capture("screen-flash");
+    await document.documentElement.requestFullscreen();
+    window.dispatchEvent(new Event("resize"));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await capture("screen-flash-wide");
+    if (!tm4Port.widescreen) throw Error("Screen flash did not exercise widescreen");
+    await document.exitFullscreen();
+    window.dispatchEvent(new Event("resize"));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await capture("screen-flash-window");
     if (!Module._WebNetCaptureLocalCheckpoint() || !Module._WebNetCapturePortableCheckpoint())
       throw Error(tm4Port.localCheckpointError || tm4Port.portableCheckpointError);
     const snapshot = tm4Port.portableCheckpoint.slice(),
       start = tick;
     const run = () => {
       tick = start;
-      const restored = Module._WebTestWorldFlash();
+      const restored = flashColor();
       if (count() !== 1 || restored < 0) throw Error("Active flash was not restored");
       const older = beam(),
         newer = beam();
       if (count() !== 1) throw Error("Overlapping beams created multiple flashes");
-      const initial = Module._WebTestWorldFlash();
+      const initial = flashColor();
       simulate(() => {
         Module._ObjectDestroy(older);
         Module._ObjectDestroy(newer);
       });
-      if (Module._WebTestWorldFlash() !== initial) throw Error("Beam destruction cleared flash");
+      if (flashColor() !== initial) throw Error("Beam destruction cleared flash");
       const colors = [restored, initial],
         states = [];
       for (let i = 0; i < 26; i++) {
         step();
-        const color = Module._WebTestWorldFlash();
+        const color = flashColor();
         // Creation happened between ticks, before this tick's simulation began.
         if (i === 0 && color !== initial) throw Error("Flash advanced on its creation tick");
         if (i > 0 && color >= 0) {
@@ -98,6 +137,7 @@ export async function checkScreenFlash(page) {
     Module._WebNetEndReplay();
     return { expected, rollback, portable: run() };
   });
+  await page.setViewportSize(viewport);
   assert.deepEqual(result.rollback, result.expected, "overlapping flash rollback");
   assert.deepEqual(result.portable, result.expected, "overlapping flash portable restore");
 }

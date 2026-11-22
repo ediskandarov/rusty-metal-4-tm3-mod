@@ -65,9 +65,9 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3TestWeaponAi);
     EXPORT(Tm3TestSurface);
     EXPORT(Tm3TestFragmentEffects);
+    EXPORT(Tm3TestScreenFlash);
     EXPORT(Tm3TestPortal);
 #endif
-    EXPORT(Tm3ScreenEffect);
     EXPORT(Tm3FragmentEffects);
     EXPORT(Tm3TransitionSizeof);
     EXPORT(Tm3TransitionInstanceConstructor);
