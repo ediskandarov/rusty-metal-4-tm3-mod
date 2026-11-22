@@ -95,7 +95,7 @@ static s32 test_read(Car* car, s32 field)
     case 1:
         return car->wheels[0].steering;
     case 2:
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     case 3:
         return car->health;
     }

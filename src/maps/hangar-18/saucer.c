@@ -42,7 +42,7 @@ static void destroyed(Tm3Prop* prop, void* projectile)
 {
     Car* owner = ObjectGetHeader(projectile)->owner;
     if (owner && GameIsCarRegistered(owner) && owner->control_kind == CAR_CONTROL_PLAYER) {
-        owner->weapons[0].amount = 8;
+        WEB_MODULE("car", CarWeaponForRole)(owner, CarWeaponSpecial)->amount = 8;
         WEB_MODULE("car", CarApplyParticipantDamage)
         (owner, NULL, (WebParticipantId) { 0 }, -owner->maximum_health, NULL, NULL);
         WEB_MODULE("mtm3fx.sym", Tm3PlayNamedSound)("tm3_s32", NULL, NULL, 1308, 0);

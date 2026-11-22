@@ -3,6 +3,7 @@ import { validateCarMr } from "@tm4/resources/mods/car-display";
 import { directory, writeMr } from "@tm4/resources/mods/mr-writer";
 
 import { at, requireValue } from "../shared/binary.ts";
+import { weaponAiWeights } from "../shared/weapon-ai.ts";
 import { readCar } from "./index.ts";
 import type { CarFace, CarModel } from "./model.ts";
 import type { CarParameters } from "./parameters.ts";
@@ -403,6 +404,22 @@ function tuning(root: MrDirectory, params: CarParameters) {
   const health = params.health_by_control_and_difficulty.slice(3, 6);
   requireValue(new Set(health).size === 1, "Expected equal player health at every difficulty");
   number(root, "healthEnergyMax", at(health, 0));
+  ["frontNarrowAngle", "frontWideAngle", "backNarrowAngle", "backWideAngle"].forEach((name, i) =>
+    number(root, "ai/sectors/" + name, at(params.ai_sector_angles, i)),
+  );
+  ["closeDistance", "nearDistance", "farDistance"].forEach((name, i) =>
+    number(root, "ai/sectors/" + name, at(params.ai_sector_distances, i)),
+  );
+  params.ai_sectors.forEach((sector, index) => {
+    number(root, `ai/sectors/${index}/order`, index);
+    number(root, `ai/sectors/${index}/sectorProb`, sector.weight);
+  });
+  root.folders
+    .get("ai")!
+    .folders.set(
+      "weaponWeights",
+      weaponAiWeights(params.ai_sectors.map((sector) => sector.weapon_weights)),
+    );
 }
 function bounds(mesh: CarModel, params: CarParameters, scale: number) {
   const points = mesh.groups.flatMap((group) => {

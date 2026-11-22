@@ -2,6 +2,7 @@ import type { MrDirectory } from "@tm4/resources/compatibility/mr";
 import { binary, directory, stringEntry, writeMr } from "@tm4/resources/mods/mr-writer";
 
 import { at, Binary, requireValue } from "../shared/binary.ts";
+import { weaponAiWeights } from "../shared/weapon-ai.ts";
 import { readTextureAnimations } from "./animation.ts";
 import { convertDestroyables } from "./destruction.ts";
 import { readHorizon } from "./horizon.ts";
@@ -11,10 +12,10 @@ import { readNavigation } from "./navigation.ts";
 import { readWorldObjects } from "./objects.ts";
 import { convertPickupModels } from "./pickup-models.ts";
 import { pickupTypes } from "./pickups.ts";
-import { writeWorldWeapons } from "./weapons.ts";
+import { mapWeaponProfile, tm3WeaponProfile, writeWorldWeapons } from "./weapons.ts";
 
 export interface WorldConversionOptions {
-  /** TM4 GAME.MR objects/powerup directory; required when TER contains pickup meshes. */
+  /** TM4 GAME.MR objects/powerup directory; supplies weapon pickup and HUD appearances. */
   powerupResources?: MrDirectory;
   /** Force one UV/CLUT variant instead of selecting terrain textures by geometry detail. */
   textureVariant?: 0 | 1;
@@ -99,23 +100,29 @@ export async function convertWorld(
   const records = readWorldObjects(world);
   const mapWeapons = new Set(
     records.flatMap((record) =>
-      record.kind === "pickup" && record.pickup?.tm4Type === "proximity"
+      record.kind === "pickup" && record.pickup && mapWeaponProfile(record.pickup.name)
         ? [record.pickup.name]
         : [],
     ),
   );
-  requireValue(mapWeapons.size <= 1, "Conflicting map weapons share the Proximity inventory slot");
+  requireValue(mapWeapons.size <= 1, "TM3 map conversion expects one map-specific weapon");
   const [mapWeapon] = mapWeapons;
   if (mapWeapon) put("tm3MapWeapon", new TextEncoder().encode(mapWeapon + "\0"), 2);
   const types = directory();
   const pickupRadius = new Uint8Array(4);
   new DataView(pickupRadius.buffer).setInt32(0, 40, true);
   types.files.set("collisionRadius", { ...binary(pickupRadius), type: 4 });
-  for (const { tm4Type } of pickupTypes) {
-    if (!tm4Type || (tm4Type === "proximity" && !mapWeapon)) continue;
+  for (const { name, tm4Type } of pickupTypes) {
+    if (!tm4Type || (mapWeaponProfile(name) && name !== mapWeapon)) continue;
     const type = directory();
+    const profile = tm3WeaponProfile(name);
+    if (profile) {
+      const source = options.powerupResources?.folders.get(tm4Type);
+      requireValue(source, `Missing pickup appearance: ${tm4Type}`);
+      for (const [key, value] of source.files) type.files.set(key, value);
+    }
     type.files.set("interact", stringEntry("Tm3"));
-    types.folders.set(tm4Type, type);
+    types.folders.set(profile ?? tm4Type, type);
   }
   const objects = directory();
   objects.folders.set("powerup", types);
@@ -258,9 +265,19 @@ export async function convertWorld(
     for (const key of ["hyperspaceLevel", "hyperspaceNumEasy", "hyperspaceNumHard"])
       number("ai/" + key, 0);
     // World sector records at +0x18 multiply the CAR sector weights (8001991c).
-    // TM4 indexes weapons by CarWeaponNames. Map only matching inventory columns.
+    // Named weights serve the map arsenal. The positional table below is only
+    // the stock TM4 resource adapter, needed when a stock profile is selected.
+    const sectors = Array.from({ length: 12 }, (_, sector) =>
+      Array.from({ length: 16 }, (_, column) =>
+        settings.length ? settings[0x1c + sector * 20 + column]! : 100,
+      ),
+    );
+    root.folders
+      .get("world")!
+      .folders.get("ai")!
+      .folders.set("weaponWeights", weaponAiWeights(sectors));
     const inventory = [
-      14,
+      15,
       0,
       2,
       1,
@@ -272,7 +289,7 @@ export async function convertWorld(
       6,
       null,
       13,
-      mapWeapon === "Eye" ? 11 : mapWeapon === "Radar" ? 10 : mapWeapon === "Spaceship" ? 12 : null,
+      null,
       3,
       null,
       null,

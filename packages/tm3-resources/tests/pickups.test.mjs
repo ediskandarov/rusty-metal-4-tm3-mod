@@ -18,6 +18,8 @@ test("TER pickups retain their native type, coordinates, quantity and base respa
     [6, 30, 0, -1],
     [1, 60, 4, 0],
     [11, 255, 2, -1],
+    [12, 255, 3, -1],
+    [13, 255, 4, -1],
     [1, 255, 4, -1],
   ];
   const bytes = new Uint8Array(20 * rows.length);
@@ -40,7 +42,7 @@ test("TER pickups retain their native type, coordinates, quantity and base respa
   const root = directory();
   expect(writeWorldObjects(root, records)).toEqual({
     teleporters: 0,
-    pickups: 8,
+    pickups: 10,
     released_pickups: 0,
     omitted_pickups: { linked: 1, unsupportedType: 0 },
   });
@@ -57,14 +59,16 @@ test("TER pickups retain their native type, coordinates, quantity and base respa
     return [stringValue(files.get("type")), value("units"), value("regenRate")];
   });
   expect(actual).toEqual([
-    ["power", 3, 60],
-    ["homing", 4, 30],
+    ["tm3Power", 3, 60],
+    ["tm3Homing", 4, 30],
     ["health", 1843, 120],
     ["healthFull", 4096, 120],
     ["turbo", 4096, 60],
-    ["napalm", 1, 30],
-    ["proximity", 2, 255],
-    ["fire", 4, 255],
+    ["tm3Napalm", 1, 30],
+    ["tm3Radar", 2, 255],
+    ["tm3Eye", 3, 255],
+    ["tm3Spaceship", 4, 255],
+    ["tm3Fire", 4, 255],
   ]);
 });
 
@@ -76,7 +80,7 @@ test("a group releases each linked pickup at its original placement", async () =
   const data = [0x40, 0xb0].map((offset, i) => ({
     kind: "pickup",
     offset,
-    pickup: { tm4Type: "power" },
+    pickup: { name: "Power", tm4Type: "power" },
     position: [offset, -24, 12],
     destruction_group: 1,
     units: i + 2,

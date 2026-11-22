@@ -13,9 +13,10 @@ static void process(Tm3Prop* prop)
     const Tm3PropResource* r = prop->resource;
     /* 800357d8: the first car carrying Radar designates the nearest other car. */
     Car* holder = NULL;
+    const s32 radar = WEB_MODULE("car", CarWeaponFindProfile)("tm3Radar");
     for (int i = 0; i < GameInfo.car_count; ++i) {
         Car* car = GameInfo.cars[i];
-        if (car->weapons && car->weapons[12].amount) {
+        if (radar >= 0 && car->weapons && car->weapons[radar].amount) {
             holder = car;
             break;
         }

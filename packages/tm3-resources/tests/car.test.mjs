@@ -800,3 +800,64 @@ test("invalid reflection indices and strengths fail before emitting an archive",
       convertCar(source, 1, { reflections: [new Map([[0, value]]), new Map(), new Map()] }),
     ).rejects.toThrow("Reflection outside byte");
 });
+
+test("CAR AI preferences retain all sectors, special column 15 and angular boundaries", async () => {
+  const source = carFixture();
+  const view = new DataView(source.buffer);
+  const angles = [228, 456, 3868, 3640];
+  const distances = [500, 4000, 6000];
+  angles.forEach((v, i) => view.setInt16(24 + 0x78 + i * 2, v, true));
+  distances.forEach((v, i) => view.setInt16(24 + 0x80 + i * 2, v, true));
+  for (let sector = 0; sector < 12; sector++) {
+    view.setInt32(24 + 0x8c + sector * 20, sector * 10, true);
+    for (let column = 0; column < 16; column++)
+      view.setUint8(24 + 0x90 + sector * 20 + column, sector * 16 + column);
+  }
+  const { root } = await readMr((await convertCar(source)).archive);
+  const ai = root.folders.get("ai");
+  const sectors = ai.folders.get("sectors");
+  const number = (dir, name) => {
+    const bytes = dir.files.get(name).bytes;
+    return new DataView(bytes.buffer, bytes.byteOffset).getInt32(0, true);
+  };
+  expect(
+    ["frontNarrowAngle", "frontWideAngle", "backNarrowAngle", "backWideAngle"].map((n) =>
+      number(sectors, n),
+    ),
+  ).toEqual(angles);
+  expect(["closeDistance", "nearDistance", "farDistance"].map((n) => number(sectors, n))).toEqual(
+    distances,
+  );
+  const names = [
+    "fire",
+    "homing",
+    "power",
+    "freeze",
+    "napalm",
+    "remote",
+    "ricochet",
+    "speed",
+    "rain",
+    "mortar",
+    "tm3:radar",
+    "tm3:eye",
+    "tm3:spaceship",
+    "lightning",
+    null,
+    "special",
+  ];
+  for (let s = 0; s < 12; s++) {
+    expect(number(sectors.folders.get(String(s)), "sectorProb")).toBe(s * 10);
+    expect(number(sectors.folders.get(String(s)), "order")).toBe(s);
+  }
+  for (const [column, name] of names.entries()) {
+    if (!name) continue;
+    const entry = ai.folders.get("weaponWeights").files.get(name);
+    expect(entry.type).toBe(18);
+    expect(entry.arraySize).toBe(12);
+    expect([...entry.bytes]).toEqual(Array.from({ length: 12 }, (_, s) => s * 16 + column));
+  }
+  expect([...ai.folders.get("weaponWeights").files.get("massive").bytes]).toEqual(
+    Array(12).fill(0),
+  );
+});

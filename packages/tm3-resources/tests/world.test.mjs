@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 import {
-  convertWorld,
+  convertWorld as convertWorldResource,
   readTerrain,
   readWorld,
   validateWorldTextures,
@@ -9,6 +9,32 @@ import {
   WorldVram,
 } from "@rusty-metal-4/tm3-resources";
 import { readMr } from "@tm4/resources/compatibility/mr";
+import { binary, directory } from "@tm4/resources/mods/mr-writer";
+
+const pickupNames = [
+  "fire",
+  "power",
+  "homing",
+  "speed",
+  "napalm",
+  "remote",
+  "ricochet",
+  "rain",
+  "mortar",
+  "lightning",
+  "proximity",
+];
+function convertWorld(ter, images, options = {}) {
+  const powerupResources = directory();
+  pickupNames.forEach((name, index) => {
+    const type = directory();
+    const bytes = new Uint8Array(4);
+    new DataView(bytes.buffer).setInt32(0, index, true);
+    type.files.set("geometryIndex", { ...binary(bytes), type: 4 });
+    powerupResources.folders.set(name, type);
+  });
+  return convertWorldResource(ter, images, { powerupResources, ...options });
+}
 
 function container(parts) {
   parts = parts.map((part) => {
@@ -487,7 +513,13 @@ test("pickup types select TM3 collection", async () => {
     "healthFull",
     "turbo",
   ]) {
-    expect(text(types.folders.get(name).files.get("interact"))).toBe("Tm3");
+    expect(
+      text(
+        types.folders
+          .get(pickupNames.includes(name) ? "tm3" + name[0].toUpperCase() + name.slice(1) : name)
+          .files.get("interact"),
+      ),
+    ).toBe("Tm3");
   }
   expect(types.folders.has("special")).toBe(false);
   expect(types.folders.has("proximity")).toBe(false);

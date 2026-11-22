@@ -6,6 +6,7 @@
 
 void Tm3WorldWeaponsClassConstructor(RegistryDirectory*);
 void Tm3WorldWeaponsClassDestructor(RegistryDirectory*);
+s32 Tm3PrepareWorldWeapon(RegistryDirectory*, const void**);
 s32 Tm3LaunchWorldProjectile(Car*, void*, CarWeaponInstance*, s32);
 s32 Tm3LaunchLightning(Car*, void*, CarWeaponInstance*, s32);
 int Tm3LaunchMapBeam(Car* owner, const SVECTOR* origin, const SVECTOR* direction);

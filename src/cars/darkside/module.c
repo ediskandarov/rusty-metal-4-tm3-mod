@@ -135,7 +135,7 @@ static Car* test_car(s32 slot)
 static s32 test_read(Car* car, s32 field)
 {
     if (field == 0)
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     if (field == 5)
         return GameInfo.players[1].car ? GameInfo.players[1].car->freeze_ticks : 0;
     const char* classes[] = { "tm3Flamer", "tm3Flame", "tm3Burn", "tm3Missile" };

@@ -96,7 +96,7 @@ static const SnapshotType* car_snapshot_type(const Car* car)
 static s32 test_read(Car* car, s32 field)
 {
     if (field == 0)
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     if (field == 5)
         return GameInfo.players[1].car ? GameInfo.players[1].car->freeze_ticks : 0;
     if (field == 6)

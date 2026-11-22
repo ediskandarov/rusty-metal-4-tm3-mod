@@ -110,7 +110,7 @@ static s32 test_read(Car* car, s32 field)
     case 2:
         return missile ? missile->linger : -1;
     case 3:
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     case 4:
         return missile ? (s32)missile->target : 0;
     case 5:

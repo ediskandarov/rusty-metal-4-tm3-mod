@@ -1,4 +1,4 @@
-/* global Module, tm4Port */
+/* global Module, tm4Port, getWasmTableEntry */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
@@ -6,7 +6,7 @@ import { parseArgs } from "node:util";
 import { mapBehaviors } from "../../apps/build-maps/src/behavior.ts";
 import { maps } from "../../apps/build-maps/src/catalog.ts";
 import { readMr } from "../../external/rusty-metal-4/packages/resources/src/compatibility/mr.ts";
-import { prepareFixture, prepareMapFixture } from "./fixture.mjs";
+import { prepareFixture, prepareMapFixture, weaponSlots } from "./fixture.mjs";
 import { checkScreenFlash } from "./helpers/screen-flash.mjs";
 import { openTm3Car } from "./helpers/tm3.mjs";
 
@@ -33,7 +33,19 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
       new Uint8Array(await Bun.file(resolve(values.maps, map.file + ".MR")).arrayBuffer()),
     )
   ).root;
-  const module = mapBehaviors[map.id]?.module;
+  const behavior = mapBehaviors[map.id];
+  const module = behavior?.module;
+  const mapProfile = behavior ? "tm3" + behavior.pickup : undefined;
+  // Move the map weapon away from its authored position to catch numeric coupling.
+  if (mapProfile) {
+    const entries = root.folders.get("world").folders.get("arsenal").folders;
+    const mapEntry = entries.get(mapProfile),
+      other = entries.get("freeze");
+    const order = mapEntry.files.get("order");
+    mapEntry.files.set("order", other.files.get("order"));
+    other.files.set("order", order);
+  }
+  const slots = weaponSlots(root);
   const { site, archive } = prepareMapFixture(root, module, values.site);
   const world = root.folders.get("world");
   assert.ok(root.folders.get("objects").folders.has("tm3WorldWeapons"));
@@ -64,12 +76,31 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
   });
   try {
     const result = await fixture.page.evaluate(
-      async ({ id, module, anchors, props }) => {
+      async ({ id, module, anchors, props, slots, mapProfile }) => {
         if (
           module &&
           !Module.ccall("WebNativeModuleLoaded", "number", ["string"], [module + ".sym"])
         )
           throw Error("Map module was not loaded");
+        const checkMapWeaponWeights = () => {
+          if (!mapProfile) return;
+          const fn = Module.ccall(
+            "WebDynamicModuleExport",
+            "number",
+            ["string", "string"],
+            ["mtm3fx.sym", "Tm3TestWeaponProfiles"],
+          );
+          if (!fn) throw Error("Build shared with --test-hooks");
+          Module._WebCheckpointArenaSelect(1);
+          try {
+            for (let sector = 0; sector < 12; ++sector)
+              if (getWasmTableEntry(fn)(12, slots[mapProfile], sector) !== 0)
+                throw Error("Map weapon inherited a non-TM3 AI weight");
+          } finally {
+            Module._WebCheckpointArenaSelect(0);
+          }
+        };
+        checkMapWeaponWeights();
         const count = (name) => {
           Module.ccall("WebTestSnapshotObjects", null, ["string"], [name]);
           return tm4Port.testSnapshotObjects.length;
@@ -86,11 +117,12 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
         }
         while (tick < 117) step();
         if (id === "egypt" || id === "tokyo") {
-          if (Module._WebTestEquipWeapon(12) !== 10) throw Error("Cannot equip map weapon");
+          if (Module._WebTestEquipWeapon(slots[mapProfile]) !== 10)
+            throw Error("Cannot equip map weapon");
         }
-        if (id === "hollywood" && Module._WebTestEquipWeapon(8) !== 5)
+        if (id === "hollywood" && Module._WebTestEquipWeapon(slots.tm3Remote) !== 5)
           throw Error("Cannot equip Remote");
-        if (id === "north-pole" && Module._WebTestEquipWeapon(11) !== 10)
+        if (id === "north-pole" && Module._WebTestEquipWeapon(slots.tm3Lightning) !== 10)
           throw Error("Cannot equip Lightning");
         step(id === "egypt" || id === "hollywood" ? 1 : 0);
         while (tick < 120) step();
@@ -100,6 +132,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
         const snapshot = tm4Port.portableCheckpoint.slice();
         if (id === "hollywood" && count("tm3Remote") !== 1) throw Error("Remote was not placed");
         const run = () => {
+          checkMapWeaponWeights();
           tick = 120;
           let debris = false,
             reward = false,
@@ -115,11 +148,15 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
                   ["string", "number"],
                   ["tm3Prop", 420],
                 ) ||
-                !Module._WebTestEquipWeapon(2)
+                !Module._WebTestEquipWeapon(slots.tm3Power)
               )
                 throw Error("Cannot aim at saucer");
             }
-            if (id === "hangar-18" && t === 123 && Module._WebTestEquipWeapon(12) !== 10)
+            if (
+              id === "hangar-18" &&
+              t === 123 &&
+              Module._WebTestEquipWeapon(slots[mapProfile]) !== 10
+            )
               throw Error("Cannot equip Spaceship");
             step(
               (["egypt", "tokyo", "hollywood", "north-pole"].includes(id) && t === 121) ||
@@ -234,10 +271,14 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
               { async: true },
             );
             if (!started) throw Error("Map change failed: " + JSON.stringify(tm4Port.netSession));
-            const capacities = [Module._WebTestEquipWeapon(2), Module._WebTestEquipWeapon(8)];
+            const capacities = [
+              Module._WebTestEquipWeapon(world ? 2 : slots.tm3Power),
+              Module._WebTestEquipWeapon(world ? 8 : slots.tm3Remote),
+            ];
             if (capacities[0] !== (world ? 6 : 5) || capacities[1] !== (world ? 4 : 5))
               throw Error("Weapon parameters leaked across maps: " + capacities);
-            if (!Module._WebTestEquipWeapon(1)) throw Error("Cannot equip Fire after map change");
+            if (!Module._WebTestEquipWeapon(world ? 1 : slots.tm3Fire))
+              throw Error("Cannot equip Fire after map change");
             tick = 0;
             while (tick < 15) step();
             const stockShots = tm4Port.projectileSpawns || 0;
@@ -250,7 +291,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
         }
         return { expected, rollback, portable, snapshotBytes: snapshot.length, mapChanges };
       },
-      { id: map.id, module, anchors, props },
+      { id: map.id, module, anchors, props, slots, mapProfile },
     );
     await Bun.write(resolve(output, "result.json"), JSON.stringify(result, null, 2));
     assert.deepEqual(result.rollback, result.expected, map.id + " rollback");

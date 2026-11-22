@@ -186,7 +186,7 @@ static s32 test_read(Car* car, s32 field)
     case 1:
         return state->angular_speed;
     case 2:
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     case 3:
         return state->target && GameIsCarRegistered(state->target);
     case 4:

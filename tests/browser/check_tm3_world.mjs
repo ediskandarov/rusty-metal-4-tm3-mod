@@ -9,7 +9,7 @@ import { readMr } from "@tm4/resources/compatibility/mr";
 
 import { mapBehaviors } from "../../apps/build-maps/src/behavior.ts";
 import { maps } from "../../apps/build-maps/src/catalog.ts";
-import { prepareFixture, prepareMapFixture } from "./fixture.mjs";
+import { prepareFixture, prepareMapFixture, weaponSlots } from "./fixture.mjs";
 import { openTm3Car } from "./helpers/tm3.mjs";
 const { values } = parseArgs({
   options: {
@@ -55,6 +55,7 @@ const built = (
     new Uint8Array(await Bun.file(resolve("build/maps", map.file + ".MR")).arrayBuffer()),
   )
 ).root;
+const slots = weaponSlots(built);
 const prepared = prepareMapFixture(built, mapBehaviors[map.id]?.module, resolve(values.site));
 const session = await openTm3Car({
   disc: values.disc,
@@ -141,6 +142,7 @@ try {
       checkRemote,
       checkRain,
       mapWeapon,
+      slots,
       checkTransition,
       stagePrefix,
     }) => {
@@ -166,13 +168,13 @@ try {
         const weapon =
           checkWeapons &&
           [
-            [1, 10],
-            [3, 10],
-            [2, 5],
-            [6, 30],
-            [4, 10],
-            [5, 10],
-            [9, 3],
+            [slots.tm3Fire, 10],
+            [slots.tm3Homing, 10],
+            [slots.tm3Power, 5],
+            [slots.tm3Speed, 30],
+            [slots.tm3Napalm, 10],
+            [slots.tm3Mortar, 10],
+            [slots.tm3Ricochet, 3],
           ][(tick - 10) / 16];
         const previousMissiles =
           weapon &&
@@ -183,13 +185,17 @@ try {
         if (weapon && Module._WebTestEquipWeapon(weapon[0]) !== weapon[1])
           throw Error("Incorrect ammo capacity for weapon " + weapon[0]);
         const placeMine = checkRemote && tick === 117;
-        if (mapWeapon && tick === 117 && Module._WebTestEquipWeapon(12) !== 10)
+        if (
+          mapWeapon &&
+          tick === 117 &&
+          Module._WebTestEquipWeapon(slots["tm3" + mapWeapon]) !== 10
+        )
           throw Error("Map weapon unavailable");
         const placeEye = mapWeapon === "Eye" && tick === 117;
         const launchRain = checkRain && tick === 117;
-        if (launchRain && Module._WebTestEquipWeapon(7) !== 10)
+        if (launchRain && Module._WebTestEquipWeapon(slots.tm3Rain) !== 10)
           throw Error("Incorrect Rain capacity");
-        if (placeMine && Module._WebTestEquipWeapon(8) !== 5)
+        if (placeMine && Module._WebTestEquipWeapon(slots.tm3Remote) !== 5)
           throw Error("Incorrect Remote capacity");
         if (tick === driveTick) {
           driveStart = position();
@@ -243,6 +249,7 @@ try {
       teleporters: converted.metadata.teleporters,
       checkRemote: values["check-remote"],
       mapWeapon,
+      slots,
       checkRain: values["check-rain"],
       checkWeapons: values["check-weapons"],
     },
@@ -276,6 +283,7 @@ try {
       checkRemote,
       checkRain,
       mapWeapon,
+      slots,
       shootProp,
       marker,
       anchors,
@@ -304,7 +312,12 @@ try {
           sawDebris = false,
           heardReward = false;
         for (let tick = 120; tick < (checkTransition ? 315 : shootProp ? 245 : 140); ++tick) {
-          if (marker && tick === 120 && Module._WebTestEquipWeapon(marker === 3 ? 11 : 12) !== 10)
+          if (
+            marker &&
+            tick === 120 &&
+            Module._WebTestEquipWeapon(marker === 3 ? slots.tm3Lightning : slots.tm3Spaceship) !==
+              10
+          )
             throw Error("Cannot equip map lightning");
           if (shootProp && tick === 120) {
             if (
@@ -314,7 +327,7 @@ try {
                 ["string", "number"],
                 ["tm3Prop", 420],
               ) ||
-              !Module._WebTestEquipWeapon(2)
+              !Module._WebTestEquipWeapon(slots.tm3Power)
             )
               throw Error("Cannot aim at the prop");
           }
@@ -435,6 +448,7 @@ try {
       marker,
       anchors,
       mapWeapon,
+      slots,
       checkRain: values["check-rain"],
       shootProp: values["shoot-prop"],
       checkRemote: values["check-remote"],

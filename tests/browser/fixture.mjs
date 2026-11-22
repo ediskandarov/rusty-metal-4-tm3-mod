@@ -39,3 +39,17 @@ export function prepareMapFixture(root, module, engineSite) {
   verifyBehavior(root, module);
   return { site: resolve(engineSite), archive: writeMr(root) };
 }
+
+// Resolve the test inventory from authored MR order, never stock weapon numbers.
+export function weaponSlots(root) {
+  const slots = {};
+  for (const entry of root.folders.get("world").folders.get("arsenal").folders.values()) {
+    const profile = new TextDecoder().decode(entry.files.get("profile").bytes).split("\0")[0];
+    const bytes = entry.files.get("order").bytes;
+    slots[profile] = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getInt32(
+      0,
+      true,
+    );
+  }
+  return slots;
+}

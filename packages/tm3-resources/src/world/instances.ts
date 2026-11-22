@@ -2,6 +2,7 @@ import type { MrDirectory } from "@tm4/resources/compatibility/mr";
 import { directory, stringEntry } from "@tm4/resources/mods/mr-writer";
 
 import type { readWorldObjects } from "./objects.ts";
+import { tm3WeaponProfile } from "./weapons.ts";
 
 function intEntry(value: number) {
   const bytes = new Uint8Array(4);
@@ -44,7 +45,7 @@ export function writeWorldObjects(
       let units = object.units;
       if (type === "health" || type === "healthFull") units = Math.round((units * 4096) / 100);
       if (type === "turbo") units = 4096;
-      instance.files.set("type", stringEntry(type));
+      instance.files.set("type", stringEntry(tm3WeaponProfile(object.pickup!.name) ?? type));
       instance.files.set("units", intEntry(units));
       instance.files.set("regenRate", intEntry(object.regeneration));
       if (group) {

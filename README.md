@@ -32,7 +32,17 @@ is active does not restart it or consume ammunition. Their state advances in
 the ordinary TM4 car process callback, after weapon handling and physics; the
 60-tick active period includes the activation tick. No pre-weapon input hook is required.
 
-Ordinary weapon parameters and `launchFunc` bindings are stored in map MR resources.
+Ordinary weapons are named MR profiles selected by the map arsenal.
+TM3 CAR sector weights, angles and distances are imported with weapon weights
+keyed by AI category (`homing`, `special`, etc.), independently of the active
+weapon implementation. TER supplies the world multipliers; selection preserves
+integer normalization. Eye, Radar and Spaceship have zero weights in all original
+TM3 USA v1.1 cars and remain usable by players. Their namespaced categories are
+declared in the shared resource pack, with zero defaults for unfamiliar cars.
+TM3 cars retain their common weapon preferences on TM4 maps too. This transfers weapon preferences,
+not the full TM3 AI state machine. See the port's [weapon profile contract](external/rusty-metal-4/docs/design/weapon-profiles.md).
+TM3 projectiles are bound by `prepareFunc` and `projectile`, independently of the
+inventory name or position.
 The engine registers game defaults before world overrides, then loads individual cars.
 Weapon-set callbacks only acquire and release resources around the car-class lifetime.
 

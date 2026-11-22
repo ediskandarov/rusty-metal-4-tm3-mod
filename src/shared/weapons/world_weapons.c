@@ -18,7 +18,6 @@ void CarTrackDetonationDevice(CarWeaponInstance*, Car*, void*);
 void* CarPrepareProjectileLaunch(Car*, CarWeaponInstance*, s32, MATRIX*, SVECTOR*);
 
 typedef struct {
-    const char* name;
     s16 profile;
     u32 trail_color;
 } WorldWeapon;
@@ -26,33 +25,45 @@ typedef struct {
 /* Class-8 launch at 80033870. Profile colours come from
    8008a990/8008a5e8/8008aad8 after weapon initialization. */
 static const WorldWeapon weapons[] = {
-    { "Fire", Tm3ProjectileFire, 0x20ffff },
-    { "Homing", Tm3ProjectileHoming, 0xc000c0 },
-    { "Power", Tm3ProjectilePower, 0xf00000 },
-    { "Speed", Tm3ProjectileSpeed, 0x50 },
-    { "Napalm", Tm3ProjectileNapalm, 0x2080ff },
-    { "Ricochet", Tm3ProjectileRicochet, 0 },
-    { "Rain", Tm3ProjectileRain, 0 },
-    { "Mortar", Tm3ProjectileMortar, 0x404040 },
+    { Tm3ProjectileFire, 0x20ffff },
+    { Tm3ProjectileHoming, 0xc000c0 },
+    { Tm3ProjectilePower, 0xf00000 },
+    { Tm3ProjectileSpeed, 0x50 },
+    { Tm3ProjectileNapalm, 0x2080ff },
+    { Tm3ProjectileRicochet, 0 },
+    { Tm3ProjectileRain, 0 },
+    { Tm3ProjectileMortar, 0x404040 },
 };
 
-static const WorldWeapon* definition(const char* name)
+s32 Tm3PrepareWorldWeapon(RegistryDirectory* resource, const void** data)
 {
-    for (unsigned i = 0; i < sizeof(weapons) / sizeof(weapons[0]); ++i)
-        if (!strcasecmp(name, weapons[i].name))
-            return &weapons[i];
-    return NULL;
+    RegistryFile* file = RegGetFilePtrPS(resource, "projectile");
+    if (!file || RegGetFileTypeP(file) != REG_FILE_TYPE_STRING)
+        return 0;
+    const char* name = RegGetFileDataP(file);
+    for (unsigned i = 0; i < sizeof(weapons) / sizeof(weapons[0]); ++i) {
+        const Tm3MissileDefinition* definition = Tm3WorldProjectile(weapons[i].profile);
+        if (!strcmp(name, definition->name)) {
+            *data = &weapons[i];
+            return 1;
+        }
+    }
+    return 0;
 }
 
 s32 Tm3LaunchWorldProjectile(Car* car, void* context, CarWeaponInstance* weapon, s32 rear)
 {
-    const WorldWeapon* entry = definition(weapon->descriptor->name);
+    const WorldWeapon* entry = weapon->descriptor->launch_data;
+    if (!entry)
+        return 0;
     MATRIX transform;
     SVECTOR inherited;
     Car* target
         = WEB_MODULE("car", CarPrepareProjectileLaunch)(car, weapon, rear, &transform, &inherited);
     Tm3Missile* missile = Tm3MissileLaunch(NULL, car, target, &transform, rear,
         Tm3WorldProjectile(entry->profile), 0, entry->trail_color);
+    if (missile)
+        missile->weapon_profile_key = weapon->profile_key;
     if (missile && entry->profile == Tm3ProjectileRain) {
         WEB_MODULE("car", CarTrackDetonationDevice)
         (weapon, car, missile);

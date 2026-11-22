@@ -1,6 +1,7 @@
 interface PickupType {
   readonly name: string;
   readonly inventorySlot: number | null;
+  /** TM4 resource used for appearance; weapon identity comes from name. */
   readonly tm4Type: string | null;
 }
 

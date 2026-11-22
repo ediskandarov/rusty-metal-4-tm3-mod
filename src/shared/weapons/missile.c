@@ -16,6 +16,9 @@
 #include <STDARG.H>
 #include <stdio.h>
 #include <string.h>
+
+extern s32 CarWeaponCount;
+
 typedef struct {
     MATRIX transform;
     SVECTOR velocity;
@@ -145,8 +148,12 @@ void Tm3RainSplit(Tm3Missile* parent)
     (parent);
     Car* owner = ObjectGetHeader(parent)->owner;
     if (owner && GameIsCarRegistered(owner) && owner->weapons
-        && owner->control_kind == CAR_CONTROL_PLAYER && owner->weapons[7].amount > 0)
-        --owner->weapons[7].amount;
+        && owner->control_kind == CAR_CONTROL_PLAYER) {
+        for (s32 i = 0; i < WEB_MODULE("car", CarWeaponCount); ++i)
+            if (owner->weapons[i].profile_key == parent->weapon_profile_key
+                && owner->weapons[i].amount > 0)
+                --owner->weapons[i].amount;
+    }
     s32 dot = 0;
     for (int axis = 0; axis < 3; ++axis)
         dot += parent->flight.velocity[axis] * parent->transform.m[axis][2];
@@ -492,6 +499,7 @@ const SnapshotField Tm3MissileFields[] = {
     SNAP_POD(Tm3Missile, linger),
     SNAP_POD(Tm3Missile, damage),
     SNAP_POD(Tm3Missile, volley_slot),
+    SNAP_POD(Tm3Missile, weapon_profile_key),
     SNAP_POD(Tm3Missile, surface_kind),
     SNAP_POD(Tm3Missile, world_hit),
     SNAP_WEAK_REF(Tm3Missile, world_owner, NULL),

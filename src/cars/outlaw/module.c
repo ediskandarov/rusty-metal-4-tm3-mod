@@ -90,7 +90,7 @@ static const SnapshotType* car_snapshot_type(const Car* car)
 static int test_read(Car* car, int field)
 {
     if (!field)
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     if (field == 1)
         return ((Tm3BodyAnimation*)car->callback_context)->frame;
     if (field == 2 || field == 7) {

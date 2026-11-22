@@ -101,9 +101,10 @@ static void head_destroy(SweetHead* head)
         if (state && state->head == head) {
             state->head = NULL;
             /* TM3 freezes the launch cooldown while a remote projectile is active. */
-            car->weapons[0].next_time = GetCurrentTime() + car->weapons[0].descriptor->delay;
-            if (car->weapons[0].amount > 0)
-                --car->weapons[0].amount;
+            CarWeaponInstance* special = WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial);
+            special->next_time = GetCurrentTime() + special->descriptor->delay;
+            if (special->amount > 0)
+                --special->amount;
         }
     }
 }
@@ -320,7 +321,7 @@ static s32 test_read(Car* car, s32 field)
     case 3:
         return state->animation.frame;
     case 4:
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     case 5:
         return head ? head->flight.position[0] : 0;
     case 6:
@@ -349,7 +350,8 @@ static s32 test_read(Car* car, s32 field)
     case 16:
         return car->engine_sound ? car->engine_sound->voices[0].voice_id : -1;
     case 17:
-        return car->weapons[0].next_time - GetCurrentTime();
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->next_time
+            - GetCurrentTime();
     default:
         return -1;
     }

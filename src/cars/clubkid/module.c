@@ -209,7 +209,7 @@ static const SnapshotType* car_snapshot_type(const Car* car)
 static int test_read(Car* car, int field)
 {
     if (field == 0)
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     if (field >= 6 && field <= 9) {
         for (s32 i = 0; i < GameInfo.car_count; ++i) {
             Car* target = GameInfo.cars[i];

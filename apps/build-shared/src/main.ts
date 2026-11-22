@@ -7,6 +7,7 @@ import { readBlocks, splitVab, TextureRectangle } from "@rusty-metal-4/tm3-resou
 import { readMr } from "@tm4/resources/compatibility/mr";
 import { binary, directory, stringEntry, writeMr } from "@tm4/resources/mods/mr-writer";
 
+import { weaponAiCategories } from "../../../packages/tm3-resources/src/shared/weapon-ai.ts";
 import { createModuleBuilder } from "../../wasm.ts";
 import { sharedModuleSources } from "./sources.ts";
 
@@ -91,6 +92,7 @@ const sources = [
   ["graphics.bit", images[2]!, "3b14422c5cfc546fd9919651fdcf20d302df97c711f587ccb9e9fcf8d346c70f"],
 ] as const;
 const root = directory();
+root.folders.set("weaponAiCategories", weaponAiCategories());
 root.files.set("resourcePack", stringEntry("tm3"));
 for (const [name, block, hash] of sources) {
   root.files.set(name, binary(verified(block.bytes, name, hash)));
@@ -119,7 +121,11 @@ const wasm = await compile({
   sources: [
     ...sharedModuleSources,
     ...(values["test-hooks"]
-      ? [resolve("tests/shared/surface_runtime.c"), resolve("tests/shared/teleport_appearance.c")]
+      ? [
+          resolve("tests/shared/surface_runtime.c"),
+          resolve("tests/shared/teleport_appearance.c"),
+          resolve("tests/shared/weapon_profiles.c"),
+        ]
       : []),
   ],
   output: resolve("build/shared"),

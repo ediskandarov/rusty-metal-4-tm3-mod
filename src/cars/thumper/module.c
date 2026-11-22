@@ -196,7 +196,7 @@ static const SnapshotType* car_snapshot_type(const Car* car)
 static int test_read(Car* car, int field)
 {
     if (field == 0)
-        return car->weapons[0].amount;
+        return WEB_MODULE("car", CarWeaponForRole)(car, CarWeaponSpecial)->amount;
     int count = 0, age = -1, newest = -1, frame = -1;
     Tm4ObjectHeader* h = ObjectGetHeader(car);
     while (h->previous)

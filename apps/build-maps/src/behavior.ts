@@ -1,10 +1,11 @@
 import type { MrDirectory } from "@tm4/resources/compatibility/mr";
 import { directory, stringEntry } from "@tm4/resources/mods/mr-writer";
 
+import { mapWeaponProfile } from "../../../packages/tm3-resources/src/world/weapons.ts";
+
 interface MapBehavior {
   module: string;
   className?: string;
-  launchFunc: string;
   pickup: string;
   props: Readonly<Record<number, string>>;
   sources: readonly string[];
@@ -14,21 +15,18 @@ export const mapBehaviors: Readonly<Record<string, MapBehavior>> = {
   egypt: {
     module: "mt3egypt",
     className: "tm3Egypt",
-    launchFunc: "Tm3UseEye",
     pickup: "Eye",
     props: {},
     sources: ["module.c", "eye.c"],
   },
   tokyo: {
     module: "mt3tokyo",
-    launchFunc: "Tm3LaunchTokyoRadar",
     pickup: "Radar",
     props: { 1: "Tm3TokyoRadar" },
     sources: ["module.c", "radar.c"],
   },
   "hangar-18": {
     module: "mtm3h18",
-    launchFunc: "Tm3LaunchHangarSpaceship",
     pickup: "Spaceship",
     props: { 2: "Tm3HangarSaucer" },
     sources: ["module.c", "saucer.c"],
@@ -57,14 +55,16 @@ export function bindMapBehavior(id: string, root: MrDirectory): MapBehavior | un
     prop.files.set("behavior", stringEntry(handler));
   }
   if (behavior) {
-    const weapon = root.folders
-      .get("objects")
-      ?.folders.get("car")
-      ?.folders.get("weapon")
-      ?.folders.get("list")
-      ?.folders.get("Proximity");
+    const profile = mapWeaponProfile(behavior.pickup)!;
+    const weapon = root.folders.get("weaponProfiles")?.folders.get(profile.profile);
     if (!weapon) throw Error(`${id}: missing map weapon descriptor`);
-    weapon.files.set("launchFunc", stringEntry(behavior.launchFunc));
+    const launch = weapon.files.get("launchFunc");
+    if (
+      !launch ||
+      launch.type !== 2 ||
+      new TextDecoder().decode(launch.bytes).split("\0")[0] !== profile.launchFunc
+    )
+      throw Error(`${id}: incorrect launcher for ${profile.profile}`);
     if (behavior.className)
       root.folders.get("objects")!.folders.set(behavior.className, directory());
   }

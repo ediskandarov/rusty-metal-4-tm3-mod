@@ -23,6 +23,8 @@
 s32 InteractCarWithPowerupTm3(Car*, PowerupState*);
 #ifdef TM3_TEST_HOOKS
 s32 Tm3TestPickupState(void);
+s32 Tm3TestWeaponProfiles(s32, s32, s32);
+s32 Tm3TestWeaponAi(s32, s32, s32);
 int Tm3TestSurface(int action, int material, int offset);
 #endif
 extern const WebCarStatusEffects Tm3StatusEffects;
@@ -36,6 +38,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
         return (OSWord)Tm3SnapshotTypes();
     EXPORT(InteractCarWithPowerupTm3);
     EXPORT(Tm3LaunchWorldProjectile);
+    EXPORT(Tm3PrepareWorldWeapon);
     EXPORT(Tm3LaunchLightning);
     EXPORT(Tm3PlaceRemote);
     EXPORT(Tm3WorldWeaponsClassConstructor);
@@ -57,6 +60,8 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 #ifdef TM3_TEST_HOOKS
     EXPORT(Tm3TestHitSceneryWithEvent);
     EXPORT(Tm3TestPickupState);
+    EXPORT(Tm3TestWeaponProfiles);
+    EXPORT(Tm3TestWeaponAi);
     EXPORT(Tm3TestSurface);
     EXPORT(Tm3TestPortal);
 #endif

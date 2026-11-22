@@ -23,6 +23,7 @@ struct Tm3Missile {
     s32 target_serial, hit_serial, world_serial;
     SVECTOR contact;
     u32 hit_distance, linger, world_hit, volley_slot;
+    u32 weapon_profile_key;
     u16 damage, surface_kind;
 };
 int Tm3MissileValidate(const void* payload);
