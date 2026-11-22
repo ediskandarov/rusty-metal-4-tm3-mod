@@ -71,6 +71,19 @@ try {
       if (a.length !== b.length || a.some((v, i) => v !== b[i])) throw Error(label + " differs");
     };
     await steps(60, 64);
+    for (const delta of [-4, 4]) {
+      call("test_set_snapshot_size_delta", delta);
+      try {
+        if (Module._WebNetCapturePortableCheckpoint())
+          throw Error("Mismatched callback context size was accepted: " + delta);
+        if (!tm4Port.portableCheckpointError)
+          throw Error("Missing snapshot size rejection diagnostic");
+      } finally {
+        call("test_set_snapshot_size_delta", 0);
+      }
+    }
+    if (!Module._WebNetCapturePortableCheckpoint())
+      throw Error("Valid callback context was rejected after size checks");
     const health = Module._WebTestPlaceWeaponTarget(700);
     call("test_select", Module._WebTestReplayCarAddress());
     const before = sample();
@@ -100,7 +113,7 @@ try {
             throw Error("Fire was blocked during the active special");
         }
         const state = sample();
-        const hp = Module._WebTestWeaponTargetHealth();
+        const hp = call("test_read", Module._WebTestReplayCarAddress(), 5);
         if (state[0] !== Math.max(0, launch[0] - i) || state[2] !== launch[2])
           throw Error("Timer or firing on tick " + i + ": " + state);
         trace.push([state[3], hp]);
@@ -153,6 +166,28 @@ try {
     const nextRam = sample();
     if (nextRam[0] !== 59 || nextRam[2] !== nextAmmo - 1 || nextRam[3] !== 0)
       throw Error("Next ram must start with a fresh hit list: " + nextRam);
+    function lethalContact(reverse) {
+      const serial = call("test_prepare_lethal_contact");
+      if (!serial || !Module._WebTestInteractCars(reverse, 1 - reverse))
+        throw Error("Cannot run ordered contact");
+      if (
+        !Module._WebTestReplayCarAddress() ||
+        sample()[3] !== serial ||
+        call("test_read", Module._WebTestReplayCarAddress(), 4)
+      )
+        throw Error("Lethal contact failed in callback order " + reverse);
+    }
+    for (const reverse of [0, 1]) {
+      if (!Module._WebNetCaptureLocalCheckpoint()) throw Error("Contact checkpoint failed");
+      lethalContact(reverse);
+      const afterContact = digest();
+      if (!Module._WebNetRestoreLocalCheckpoint()) throw Error("Contact restore failed");
+      lethalContact(reverse);
+      if (!Module._WebNetFinishLocalReplay()) throw Error("Contact replay finish failed");
+      equal(afterContact, digest(), "Ordered lethal contact replay");
+      if (!Module._WebNetRestoreLocalCheckpoint() || !Module._WebNetFinishLocalReplay())
+        throw Error("Cannot restore live cars for the next contact order");
+    }
     if (!(await Module.ccall("WebTestRestartNetworkReplay", "number", [], [], { async: true })))
       throw Error("Rear setup failed");
     tick = 0;
@@ -170,7 +205,7 @@ try {
     await steps(12);
     if (!sample()[3] || call("test_read", Module._WebTestReplayCarAddress(), 4))
       throw Error("Lethal rear contact failed: " + sample());
-    return { before, launch, health, hits, rear };
+    return { before, launch, health, hits, rear, contactOrders: [0, 1] };
   });
   await Bun.write(output + "/result.json", JSON.stringify(result, null, 2));
   await page.locator("canvas").screenshot({ path: output + "/result.png" });

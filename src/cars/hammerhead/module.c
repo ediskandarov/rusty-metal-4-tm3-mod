@@ -128,12 +128,23 @@ static const SnapshotField car_fields[] = {
 static const SnapshotType car_snapshot = {
     .name = "tm3HammerheadCar", .size = sizeof(Hammerhead), .fields = car_fields, .hash_fields = 1
 };
+#ifdef TM3_HAMMERHEAD_TEST
+static s32 test_snapshot_size_delta;
+#endif
 static const SnapshotType* car_snapshot_type(const Car* car)
 {
-    return car->process_callback == CarMtm3hhProcess && !car->destructor_callback
-            && car->collision_callback == InteractCarMtm3hhWithCar && !car->render_callback
-        ? &car_snapshot
-        : NULL;
+    if (car->process_callback != CarMtm3hhProcess || car->destructor_callback
+        || car->collision_callback != InteractCarMtm3hhWithCar || car->render_callback)
+        return NULL;
+#ifdef TM3_HAMMERHEAD_TEST
+    if (test_snapshot_size_delta) {
+        static SnapshotType invalid;
+        invalid = car_snapshot;
+        invalid.size += test_snapshot_size_delta;
+        return &invalid;
+    }
+#endif
+    return &car_snapshot;
 }
 #ifdef TM3_HAMMERHEAD_TEST
 static s32 test_read(Car* car, s32 field)
@@ -150,12 +161,44 @@ static s32 test_read(Car* car, s32 field)
         return state->hit_serials[0];
     case 4:
         return GameInfo.players[1].car != NULL;
+    case 5:
+        return GameInfo.players[1].car ? GameInfo.players[1].car->health : -1;
     case 6:
         return car->weapons[car->controls.selected_weapon].amount;
     default:
         return -1;
     }
 }
+static void test_set_snapshot_size_delta(s32 delta)
+{
+    test_snapshot_size_delta = delta;
+}
+
+void CarOrientWithMatrix(Car*, MATRIX*);
+
+static s32 test_prepare_lethal_contact(void)
+{
+    Car* car = GameInfo.players[0].car;
+    Car* target = GameInfo.players[1].car;
+    if (!car || !target)
+        return 0;
+    s32 serial = ObjectGetHeader(target)->serial;
+    Hammerhead* state = car->callback_context;
+    memset(state, 0, sizeof(*state));
+    state->ticks = 60;
+    MATRIX placement = car->transform;
+    for (s32 axis = 0; axis < 3; ++axis)
+        placement.t[axis] += (placement.m[axis][2] * 100) >> 12;
+    WEB_MODULE("car", CarOrientWithMatrix)(target, &placement);
+    target->previous_transform = target->transform;
+    car->previous_transform = car->transform;
+    for (s32 axis = 0; axis < 3; ++axis)
+        car->previous_transform.t[axis] -= (car->transform.m[axis][2] * 64) >> 12;
+    target->shield_ticks = 0;
+    target->health = 500;
+    return serial;
+}
+
 static void test_weaken_target(void)
 {
     if (GameInfo.players[1].car)
@@ -177,6 +220,10 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
 #ifdef TM3_HAMMERHEAD_TEST
     if (!strcmp(name, "test_read"))
         return (OSWord)test_read;
+    if (!strcmp(name, "test_set_snapshot_size_delta"))
+        return (OSWord)test_set_snapshot_size_delta;
+    if (!strcmp(name, "test_prepare_lethal_contact"))
+        return (OSWord)test_prepare_lethal_contact;
     if (!strcmp(name, "test_weaken_target"))
         return (OSWord)test_weaken_target;
     if (!strcmp(name, "test_select"))
