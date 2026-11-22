@@ -197,7 +197,6 @@ static int missile_impact(Tm3Missile* missile, Car* hit)
             && !hit->shield_ticks) {
             WEB_MODULE("car", CarFreezeCar)
             (hit);
-            hit->freeze_ticks = Tm3FreezeTicks;
         } else if (survived && missile->definition->apply_impulse) {
             int16_t forward[3] = { missile->transform.m[0][2], missile->transform.m[1][2],
                 missile->transform.m[2][2] };

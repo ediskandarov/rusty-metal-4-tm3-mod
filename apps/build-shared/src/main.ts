@@ -103,6 +103,21 @@ for (const [name, value] of Object.entries({ sprite: 2, size: 100, fps: 12 }))
   turboProfile.files.set(name, integerEntry(value));
 turbo.folders.set("default", turboProfile);
 root.folders.set("turbo", turbo);
+const effects = directory();
+for (const name of ["freeze", "invisibility"]) {
+  const profile = directory();
+  profile.files.set("drawBody", stringEntry("Tm3DrawEffectBody"));
+  if (name === "freeze") profile.files.set("drawOverlay", stringEntry("Tm3DrawFrozenOverlay"));
+  profile.files.set("minimumLight", integerEntry(32));
+  // No sound: TM3 does not use the stock TM4 freeze/invisibility loops.
+  effects.folders.set(name, profile);
+}
+root.folders.set("effects", effects);
+const attacks = directory();
+const freezeAttack = directory();
+freezeAttack.files.set("launchFunc", stringEntry("Tm3LaunchFreeze"));
+attacks.folders.set("freeze", freezeAttack);
+root.folders.set("attacks", attacks);
 for (const [name, block, hash] of sources) {
   root.files.set(name, binary(verified(block.bytes, name, hash)));
 }
@@ -133,6 +148,7 @@ const wasm = await compile({
       ? [
           resolve("tests/shared/surface_runtime.c"),
           resolve("tests/shared/turbo.c"),
+          resolve("tests/shared/car_effects.c"),
           resolve("tests/shared/teleport_appearance.c"),
           resolve("tests/shared/weapon_profiles.c"),
         ]

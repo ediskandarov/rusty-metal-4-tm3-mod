@@ -1,7 +1,7 @@
 #ifdef TM3_TEST_HOOKS
 #include "../../tests/shared/teleport_appearance.h"
 #endif
-#include "car_status_effects.h"
+#include "car_effects.h"
 #include "decoration.h"
 #include "destruction.h"
 #include "flash.h"
@@ -17,6 +17,7 @@
 #include "tm3/world.h"
 #include "tm4/main/os.h"
 #include "tm4/modules/powerup.h"
+#include "weapons/freeze_attack.h"
 #include <string.h>
 #include <strings.h>
 
@@ -24,12 +25,12 @@ s32 InteractCarWithPowerupTm3(Car*, PowerupState*);
 #ifdef TM3_TEST_HOOKS
 s32 Tm3TestPickupState(void);
 s32 Tm3TestTurbo(Car*, s32);
+s32 Tm3TestCarEffectState(s32, s32);
 s32 Tm3TestWeaponProfiles(s32, s32, s32);
 s32 Tm3TestWeaponAi(s32, s32, s32);
 int Tm3TestSurface(int action, int material, int offset);
 int Tm3TestFragmentEffects(int reset);
 #endif
-extern const WebCarStatusEffects Tm3StatusEffects;
 
 #define EXPORT(symbol)                                                                             \
     if (!strcasecmp(name, #symbol))                                                                \
@@ -45,8 +46,9 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3PlaceRemote);
     EXPORT(Tm3WorldWeaponsClassConstructor);
     EXPORT(Tm3WorldWeaponsClassDestructor);
-    if (!strcmp(name, "Tm3StatusEffects"))
-        return (OSWord)&Tm3StatusEffects;
+    EXPORT(Tm3DrawEffectBody);
+    EXPORT(Tm3DrawFrozenOverlay);
+    EXPORT(Tm3LaunchFreeze);
     EXPORT(Tm3SurfaceEffects);
     EXPORT(Tm3TeleportEffects);
     EXPORT(Tm3DamageScenery);
@@ -63,6 +65,7 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3TestHitSceneryWithEvent);
     EXPORT(Tm3TestPickupState);
     EXPORT(Tm3TestTurbo);
+    EXPORT(Tm3TestCarEffectState);
     EXPORT(Tm3TestWeaponProfiles);
     EXPORT(Tm3TestWeaponAi);
     EXPORT(Tm3TestSurface);

@@ -175,3 +175,20 @@ for mounts, lifecycle and snapshot requirements.
 ```sh
 bun tests/browser/check_tm3_turbo.mjs --disc /path/to/TM4
 ```
+
+## Freeze and invisibility profiles
+
+Cars independently reference `effects/freeze` and `effects/invisibility` in the
+shared TM3 resource pack. Their body and ice callbacks only render; the port owns
+visibility, timer lifecycle and looping sounds. Missing sound entries deliberately
+silence TM4's loops. Durations follow TM4: freeze lasts 120 ticks, invisibility and
+shield last 180 ticks each. The energy-freeze launcher lives in `attacks/freeze`,
+separately from frozen-car appearance.
+See the port's [effect contract](external/rusty-metal-4/docs/design/car-effects.md).
+
+```sh
+bun tests/browser/check_tm3_freeze.mjs --disc /path/to/TM4 --effects both
+```
+
+Repeat with `freeze`, `invisibility` and `stock` to test independent overrides,
+shield composition, local rollback and portable snapshot restoration.

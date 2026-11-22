@@ -6,7 +6,6 @@
 #include "tm4/main/registry.h"
 #include "tm4/modules/car.h"
 
-enum { Tm3FreezeTicks = 90 };
 typedef struct Tm3Missile Tm3Missile;
 /* Shared prefix of the downloadable missile-car contexts. Weak links track the
    current volley without owning older projectiles or transferring attribution. */

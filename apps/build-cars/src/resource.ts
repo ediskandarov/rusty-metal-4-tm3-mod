@@ -62,7 +62,15 @@ export async function buildCarResource(definition: CarDefinition, bytes: Uint8Ar
   turboEffect.files.set("profile", stringEntry("/resourcePacks/tm3/turbo/default"));
   // TM3 emits at the car origin; other cars can supply a local position (SVECTOR).
   root.folders.set("turboEffect", turboEffect);
-  root.files.set("statusEffects", stringEntry("Tm3StatusEffects"));
+  for (const [binding, profile] of Object.entries({
+    freezeEffect: "effects/freeze",
+    invisibilityEffect: "effects/invisibility",
+    freezeAttack: "attacks/freeze",
+  })) {
+    const reference = directory();
+    reference.files.set("profile", stringEntry(`/resourcePacks/tm3/${profile}`));
+    root.folders.set(binding, reference);
+  }
   root.files.set("tm3Engine", { type: 4, arraySize: engine.length, bytes: settings });
   root.files.set("engineSoundName", stringEntry(`tm3_s${String(engine[0]).padStart(2, "0")}`));
   return root;
