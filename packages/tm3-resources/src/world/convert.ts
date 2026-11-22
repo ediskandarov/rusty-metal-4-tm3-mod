@@ -231,7 +231,7 @@ export async function convertWorld(
       flash.set(settings.length ? settings.subarray(0x15, 0x18) : [255, 120, 120]);
       put("flashColor", flash, 18, flash.length);
       put("screenEffect", new TextEncoder().encode("Tm3ScreenEffect\0"), 2);
-      put("fragmentImpact", new TextEncoder().encode("Tm3FragmentImpact\0"), 2);
+      put("fragmentEffects", new TextEncoder().encode("Tm3FragmentEffects\0"), 2);
     }
     if (settings.length) {
       // 8003d408 paints the background tile. 8003db70 selects the face budgets per viewport.

@@ -1,5 +1,6 @@
 #include "stage.h"
 #include "tm4/main/object.h"
+#include "tm4/main/system.h"
 #include "tm4/main/world.h"
 #include <stdlib.h>
 
@@ -28,13 +29,39 @@ void Tm3StageEffect(RegistryDirectory* stage, s32 x, s32 y, s32 z)
     Tm3SpawnSprite(0, &origin, 500, NULL, 12, -1);
 }
 
-void Tm3FragmentImpact(const SVECTOR* point, s32 size, s32 surface)
+#ifdef TM3_TEST_HOOKS
+static int impact_calls, gameplay_rng_changes;
+int Tm3TestFragmentEffects(int reset)
 {
-    if (rand() % 3 == 0)
-        Tm3SpawnSurfaceSprite(0, point, size, NULL, 12, rand() & 1 ? -2 : -1, surface);
-    if (!(rand() & 3)) {
+    int result = impact_calls | (gameplay_rng_changes << 16);
+    if (reset)
+        impact_calls = gameplay_rng_changes = 0;
+    return result;
+}
+#endif
+
+static void fragment_impact(const Rm4FragmentImpact* event)
+{
+#ifdef TM3_TEST_HOOKS
+    u32 random_before = randseed();
+    ++impact_calls;
+#endif
+    const SVECTOR* point = &event->position;
+    s32 size = event->effect_size, surface = event->surface_kind;
+    if (randrand() % 3 == 0)
+        Tm3SpawnSurfaceSprite(0, point, size, NULL, 12, randrand() & 1 ? -2 : -1, surface);
+    if (!(randrand() & 3)) {
         SVECTOR smoke = *point;
         smoke.vy -= size / 2;
         Tm3SpawnSurfaceSprite(2, &smoke, size, NULL, 12, -2, surface);
     }
+#ifdef TM3_TEST_HOOKS
+    gameplay_rng_changes += random_before != randseed();
+#endif
 }
+
+const Rm4FragmentEffects Tm3FragmentEffects = {
+    .version = RM4_FRAGMENT_EFFECTS_VERSION,
+    .size = sizeof(Rm4FragmentEffects),
+    .impact = fragment_impact,
+};

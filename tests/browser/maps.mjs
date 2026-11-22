@@ -7,6 +7,7 @@ import { mapBehaviors } from "../../apps/build-maps/src/behavior.ts";
 import { maps } from "../../apps/build-maps/src/catalog.ts";
 import { readMr } from "../../external/rusty-metal-4/packages/resources/src/compatibility/mr.ts";
 import { prepareFixture, prepareMapFixture, weaponSlots } from "./fixture.mjs";
+import { checkFragmentEffects } from "./helpers/fragment-effects.mjs";
 import { checkObjectLifecycle } from "./helpers/object-lifecycle.mjs";
 import { checkScreenFlash } from "./helpers/screen-flash.mjs";
 import { openTm3Car } from "./helpers/tm3.mjs";
@@ -300,6 +301,7 @@ for (const map of maps.filter((map) => !values.map || values.map.includes(map.id
     assert.deepEqual(result.rollback, result.expected, map.id + " rollback");
     assert.deepEqual(result.portable, result.expected, map.id + " portable restore");
     if (map.id === "tokyo") await checkScreenFlash(fixture.page);
+    if (map.id === "egypt") await checkFragmentEffects(fixture.page);
     await checkObjectLifecycle(fixture.page, {
       module,
       props,

@@ -26,6 +26,7 @@ s32 Tm3TestPickupState(void);
 s32 Tm3TestWeaponProfiles(s32, s32, s32);
 s32 Tm3TestWeaponAi(s32, s32, s32);
 int Tm3TestSurface(int action, int material, int offset);
+int Tm3TestFragmentEffects(int reset);
 #endif
 extern const WebCarStatusEffects Tm3StatusEffects;
 
@@ -63,10 +64,11 @@ __attribute__((visibility("default"))) OSWord Tm4ModuleExport(const char* name)
     EXPORT(Tm3TestWeaponProfiles);
     EXPORT(Tm3TestWeaponAi);
     EXPORT(Tm3TestSurface);
+    EXPORT(Tm3TestFragmentEffects);
     EXPORT(Tm3TestPortal);
 #endif
     EXPORT(Tm3ScreenEffect);
-    EXPORT(Tm3FragmentImpact);
+    EXPORT(Tm3FragmentEffects);
     EXPORT(Tm3TransitionSizeof);
     EXPORT(Tm3TransitionInstanceConstructor);
     EXPORT(Tm3TransitionProcess);
