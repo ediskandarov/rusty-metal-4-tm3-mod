@@ -58,6 +58,8 @@ export async function checkObjectLifecycle(page, { module, car, props }) {
           { async: true },
         );
         if (!started) throw Error("Map reload failed");
+        if (Module._WebTestWeaponTargetHealth() !== -1)
+          throw Error("Weapon test target survived map restart");
         if (!world) {
           const points = Module.ccall(
             "RegGetFileDataS",
@@ -95,12 +97,20 @@ export async function checkObjectLifecycle(page, { module, car, props }) {
               throw Error("Input rejected");
           if (!Module._WebNetQueueTick(tick)) throw Error("Tick rejected");
         }
+        const targetHealth = Module._WebTestPlaceWeaponTarget(400);
+        if (targetHealth <= 0) throw Error("Cannot select weapon test target");
         if (!Module._WebNetCaptureLocalCheckpoint() || !Module._WebNetCapturePortableCheckpoint())
           throw Error(tm4Port.localCheckpointError || tm4Port.portableCheckpointError);
+        if (!Module._WebNetRestoreLocalCheckpoint()) throw Error(tm4Port.localCheckpointError);
+        if (Module._WebTestWeaponTargetHealth() !== targetHealth)
+          throw Error("Weapon test target lost after local restore");
+        if (!Module._WebNetFinishLocalReplay()) throw Error(tm4Port.localCheckpointError);
         return state;
       };
       await stop();
       const first = await start(0);
+      await stop();
+      await start(0); // Same map and seed repeat object serials.
       await stop();
       await start(1);
       await stop();
