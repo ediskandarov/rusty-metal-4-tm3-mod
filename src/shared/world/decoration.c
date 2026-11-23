@@ -1,4 +1,5 @@
 #include "decoration.h"
+#include "world_texture.h"
 #include "tm4/main/math3d.h"
 #include "tm4/main/object.h"
 #include "tm4/main/system.h"
@@ -72,7 +73,9 @@ void Tm3DecorationDisplay(
         corners[3] = (SVECTOR) { x, y, 0, 0 };
         vertices = corners;
     }
-    CardDisplayTexturedQuad(vertices, quad->color, decoration->texture, ordering,
+    Tm4CardQuadTexture texture = *decoration->texture;
+    texture.uv.tpage = WebWorldTexturePage(texture.uv.tpage);
+    CardDisplayTexturedQuad(vertices, quad->color, &texture, ordering,
         (Tm4CardPacket**)cursor, quad->blend, limit, 0);
     PopMatrix();
 }

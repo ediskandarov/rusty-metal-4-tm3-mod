@@ -110,6 +110,10 @@ try {
       probe(0, 2);
       check(probe(3) === 0, "Water retained road marks");
       check((probe(5) & 7) === 7, "Missing splash, dust or spray");
+      check(
+        probe(9) === 31,
+        "Portal decorations, tire marks, splash, dust and spray must draw from the map texture bank",
+      );
       const states = [];
       while (tick < 135) {
         step();

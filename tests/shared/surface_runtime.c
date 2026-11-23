@@ -4,13 +4,55 @@
 #include "surface.h"
 #include "tm4/main/game.h"
 #include "tm4/main/object.h"
+#include "tm4/main/render.h"
+#include "world_texture.h"
 #include "tm4/main/sound.h"
 #include "tm4/main/system.h"
 #include <stdlib.h>
 #include <string.h>
 
+/* Draw Washington's real decorations and contact effects into a scratch ordering table. */
+static int world_draw_mask(void)
+{
+    Tm4OrderingTag ordering[otSize];
+    memset(ordering, 0, sizeof(ordering));
+    u16 bank = WebWorldTexturePage(0);
+    if (!bank)
+        return -1;
+    int mask = 0;
+    for (unsigned list = 0; list < OBJECT_LIST_COUNT; ++list) {
+        for (Tm4ObjectHeader* h = ObjectLists[list].first; h; h = h->next) {
+            void* object = ObjectGetPayload(h);
+            int bit;
+            if (!strcmp(h->name, "tm3Decoration"))
+                bit = 1;
+            else if (!strcmp(h->name, "tm3TireMark"))
+                bit = 2;
+            else if (!strcmp(h->name, "tm3SurfaceParticle"))
+                bit = 4 << ((Tm3SurfaceParticle*)object)->family;
+            else
+                continue;
+
+            MATRIX view = { .m = { { 4096, 0, 0 }, { 0, 4096, 0 }, { 0, 0, 4096 } },
+                .t = { -h->position.vx, -h->position.vy, 512 - h->position.vz } };
+            u32 storage[32] = { 0 };
+            u8* cursor = (u8*)storage;
+            h->display(object, ordering, &cursor, (u8*)(storage + 32), &view);
+            if (cursor == (u8*)storage)
+                return -1;
+            u16 page = bit == 2 ? ((POLY_GT4*)storage)->tpage : ((POLY_FT4*)storage)->tpage;
+            if ((page & 0x1e00) != bank)
+                return -1;
+            mask |= bit;
+        }
+    }
+    return mask;
+}
+
 int Tm3TestSurface(int action, int material, int offset)
 {
+    if (action == 9)
+        return world_draw_mask();
     if (action == 7)
         return randseed();
     Car* car = GameInfo.players[0].car;

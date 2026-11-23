@@ -1,4 +1,5 @@
 #include "snapshot_types.h"
+#include "world_texture.h"
 #include "surface.h"
 #include "tm4/fixed.h"
 #include "tm4/gpu_packet.h"
@@ -111,7 +112,6 @@ static void mark_draw(Tm3TireMark* mark, Tm4OrderingTag* ot, u8** cursor, u8* li
         z = otSize - 1;
     const u8* materials = RegGetFileDataS("/world/wheelMaterials");
     const Tm4CardTexture* atlas = RegGetFileDataS("/world/wheelAtlas");
-    const Tm4CardQuadTexture* shaders = RegGetFileDataS("/world/displayPolys/shaderData");
     const Tm4CardTexture* tile = atlas + materials[mark->material * 32 + 6];
     POLY_GT4* packet = (void*)*cursor;
     setPolyGT4(packet);
@@ -125,7 +125,7 @@ static void mark_draw(Tm3TireMark* mark, Tm4OrderingTag* ot, u8** cursor, u8* li
     setUV4(packet, tile->uv.u0, tile->uv.v0, tile->uv.u1, tile->uv.v0, tile->uv.u0, tile->uv.v1,
         tile->uv.u1, tile->uv.v1);
     packet->clut = tile->uv.clut;
-    packet->tpage = tile->uv.tpage | (shaders->uv.tpage & 0x1e00);
+    packet->tpage = WebWorldTexturePage(tile->uv.tpage);
     GpuLinkPacketSized(ot + z, packet, sizeof(*packet));
     *cursor += sizeof(*packet);
 }

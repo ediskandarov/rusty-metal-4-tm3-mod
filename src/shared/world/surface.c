@@ -1,4 +1,5 @@
 #include "surface.h"
+#include "world_texture.h"
 #include "audio.h"
 #include "snapshot_types.h"
 #include "tm3/projectile_motion.h"
@@ -219,12 +220,10 @@ static void particle_draw(
     const Tm4CardTexture* tile = &atlas[effect[2] + p->frame];
     if (*cursor + sizeof(POLY_FT4) >= limit)
         return;
-    const Tm4CardQuadTexture* shaders = RegGetFileDataS("/world/displayPolys/shaderData");
     int transparent = p->family == Dust && !effect[1];
     u16 tpage = tile->uv.tpage;
     if (transparent)
         tpage = (tpage & 0x99f) | 0x20;
-    tpage |= shaders->uv.tpage & 0x1e00;
     int half = p->family == Spray ? p->width / 2 : p->width / 32;
     int height = p->family == Spray ? p->height : p->height / 16;
     SVECTOR quad[] = {
@@ -279,7 +278,7 @@ static void particle_draw(
     u8 left = p->flip ? tile->uv.u1 : tile->uv.u0;
     u8 right = p->flip ? tile->uv.u0 : tile->uv.u1;
     setUV4(packet, left, tile->uv.v0, right, tile->uv.v0, left, tile->uv.v1, right, tile->uv.v1);
-    packet->tpage = tpage;
+    packet->tpage = WebWorldTexturePage(tpage);
     packet->clut = tile->uv.clut;
     GpuLinkPacketSized(ot + bucket, packet, sizeof(*packet));
     *cursor += sizeof(*packet);

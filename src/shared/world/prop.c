@@ -1,4 +1,5 @@
 #include "prop.h"
+#include "world_texture.h"
 #include "tm3/missile.h"
 #include "tm3/projectile_motion.h"
 #include "tm3/resources.h"
@@ -189,6 +190,7 @@ static void draw_mesh(const Tm3PropFace* faces, unsigned count, const Tm4CardQua
         }
         packet->packed.uv0_clut.word = shader->packed.uv0_clut;
         packet->packed.uv1_page.word = shader->packed.uv1_page;
+        packet->quad.tpage = WebWorldTexturePage(shader->uv.tpage);
         packet->packed.uv2 = shader->packed.uv2;
         if (quad)
             packet->packed.uv3 = shader->packed.uv3;
