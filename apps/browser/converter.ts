@@ -14,6 +14,7 @@ import { maps } from "../build-maps/src/catalog.ts";
 import { buildSharedResource } from "../build-shared/src/resource.ts";
 import { digest } from "../digest.ts";
 
+declare const TM3_MAP_PORTRAITS: Record<(typeof maps)[number]["id"], string>;
 declare const TM3_RELEASE: string;
 declare const TM3_RUNTIME: string;
 declare const TM3_MODULE_HASHES: Record<string, string>;
@@ -46,28 +47,6 @@ async function addBehavior(resource: MrDirectory, name: string) {
   const bytes = new Uint8Array(await response.arrayBuffer());
   if ((await digest(bytes)) !== expected) throw Error(`Incorrect module bytes for ${name}`);
   resource.files.set("behavior.mod", { ...binary(bytes), type: 6 });
-}
-
-function mapPortrait() {
-  // The engine's world picker samples a 118 × 121 indexed TIM with a 256-color palette.
-  const width = 118;
-  const height = 121;
-  const pixels = 544;
-  const bytes = new Uint8Array(pixels + width * height + 2);
-  const view = new DataView(bytes.buffer);
-  view.setUint32(0, 16, true);
-  view.setUint32(4, 9, true);
-  view.setUint32(8, 524, true);
-  view.setUint16(16, 256, true);
-  view.setUint16(18, 1, true);
-  view.setUint16(22, 0x20c4, true);
-  view.setUint16(24, 0x35a8, true);
-  view.setUint32(532, 12 + width * height, true);
-  view.setUint16(540, width / 2, true);
-  view.setUint16(542, height, true);
-  for (let y = 0; y < height; y++)
-    for (let x = 0; x < width; x++) bytes[pixels + y * width + x] = (x + y) % 24 < 4 ? 2 : 1;
-  return bytes;
 }
 
 export async function build({ modDisc, baseDisc, progress }: RecipeInput): Promise<ModDraft> {
@@ -138,7 +117,6 @@ export async function build({ modDisc, baseDisc, progress }: RecipeInput): Promi
   const powerupResources = game.directories.get("Root/objects/powerup");
   if (!powerupResources) throw Error("Missing base-game powerup resources");
   files.set("files/shared/loading.TIM", await readBase("/DATA/TITLE.TIM"));
-  files.set("files/shared/portrait.TIM", mapPortrait());
   for (const [i, map] of maps.entries()) {
     const name = title(map.id, mapTitles);
     progress(`Converting ${name}…`);
@@ -154,11 +132,16 @@ export async function build({ modDisc, baseDisc, progress }: RecipeInput): Promi
     mount(`/DATA/${stem.toUpperCase()}.IMG`, converted.imageArchive);
     // Reuse the user's base-game loading screen for maps without a dedicated one.
     mounts.push({ path: `/DATA/${stem.toUpperCase()}.TIM`, source: "files/shared/loading.TIM" });
+    const portrait = `files/portraits/${map.id}.TIM`;
+    files.set(
+      portrait,
+      Uint8Array.from(atob(TM3_MAP_PORTRAITS[map.id]), (c) => c.charCodeAt(0)),
+    );
     registry.push({
       archive: "/DATA/MENU.MR",
       folder: ["menu", "worldpix"],
       name: stem,
-      source: "files/shared/portrait.TIM",
+      source: portrait,
       kind: "binary",
     });
     const entry = namedResource(stem);

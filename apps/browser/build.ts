@@ -5,6 +5,7 @@ import { parseArgs } from "node:util";
 import { cars } from "../build-cars/src/catalog.ts";
 import { carModuleSources } from "../build-cars/src/sources.ts";
 import { mapBehaviors } from "../build-maps/src/behavior.ts";
+import { maps } from "../build-maps/src/catalog.ts";
 import { sharedModuleSources } from "../build-shared/src/sources.ts";
 import { digest } from "../digest.ts";
 import { createModuleBuilder } from "../wasm.ts";
@@ -68,6 +69,11 @@ try {
     );
   }
   await rm(join(modules, "inverse-root.o"));
+  const portraits: Record<string, string> = {};
+  for (const map of maps) {
+    const portrait = Bun.file(join(import.meta.dir, "../build-maps/portraits", map.id + ".tim"));
+    portraits[map.id] = (await portrait.bytes()).toBase64();
+  }
   const result = await Bun.build({
     entrypoints: [join(import.meta.dir, "converter.ts")],
     target: "browser",
@@ -90,6 +96,7 @@ try {
     ],
     define: {
       TM3_RELEASE: JSON.stringify(values.release),
+      TM3_MAP_PORTRAITS: JSON.stringify(portraits),
       TM3_RUNTIME: JSON.stringify(runtime),
       TM3_MODULE_HASHES: JSON.stringify(
         Object.fromEntries(files.map(({ path, sha256 }) => [path, sha256])),
