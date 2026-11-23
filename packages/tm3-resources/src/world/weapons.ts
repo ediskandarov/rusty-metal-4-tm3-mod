@@ -31,6 +31,16 @@ function integer(value: number, type: number) {
   return { ...binary(bytes), type };
 }
 
+function forwardLauncher() {
+  // TM4 position and Q12 direction (two SVECTORs). TM3 applies each weapon's pitch at launch.
+  const bytes = new Uint8Array(16);
+  const view = new DataView(bytes.buffer);
+  view.setInt16(2, -50, true);
+  view.setInt16(4, 140, true);
+  view.setInt16(12, 4096, true);
+  return { ...binary(bytes), type: 15 };
+}
+
 export function writeWorldWeapons(root: MrDirectory, mapWeapon: string | undefined) {
   const objects = root.folders.get("objects")!;
   objects.folders.set("tm3WorldWeapons", directory());
@@ -67,6 +77,7 @@ export function writeWorldWeapons(root: MrDirectory, mapWeapon: string | undefin
     entry.files.set("model", stringEntry(id));
     entry.files.set("hudName", stringEntry(name));
     if (launchFunc === "Tm3LaunchWorldProjectile") {
+      entry.files.set("launcher", forwardLauncher());
       entry.files.set("prepareFunc", stringEntry("Tm3PrepareWorldWeapon"));
       entry.files.set("projectile", stringEntry("Tm3ProjectileType_" + name));
     }
