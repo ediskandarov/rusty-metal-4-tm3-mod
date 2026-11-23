@@ -144,6 +144,25 @@ bun tests/browser/check_tm3_world.mjs --disc ./disc-tm4 --tm3-disc ./disc-tm3 --
 The checks cover pickup release, moving debris, and local/portable restoration
 before and between destruction stages. Damage uses the engine's bullet interaction dispatch.
 
+## Browser converter release
+
+Use a Rusty Metal 4 checkout with a finished browser runtime and point
+`external/rusty-metal-4` at that checkout for the workspace dependencies.
+
+```sh
+bun apps/browser/build.ts \
+  --engine external/rusty-metal-4 \
+  --game-build external/rusty-metal-4/build/release \
+  --release 0.1.1 \
+  --output build/browser-0.1.1
+```
+
+This compiles the existing behavior modules and bundles the browser converter.
+The release includes a file manifest with the engine build ID and payload hashes.
+Point the site's `TM4_TM3_CONVERTER` at the resulting directory. Its Mods page
+runs this converter with the selected disc folders and installs the resulting
+package in the browser. Disc images and generated game assets stay local.
+
 ## TODO
 
 - [ ] Verify every TM4 and TM3 car special, ordinary weapon and car collision against

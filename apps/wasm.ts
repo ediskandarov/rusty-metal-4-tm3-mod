@@ -14,8 +14,11 @@ interface ModuleOptions {
   inverseRoot?: boolean;
 }
 
-export async function createModuleBuilder(gameBuild: string) {
-  const engine = await realpath(join(root, "external/rusty-metal-4"));
+export async function createModuleBuilder(
+  gameBuild: string,
+  engineRoot = join(root, "external/rusty-metal-4"),
+) {
+  const engine = await realpath(engineRoot);
   const build = resolve(gameBuild);
   const includes = join(build, "CMakeFiles/tm4_core.dir/includes_C.rsp");
   if (!(await Bun.file(includes).exists()))

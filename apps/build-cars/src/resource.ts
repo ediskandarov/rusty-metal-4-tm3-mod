@@ -1,6 +1,7 @@
 import { convertCar, enableCarAnimations, namedVab } from "@rusty-metal-4/tm3-resources";
 import { binary, directory, stringEntry } from "@tm4/resources/mods/mr-writer";
 
+import { digest } from "../../digest.ts";
 import type { CarDefinition } from "./catalog.ts";
 import { carReflections } from "./reflections/index.ts";
 
@@ -39,10 +40,7 @@ export async function buildCarResource(definition: CarDefinition, bytes: Uint8Ar
     special.files.set(name, { type, arraySize: 65535, bytes: valueBytes });
   }
   root.folders.set("special", special);
-  if (
-    definition.soundSha256 &&
-    new Bun.CryptoHasher("sha256").update(specialVab).digest("hex") !== definition.soundSha256
-  )
+  if (definition.soundSha256 && (await digest(specialVab)) !== definition.soundSha256)
     throw Error(`${definition.file}: unexpected special sound bank`);
   root.files.set("car.vab", { ...binary(namedVab(specialVab, [definition.sound])), type: 16 });
   root.files.set("specialSoundName", stringEntry(definition.specialSound));

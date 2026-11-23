@@ -6,7 +6,9 @@
     "apps/*",
     "packages/*",
     "external/rusty-metal-4/packages/resources",
-    "external/rusty-metal-4/packages/dev-server-client"
+    "external/rusty-metal-4/packages/dev-server-client",
+    "external/rusty-metal-4/packages/mr-preparation",
+    "external/rusty-metal-4/packages/mods"
   ],
   "scripts": {
     "build:shared": "bun apps/build-shared/src/main.ts",
@@ -22,6 +24,7 @@
     "test:maps": "bun tests/browser/maps.mjs"
   },
   "devDependencies": {
+    "@tm4/mods": "workspace:*",
     "@tsconfig/bun": "1.0.11",
     "@types/bun": "1.4.4"
   }
